@@ -1,5 +1,3 @@
-#include "c_box2d/dynamics/body.h"
-
 b2BodyDef BodyDef_default() {
     return b2BodyDef();
 }

@@ -15,3 +15,4 @@ typedef double f64;
 
 #include "c_box2d/collision/shapes/shape.cpp"
 #include "c_box2d/collision/shapes/chain_shape.cpp"
+#include "c_box2d/collision/shapes/circle_shape.cpp"

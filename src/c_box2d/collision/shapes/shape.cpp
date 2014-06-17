@@ -12,6 +12,11 @@ i32 Shape_get_type(const b2Shape* self) {
 i32 Shape_get_child_count_virtual(const b2Shape* self) {
     return self->GetChildCount();
 }
+bool Shape_test_point_virtual(const b2Shape* self,
+                              const b2Transform* xf,
+                              const b2Vec2* p) {
+    return self->TestPoint(*xf, *p);
+}
 bool Shape_ray_cast_virtual(const b2Shape* self,
                             b2RayCastOutput* output,
                             const b2RayCastInput* input,

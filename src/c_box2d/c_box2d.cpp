@@ -12,3 +12,5 @@ typedef double f64;
 #include "c_box2d/dynamics/body.cpp"
 #include "c_box2d/dynamics/fixture.cpp"
 #include "c_box2d/dynamics/world.cpp"
+
+#include "c_box2d/collision/shapes/shape.cpp"

@@ -21,3 +21,4 @@ typedef double f64;
 
 #include "c_box2d/dynamics/joints/joint.cpp"
 #include "c_box2d/dynamics/joints/distance_joint.cpp"
+#include "c_box2d/dynamics/joints/friction_joint.cpp"

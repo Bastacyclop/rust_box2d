@@ -24,3 +24,4 @@ typedef double f64;
 #include "c_box2d/dynamics/joints/friction_joint.cpp"
 #include "c_box2d/dynamics/joints/gear_joint.cpp"
 #include "c_box2d/dynamics/joints/motor_joint.cpp"
+#include "c_box2d/dynamics/joints/mouse_joint.cpp"

@@ -28,3 +28,5 @@ typedef double f64;
 #include "c_box2d/dynamics/joints/prismatic_joint.cpp"
 #include "c_box2d/dynamics/joints/pulley_joint.cpp"
 #include "c_box2d/dynamics/joints/revolute_joint.cpp"
+#include "c_box2d/dynamics/joints/rope_joint.cpp"
+#include "c_box2d/dynamics/joints/weld_joint.cpp"

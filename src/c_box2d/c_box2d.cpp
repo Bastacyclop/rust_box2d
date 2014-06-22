@@ -9,6 +9,8 @@ typedef unsigned int u32;
 typedef float f32;
 typedef double f64;
 
+u32 SIZEOF_BODY = sizeof(b2Body);
+
 #include "c_box2d/dynamics/body.cpp"
 #include "c_box2d/dynamics/fixture.cpp"
 #include "c_box2d/dynamics/world.cpp"

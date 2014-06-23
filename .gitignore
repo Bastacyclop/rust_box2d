@@ -1,6 +1,7 @@
 lib/*
 extlib/*
 build/*
+bin/*
 
 *~
 *.o

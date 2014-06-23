@@ -1,5 +1,8 @@
-b2World World_new(const b2Vec2* gravity) {
-    return b2World(*gravity);
+extern "C"
+{
+
+b2World* World_new(const b2Vec2* gravity) {
+    return new b2World(*gravity);
 }
 void World_drop(b2World* self) {
     delete self;
@@ -143,4 +146,6 @@ const b2Profile* World_get_profile(const b2World* self) {
 
 void World_dump(b2World* self) {
     self->Dump();
+}
+
 }

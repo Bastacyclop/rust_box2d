@@ -24,7 +24,7 @@ impl World {
     
     pub fn new(gravity: Vec2) -> World {
         unsafe {
-            World::from_ptr(&mut ffi::World_new(&gravity))
+            World::from_ptr(ffi::World_new(&gravity))
         }
     }
     pub fn create_body<'l>(&'l mut self, def: body::Def) -> Body<'l> {

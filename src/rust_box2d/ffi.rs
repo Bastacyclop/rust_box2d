@@ -20,13 +20,13 @@ pub struct Profile;
 pub type UserData = *i32;
 
 #[link(name = "c_box2d", kind = "static")]
-extern "C" {
+extern {
     pub static SIZEOF_BODY: u32;
     
-    pub fn World_new(gravity: *Vec2) -> World;
+    pub fn World_new(gravity: *Vec2) -> *mut World;
     pub fn World_drop(slf: *mut World);
     pub fn World_set_destruction_listener(slf: *mut World,
-                                      dl: *mut DestructionListener);
+                                          dl: *mut DestructionListener);
     pub fn World_set_contact_filter(slf: *mut World, cf: *mut ContactFilter);
     pub fn World_set_contact_listener(slf: *mut World, cl: *mut ContactListener);
     pub fn World_set_debug_draw(slf: *mut World, dd: *mut Draw);

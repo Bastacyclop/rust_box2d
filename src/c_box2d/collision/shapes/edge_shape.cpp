@@ -1,5 +1,8 @@
-b2EdgeShape EdgeShape_new() {
-    return b2EdgeShape();
+b2EdgeShape* EdgeShape_new() {
+    return new b2EdgeShape();
+}
+void EdgeShape_drop(b2EdgeShape* self) {
+    delete self;
 }
 
 b2Shape* EdgeShape_as_shape(b2EdgeShape* self) {

@@ -35,7 +35,7 @@ impl Chain {
         unsafe {
             ffi::ChainShape_create_loop(self.get_mut_ptr(),
                                         vertices.as_ptr(),
-                                        vertices.len()                                    
+                                        vertices.len() as i32                                   
                                         )
         }
     }
@@ -43,7 +43,7 @@ impl Chain {
         unsafe {
             ffi::ChainShape_create_chain(self.get_mut_ptr(),
                                          vertices.as_ptr(),
-                                         vertices.len()
+                                         vertices.len() as i32
                                          )
         }
     }

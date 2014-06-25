@@ -116,6 +116,12 @@ extern {
     pub fn ChainShape_set_next_vertex(slf: *mut ChainShape, vertex: *Vec2);
     pub fn ChainShape_get_child_edge(slf: *ChainShape,
                                      edge: *mut EdgeShape,
-                                     index: i32); 
+                                     index: i32);
+                                     
+    pub fn EdgeShape_new() -> *mut EdgeShape;
+    pub fn EdgeShape_drop(slf: *mut EdgeShape);
+    pub fn EdgeShape_as_shape(slf: *mut EdgeShape) -> *mut Shape;
+    pub fn Shape_as_edge_shape(slf: *mut Shape) -> *mut EdgeShape;
+    pub fn EdgeShape_set(slf: *mut EdgeShape, v1: *Vec2, v2: *Vec2);
 
 }

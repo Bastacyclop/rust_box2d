@@ -3,8 +3,10 @@ use math::Vec2;
 use math::Transform;
 
 pub use self::chain::Chain;
+pub use self::edge::Edge;
 
 pub mod chain;
+pub mod edge;
 
 pub enum Type {
     Circle,

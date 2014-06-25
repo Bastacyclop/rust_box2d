@@ -1,5 +1,5 @@
-b2ChainShape ChainShape_new() {
-    return b2ChainShape();
+b2ChainShape* ChainShape_new() {
+    return new b2ChainShape();
 }
 void ChainShape_drop(b2ChainShape* self) {
     delete self;

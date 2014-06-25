@@ -22,6 +22,8 @@ pub struct Shape;
 pub struct RayCastInput;
 pub struct RayCastOutput;
 pub struct BlockAllocator;
+pub struct ChainShape;
+pub struct EdgeShape;
 
 pub type UserData = *i32;
 
@@ -98,4 +100,22 @@ extern {
     pub fn Shape_compute_mass_virtual(slf: *Shape,
                                       data: *mut shape::MassData,
                                       density: f32);
+                                      
+    pub fn ChainShape_new() -> *mut ChainShape;
+    pub fn ChainShape_drop(slf: *mut ChainShape);
+    pub fn ChainShape_as_shape(slf: *mut ChainShape) -> *mut Shape;
+    pub fn Shape_as_chain_shape(slf: *mut Shape) -> *mut ChainShape;
+    pub fn ChainShape_clear(slf: *mut ChainShape);
+    pub fn ChainShape_create_loop(slf: *mut ChainShape,
+                                  vertices: *Vec2,
+                                  count: i32);
+    pub fn ChainShape_create_chain(slf: *mut ChainShape,
+                                   vertices: *Vec2,
+                                   count: i32);
+    pub fn ChainShape_set_prev_vertex(slf: *mut ChainShape, vertex: *Vec2);
+    pub fn ChainShape_set_next_vertex(slf: *mut ChainShape, vertex: *Vec2);
+    pub fn ChainShape_get_child_edge(slf: *ChainShape,
+                                     edge: *mut EdgeShape,
+                                     index: i32); 
+
 }

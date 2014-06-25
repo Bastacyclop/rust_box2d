@@ -2,6 +2,10 @@ use ffi;
 use math::Vec2;
 use math::Transform;
 
+pub use self::chain::Chain;
+
+pub mod chain;
+
 pub enum Type {
     Circle,
     Edge,
@@ -27,8 +31,9 @@ impl MassData {
 }
 
 pub trait Shape {
-    fn get_shape_ptr(&self) -> *ffi::Shape;
-    fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape;
+    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Self;
+    unsafe fn get_shape_ptr(&self) -> *ffi::Shape;
+    unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape;
     
     fn get_type(&self) -> Type {
         unsafe {

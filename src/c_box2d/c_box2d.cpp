@@ -1,5 +1,7 @@
 #include <Box2D/Box2D.h>
 
+extern "C" {
+
 typedef signed char i8;
 typedef signed short i16;
 typedef signed int i32;
@@ -33,3 +35,5 @@ u32 SIZEOF_BODY = sizeof(b2Body);
 #include "c_box2d/dynamics/joints/rope_joint.cpp"
 #include "c_box2d/dynamics/joints/weld_joint.cpp"
 #include "c_box2d/dynamics/joints/wheel_joint.cpp"
+
+}

@@ -8,3 +8,4 @@ mod ffi;
 
 pub mod dynamics;
 pub mod common;
+pub mod collision;

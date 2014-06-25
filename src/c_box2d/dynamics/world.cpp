@@ -1,6 +1,3 @@
-extern "C"
-{
-
 b2World* World_new(const b2Vec2* gravity) {
     return new b2World(*gravity);
 }
@@ -146,6 +143,4 @@ const b2Profile* World_get_profile(const b2World* self) {
 
 void World_dump(b2World* self) {
     self->Dump();
-}
-
 }

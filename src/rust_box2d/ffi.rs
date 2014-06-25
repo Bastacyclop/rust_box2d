@@ -1,7 +1,9 @@
 use math::Vec2;
+use math::Transform;
 
 use dynamics::body;
 use dynamics::joint;
+use collision::shape;
 
 pub struct World;
 pub struct DestructionListener;
@@ -16,6 +18,10 @@ pub struct RayCastCallback;
 pub struct Contact;
 pub struct ContactManager;
 pub struct Profile;
+pub struct Shape;
+pub struct RayCastInput;
+pub struct RayCastOutput;
+pub struct BlockAllocator;
 
 pub type UserData = *i32;
 
@@ -72,4 +78,24 @@ extern {
     pub fn World_get_contact_manager(slf: *World) -> *ContactManager;
     pub fn World_get_profile(slf: *World) -> *Profile;
     pub fn World_dump(slf: *mut World);
+    
+    pub fn Shape_drop_virtual(slf: *mut Shape);
+    pub fn Shape_clone_cirtual(slf: *Shape,
+                               alloc: *mut BlockAllocator) -> *mut Shape;
+    pub fn Shape_get_type(slf: *Shape) -> shape::Type;
+    pub fn Shape_get_child_count_virtual(slf: *Shape) -> i32;
+    pub fn Shape_test_point_virtual(slf: *Shape,
+                                    xf: *Transform,
+                                    p: *Vec2) -> bool;
+    pub fn Shape_ray_cast_virtual(slf: *Shape,
+                                  output: *mut RayCastOutput,
+                                  input: *RayCastInput,
+                                  transform: *Transform) -> bool;
+    pub fn Shape_compute_aabb_virtual(slf: *Shape,
+                                      aabb: *mut AABB,
+                                      xf: *Transform,
+                                      child_id: i32);
+    pub fn Shape_compute_mass_virtual(slf: *Shape,
+                                      data: *mut shape::MassData,
+                                      density: f32);
 }

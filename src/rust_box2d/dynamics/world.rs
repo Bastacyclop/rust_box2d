@@ -75,6 +75,7 @@ impl World {
             ffi::World_draw_debug_data(self.get_mut_ptr())
         }
     }
+    #[unstable]
     pub fn get_mut_body_list<'l>(&'l mut self) -> Vec<Body<'l>> {
         unsafe {
             let base = ffi::World_get_body_list(self.get_mut_ptr()) as uint;

@@ -4,9 +4,11 @@ use math::Transform;
 
 pub use self::chain::Chain;
 pub use self::edge::Edge;
+pub use self::circle::Circle;
 
 pub mod chain;
 pub mod edge;
+pub mod circle;
 
 pub enum Type {
     Circle,

@@ -1,5 +1,8 @@
-b2CircleShape CircleShape_new() {
-    return b2CircleShape();
+b2CircleShape* CircleShape_new() {
+    return new b2CircleShape();
+}
+void CircleShape_drop(b2CircleShape* self) {
+    delete self;
 }
 
 b2Shape* CircleShape_as_shape(b2CircleShape* self) {

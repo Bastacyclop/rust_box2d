@@ -24,6 +24,7 @@ pub struct RayCastOutput;
 pub struct BlockAllocator;
 pub struct ChainShape;
 pub struct EdgeShape;
+pub struct CircleShape;
 
 pub type UserData = *i32;
 
@@ -124,4 +125,13 @@ extern {
     pub fn Shape_as_edge_shape(slf: *mut Shape) -> *mut EdgeShape;
     pub fn EdgeShape_set(slf: *mut EdgeShape, v1: *Vec2, v2: *Vec2);
 
+    pub fn CircleShape_new() -> *mut CircleShape;
+    pub fn CircleShape_drop(slf: *mut CircleShape);
+    pub fn CircleShape_as_shape(slf: *mut CircleShape) -> *mut Shape;
+    pub fn Shape_as_circle_shape(slf: *mut Shape) -> *mut CircleShape;
+    pub fn CircleShape_get_support(slf: *CircleShape, d: *Vec2) -> i32;
+    pub fn CircleShape_get_support_vertex(slf: *CircleShape,
+                                          d: *Vec2) -> *Vec2;
+    pub fn CircleShape_get_vertex_count(slf: *CircleShape) -> i32;
+    pub fn CircleShape_get_vertex(slf: *CircleShape, index: i32) -> *Vec2;
 }

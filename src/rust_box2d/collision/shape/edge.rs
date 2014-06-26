@@ -1,7 +1,6 @@
 use ffi;
 use math::Vec2;
 use collision::Shape;
-use collision::shape;
 
 pub struct Edge {
     ptr: *mut ffi::EdgeShape
@@ -26,9 +25,9 @@ impl Edge {
             Edge::from_ptr(ffi::EdgeShape_new())
         }
     }
-    pub fn set(&mut self, v1: Vec2, v2: Vec2) {
+    pub fn set(&mut self, v1: &Vec2, v2: &Vec2) {
         unsafe {
-            ffi::EdgeShape_set(self.get_mut_ptr(), &v1, &v2)
+            ffi::EdgeShape_set(self.get_mut_ptr(), v1, v2)
         }
     }
 }

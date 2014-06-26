@@ -84,7 +84,7 @@ extern {
     pub fn World_dump(slf: *mut World);
     
     pub fn Shape_drop_virtual(slf: *mut Shape);
-    pub fn Shape_clone_cirtual(slf: *Shape,
+    pub fn Shape_clone_virtual(slf: *Shape,
                                alloc: *mut BlockAllocator) -> *mut Shape;
     pub fn Shape_get_type(slf: *Shape) -> shape::Type;
     pub fn Shape_get_child_count_virtual(slf: *Shape) -> i32;

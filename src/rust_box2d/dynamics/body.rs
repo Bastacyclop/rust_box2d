@@ -7,6 +7,7 @@ pub enum Type {
     Dynamic,
 }
 
+#[allow(dead_code)]
 pub struct Def {
     pub body_type: Type,
     pub position: Vec2,

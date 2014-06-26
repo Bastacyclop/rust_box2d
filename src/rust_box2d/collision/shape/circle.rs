@@ -1,7 +1,6 @@
 use ffi;
 use math::Vec2;
 use collision::Shape;
-use collision::shape;
 
 pub struct Circle {
     ptr: *mut ffi::CircleShape
@@ -26,14 +25,17 @@ impl Circle {
             Circle::from_ptr(ffi::CircleShape_new())
         }
     }
-    pub fn get_support(&self, dir: Vec2) -> uint {
+    pub fn get_support(&self, dir: &Vec2) -> uint {
         unsafe {
-            ffi::CircleShape_get_support(self.get_ptr(), &dir) as uint
+            ffi::CircleShape_get_support(self.get_ptr(), dir) as uint
         }
     }
-    pub fn get_support_vertex(&self, dir: Vec2) -> Vec2 {
+    pub fn get_support_vertex(&self, dir: &Vec2) -> &Vec2 {
         unsafe {
-            *ffi::CircleShape_get_support_vertex(self.get_ptr(), &dir)
+            let support =
+                ffi::CircleShape_get_support_vertex(self.get_ptr(), dir);
+            assert!(!support.is_null());
+            &*support
         }
     }
     pub fn get_vertex_count(&self) -> uint {
@@ -41,9 +43,12 @@ impl Circle {
             ffi::CircleShape_get_vertex_count(self.get_ptr()) as uint
         }
     }
-    pub fn get_vertex(&self, index: uint) -> Vec2 {
+    pub fn get_vertex(&self, index: uint) -> &Vec2 {
         unsafe {
-            *ffi::CircleShape_get_vertex(self.get_ptr(), index as i32)
+            let vertex =
+                ffi::CircleShape_get_vertex(self.get_ptr(), index as i32);
+            assert!(!vertex.is_null());
+            &*vertex
         }
     }
 }

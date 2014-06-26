@@ -47,14 +47,14 @@ impl Chain {
                                          )
         }
     }
-    pub fn set_prev_vertex(&mut self, vertex: Vec2) {
+    pub fn set_prev_vertex(&mut self, vertex: &Vec2) {
         unsafe {
-            ffi::ChainShape_set_prev_vertex(self.get_mut_ptr(), &vertex)
+            ffi::ChainShape_set_prev_vertex(self.get_mut_ptr(), vertex)
         }
     }
-    pub fn set_next_vertex(&mut self, vertex: Vec2) {
+    pub fn set_next_vertex(&mut self, vertex: &Vec2) {
         unsafe {
-            ffi::ChainShape_set_next_vertex(self.get_mut_ptr(), &vertex)
+            ffi::ChainShape_set_next_vertex(self.get_mut_ptr(), vertex)
         }
     }
     #[unstable]

@@ -1,7 +1,6 @@
 use ffi;
 use math::Vec2;
 use collision::Shape;
-use collision::shape;
 
 pub struct Polygon {
     ptr: *mut ffi::PolygonShape
@@ -39,11 +38,11 @@ impl Polygon {
         }
     }
     pub fn set_as_oriented_box(&mut self, hw: f32, hh: f32,
-                               center: Vec2, angle: f32) {
+                               center: &Vec2, angle: f32) {
         unsafe {
             ffi::PolygonShape_set_as_oriented_box(self.get_mut_ptr(),
                                                   hw, hh,
-                                                  &center, angle)
+                                                  center, angle)
         }
     }
     pub fn get_vertex_count(&self) -> uint {
@@ -53,7 +52,10 @@ impl Polygon {
     }
     pub fn get_vertex(&self, index: uint) -> &Vec2 {
         unsafe {
-            &*ffi::PolygonShape_get_vertex(self.get_ptr(), index as i32)
+            let vertex =
+                ffi::PolygonShape_get_vertex(self.get_ptr(), index as i32);
+            assert!(!vertex.is_null());
+            &*vertex
         }
     }
     pub fn validate(&self) -> bool {

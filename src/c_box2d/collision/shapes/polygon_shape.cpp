@@ -1,5 +1,8 @@
-b2PolygonShape PolygonShape_new() {
-    return b2PolygonShape();
+b2PolygonShape* PolygonShape_new() {
+    return new b2PolygonShape();
+}
+void PolygonShape_drop(b2PolygonShape* self) {
+    delete self;
 }
 
 b2Shape* PolygonShape_as_shape(b2PolygonShape* self) {

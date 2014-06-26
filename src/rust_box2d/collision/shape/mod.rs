@@ -5,10 +5,12 @@ use math::Transform;
 pub use self::chain::Chain;
 pub use self::edge::Edge;
 pub use self::circle::Circle;
+pub use self::polygon::Polygon;
 
 pub mod chain;
 pub mod edge;
 pub mod circle;
+pub mod polygon;
 
 pub enum Type {
     Circle,

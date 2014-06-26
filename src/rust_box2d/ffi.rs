@@ -25,6 +25,7 @@ pub struct BlockAllocator;
 pub struct ChainShape;
 pub struct EdgeShape;
 pub struct CircleShape;
+pub struct PolygonShape;
 
 pub type UserData = *i32;
 
@@ -134,4 +135,18 @@ extern {
                                           d: *Vec2) -> *Vec2;
     pub fn CircleShape_get_vertex_count(slf: *CircleShape) -> i32;
     pub fn CircleShape_get_vertex(slf: *CircleShape, index: i32) -> *Vec2;
+    
+    pub fn PolygonShape_new() -> *mut PolygonShape;
+    pub fn PolygonShape_drop(slf: *mut PolygonShape);
+    pub fn PolygonShape_as_shape(slf: *mut PolygonShape) -> *mut Shape;
+    pub fn Shape_as_polygon_shape(slf: *mut Shape) -> *mut PolygonShape;
+    pub fn PolygonShape_set(slf: *mut PolygonShape, points: *Vec2, count: i32);
+    pub fn PolygonShape_set_as_box(slf: *mut PolygonShape, hw: f32, hh: f32);
+    pub fn PolygonShape_set_as_oriented_box(slf: *mut PolygonShape,
+                                            hw: f32, hh: f32,
+                                            center: *Vec2,
+                                            angle: f32);
+    pub fn PolygonShape_get_vertex_count(slf: *PolygonShape) -> i32;
+    pub fn PolygonShape_get_vertex(slf: *PolygonShape, index: i32) -> *Vec2;
+    pub fn PolygonShape_validate(slf: *PolygonShape) -> bool;
 }

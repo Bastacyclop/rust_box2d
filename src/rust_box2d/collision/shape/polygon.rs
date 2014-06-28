@@ -1,43 +1,30 @@
 use ffi;
 use math::Vec2;
-use collision::Shape;
+use super::{ShapeWrapper, Shape};
+use WrapStruct;
+use Wrapper;
 
-pub struct Polygon {
-    ptr: *mut ffi::PolygonShape
-}
+pub type PolygonShape = WrapStruct<ffi::PolygonShape>;
 
-impl Polygon {
-    pub unsafe fn from_ptr(ptr: *mut ffi::PolygonShape) -> Polygon {
-        assert!(!ptr.is_null());
-        Polygon {
-            ptr: ptr
-        }
-    }
-    pub unsafe fn get_ptr(&self) -> *ffi::PolygonShape {
-        self.ptr as *ffi::PolygonShape
-    }
-    pub unsafe fn get_mut_ptr(&mut self) -> *mut ffi::PolygonShape {
-        self.ptr
-    }
-    
-    pub fn new() -> Polygon {
+pub trait PolygonShapeT: Wrapper<ffi::PolygonShape> {
+    fn new() -> Self {
         unsafe {
-            Polygon::from_ptr(ffi::PolygonShape_new())
+            Wrapper::from_ptr(ffi::PolygonShape_new())
         }
     }
-    pub fn set(&mut self, points: Vec<Vec2>) {
+    fn set(&mut self, points: Vec<Vec2>) {
         unsafe {
             ffi::PolygonShape_set(self.get_mut_ptr(),
                                   points.as_ptr(),
                                   points.len() as i32)
         }
     }
-    pub fn set_as_box(&mut self, hw: f32, hh: f32) {
+    fn set_as_box(&mut self, hw: f32, hh: f32) {
         unsafe {
             ffi::PolygonShape_set_as_box(self.get_mut_ptr(), hw, hh)
         }
     }
-    pub fn set_as_oriented_box(&mut self, hw: f32, hh: f32,
+    fn set_as_oriented_box(&mut self, hw: f32, hh: f32,
                                center: &Vec2, angle: f32) {
         unsafe {
             ffi::PolygonShape_set_as_oriented_box(self.get_mut_ptr(),
@@ -45,12 +32,12 @@ impl Polygon {
                                                   center, angle)
         }
     }
-    pub fn get_vertex_count(&self) -> uint {
+    fn get_vertex_count(&self) -> uint {
         unsafe {
             ffi::PolygonShape_get_vertex_count(self.get_ptr()) as uint
         }
     }
-    pub fn get_vertex(&self, index: uint) -> &Vec2 {
+    fn get_vertex(&self, index: uint) -> &Vec2 {
         unsafe {
             let vertex =
                 ffi::PolygonShape_get_vertex(self.get_ptr(), index as i32);
@@ -58,16 +45,18 @@ impl Polygon {
             &*vertex
         }
     }
-    pub fn validate(&self) -> bool {
+    fn validate(&self) -> bool {
         unsafe {
             ffi::PolygonShape_validate(self.get_ptr())
         }
     }
 }
 
-impl Shape for Polygon {
-    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Polygon {
-        Polygon::from_ptr(ffi::Shape_as_polygon_shape(ptr))
+impl PolygonShapeT for PolygonShape {}
+
+impl ShapeWrapper for PolygonShape {
+    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> PolygonShape {
+        Wrapper::from_ptr(ffi::Shape_as_polygon_shape(ptr))
     }
     unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
         ffi::PolygonShape_as_shape(self.ptr) as *ffi::Shape
@@ -77,7 +66,10 @@ impl Shape for Polygon {
     }
 }
 
-impl Drop for Polygon {
+impl Shape for PolygonShape {}
+
+#[unsafe_destructor]
+impl Drop for PolygonShape {
     fn drop(&mut self) {
         unsafe {
             ffi::PolygonShape_drop(self.get_mut_ptr())

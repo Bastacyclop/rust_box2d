@@ -1,18 +1,13 @@
 use ffi;
 use math::Vec2;
-use collision::Shape;
-use collision::shape;
+use super::{EdgeShape, ShapeWrapper, Shape};
 use WrapStruct;
 use Wrapper;
 
-pub type ChainStruct = WrapStruct<ffi::ChainShape>;
+pub type ChainShape = WrapStruct<ffi::ChainShape>;
 
-pub trait Chain: Wrapper<ffi::ChainShape> {
-    //pub unsafe fn from_ptr(ptr: *mut ffi::ChainShape) -> Self;
-    //pub unsafe fn get_ptr(&self) -> *ffi::ChainShape;
-    //pub unsafe fn get_mut_ptr(&mut self) -> *mut ffi::ChainShape;
-    
-    fn new() -> ChainStruct {
+pub trait ChainShapeT: Wrapper<ffi::ChainShape> {
+    fn new() -> Self {
         unsafe {
             Wrapper::from_ptr(ffi::ChainShape_new())
         }
@@ -49,19 +44,19 @@ pub trait Chain: Wrapper<ffi::ChainShape> {
         }
     }
     #[unstable]
-    fn get_child_edge(&self, index: i32) -> shape::Edge {
+    fn get_child_edge(&self, index: i32) -> EdgeShape {
         unsafe {
             let edge = ffi::EdgeShape_new();
             ffi::ChainShape_get_child_edge(self.get_ptr(), edge, index);
-            shape::Edge::from_ptr(edge)
+            Wrapper::from_ptr(edge)
         }
     }
 }
 
-impl Chain for ChainStruct {}
+impl ChainShapeT for ChainShape {}
 
-impl Shape for ChainStruct {
-    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> ChainStruct {
+impl ShapeWrapper for ChainShape {
+    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> ChainShape {
         Wrapper::from_ptr(ffi::Shape_as_chain_shape(ptr))
     }
     unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
@@ -72,8 +67,10 @@ impl Shape for ChainStruct {
     }
 }
 
+impl Shape for ChainShape {}
+
 #[unsafe_destructor]
-impl Drop for ChainStruct {
+impl Drop for ChainShape {
     fn drop(&mut self) {
         unsafe {
             ffi::ChainShape_drop(self.get_mut_ptr())

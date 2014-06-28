@@ -22,11 +22,11 @@ pub mod dynamics;
 pub mod common;
 pub mod collision;
 
-pub struct WrapStruct<T> {
+struct WrapStruct<T> {
     ptr: *mut T
 }
 
-pub trait Wrapper<T> {
+trait Wrapper<T> {
     unsafe fn from_ptr(ptr: *mut T) -> Self;
     unsafe fn get_ptr(&self) -> *T;
     unsafe fn get_mut_ptr(&mut self) -> *mut T;

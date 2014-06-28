@@ -2,11 +2,10 @@ use ffi;
 use math::Vec2;
 use math::Transform;
 
-pub use self::chain::ChainStruct;
-pub use self::chain::Chain;
-pub use self::edge::Edge;
-pub use self::circle::Circle;
-pub use self::polygon::Polygon;
+pub use self::chain::{ChainShape, ChainShapeT};
+pub use self::edge::{EdgeShape, EdgeShapeT};
+pub use self::circle::{CircleShape, CircleShapeT};
+pub use self::polygon::{PolygonShape, PolygonShapeT};
 
 pub mod chain;
 pub mod edge;
@@ -38,13 +37,15 @@ impl MassData {
     }
 }
 
-pub trait Shape {
+trait ShapeWrapper {
     unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Self;
     unsafe fn get_shape_ptr(&self) -> *ffi::Shape;
     unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape;
-    
+}
+
+pub trait Shape: ShapeWrapper {
     unsafe fn clone(&self, alloc: &mut ffi::BlockAllocator) -> Self {
-        Shape::from_shape_ptr(
+        ShapeWrapper::from_shape_ptr(
             ffi::Shape_clone_virtual(self.get_shape_ptr(), alloc)
             )
     }
@@ -75,30 +76,30 @@ pub trait Shape {
     }
 }
 
-pub enum Unknown {
+pub enum UnknownShape {
     None,
-    SomeCircle(Circle),
-    SomeEdge(Edge),
-    SomePolygon(Polygon),
-    SomeChain(ChainStruct),
+    SomeCircle(CircleShape),
+    SomeEdge(EdgeShape),
+    SomePolygon(PolygonShape),
+    SomeChain(ChainShape),
 }
 
-impl Unknown {
-    pub unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Unknown {
+impl UnknownShape {
+    pub unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> UnknownShape {
         assert!(!ptr.is_null())
         let shape_type = ffi::Shape_get_type(ptr as *ffi::Shape);
         match shape_type {
             CIRCLE => SomeCircle(
-                Shape::from_shape_ptr(ptr)
+                ShapeWrapper::from_shape_ptr(ptr)
                 ),
             EDGE => SomeEdge(
-                Shape::from_shape_ptr(ptr)
+                ShapeWrapper::from_shape_ptr(ptr)
                 ),
             POLYGON => SomePolygon(
-                Shape::from_shape_ptr(ptr)
+                ShapeWrapper::from_shape_ptr(ptr)
                 ),
             CHAIN => SomeChain(
-                Shape::from_shape_ptr(ptr)
+                ShapeWrapper::from_shape_ptr(ptr)
                 ),
             _ => None,
         } 

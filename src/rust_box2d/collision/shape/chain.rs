@@ -2,36 +2,27 @@ use ffi;
 use math::Vec2;
 use collision::Shape;
 use collision::shape;
+use WrapStruct;
+use Wrapper;
 
-pub struct Chain {
-    ptr: *mut ffi::ChainShape
-}
+pub type ChainStruct = WrapStruct<ffi::ChainShape>;
 
-impl Chain {
-    pub unsafe fn from_ptr(ptr: *mut ffi::ChainShape) -> Chain {
-        assert!(!ptr.is_null());
-        Chain {
-            ptr: ptr
-        }
-    }
-    pub unsafe fn get_ptr(&self) -> *ffi::ChainShape {
-        self.ptr as *ffi::ChainShape
-    }
-    pub unsafe fn get_mut_ptr(&mut self) -> *mut ffi::ChainShape {
-        self.ptr
-    }
+pub trait Chain: Wrapper<ffi::ChainShape> {
+    //pub unsafe fn from_ptr(ptr: *mut ffi::ChainShape) -> Self;
+    //pub unsafe fn get_ptr(&self) -> *ffi::ChainShape;
+    //pub unsafe fn get_mut_ptr(&mut self) -> *mut ffi::ChainShape;
     
-    pub fn new() -> Chain {
+    fn new() -> ChainStruct {
         unsafe {
-            Chain::from_ptr(ffi::ChainShape_new())
+            Wrapper::from_ptr(ffi::ChainShape_new())
         }
     }
-    pub fn clear(&mut self) {
+    fn clear(&mut self) {
         unsafe {
             ffi::ChainShape_clear(self.get_mut_ptr())
         }
     }
-    pub fn create_loop(&mut self, vertices: Vec<Vec2>) {
+    fn create_loop(&mut self, vertices: Vec<Vec2>) {
         unsafe {
             ffi::ChainShape_create_loop(self.get_mut_ptr(),
                                         vertices.as_ptr(),
@@ -39,7 +30,7 @@ impl Chain {
                                         )
         }
     }
-    pub fn create_chain(&mut self, vertices: Vec<Vec2>) {
+    fn create_chain(&mut self, vertices: Vec<Vec2>) {
         unsafe {
             ffi::ChainShape_create_chain(self.get_mut_ptr(),
                                          vertices.as_ptr(),
@@ -47,18 +38,18 @@ impl Chain {
                                          )
         }
     }
-    pub fn set_prev_vertex(&mut self, vertex: &Vec2) {
+    fn set_prev_vertex(&mut self, vertex: &Vec2) {
         unsafe {
             ffi::ChainShape_set_prev_vertex(self.get_mut_ptr(), vertex)
         }
     }
-    pub fn set_next_vertex(&mut self, vertex: &Vec2) {
+    fn set_next_vertex(&mut self, vertex: &Vec2) {
         unsafe {
             ffi::ChainShape_set_next_vertex(self.get_mut_ptr(), vertex)
         }
     }
     #[unstable]
-    pub fn get_child_edge(&self, index: i32) -> shape::Edge {
+    fn get_child_edge(&self, index: i32) -> shape::Edge {
         unsafe {
             let edge = ffi::EdgeShape_new();
             ffi::ChainShape_get_child_edge(self.get_ptr(), edge, index);
@@ -67,9 +58,11 @@ impl Chain {
     }
 }
 
-impl Shape for Chain {
-    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Chain {
-        Chain::from_ptr(ffi::Shape_as_chain_shape(ptr))
+impl Chain for ChainStruct {}
+
+impl Shape for ChainStruct {
+    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> ChainStruct {
+        Wrapper::from_ptr(ffi::Shape_as_chain_shape(ptr))
     }
     unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
         ffi::ChainShape_as_shape(self.ptr) as *ffi::Shape
@@ -79,7 +72,8 @@ impl Shape for Chain {
     }
 }
 
-impl Drop for Chain {
+#[unsafe_destructor]
+impl Drop for ChainStruct {
     fn drop(&mut self) {
         unsafe {
             ffi::ChainShape_drop(self.get_mut_ptr())

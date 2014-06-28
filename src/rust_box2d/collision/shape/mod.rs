@@ -2,6 +2,7 @@ use ffi;
 use math::Vec2;
 use math::Transform;
 
+pub use self::chain::ChainStruct;
 pub use self::chain::Chain;
 pub use self::edge::Edge;
 pub use self::circle::Circle;
@@ -79,7 +80,7 @@ pub enum Unknown {
     SomeCircle(Circle),
     SomeEdge(Edge),
     SomePolygon(Polygon),
-    SomeChain(Chain),
+    SomeChain(ChainStruct),
 }
 
 impl Unknown {

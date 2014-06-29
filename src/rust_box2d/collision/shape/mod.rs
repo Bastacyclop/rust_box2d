@@ -96,10 +96,10 @@ pub trait Shape: WrappedShape {
 
 pub enum UnknownShape {
     None,
-    SomeCircle(CircleShape),
-    SomeEdge(EdgeShape),
-    SomePolygon(PolygonShape),
-    SomeChain(ChainShape),
+    Circle(CircleShape),
+    Edge(EdgeShape),
+    Polygon(PolygonShape),
+    Chain(ChainShape),
 }
 
 impl WrappedShape for UnknownShape {
@@ -107,16 +107,16 @@ impl WrappedShape for UnknownShape {
         assert!(!ptr.is_null())
         let shape_type = ffi::Shape_get_type(ptr as *ffi::Shape);
         match shape_type {
-            CIRCLE => SomeCircle(
+            CIRCLE => Circle(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
-            EDGE => SomeEdge(
+            EDGE => Edge(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
-            POLYGON => SomePolygon(
+            POLYGON => Polygon(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
-            CHAIN => SomeChain(
+            CHAIN => Chain(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
             _ => None,
@@ -124,10 +124,10 @@ impl WrappedShape for UnknownShape {
     }
     unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
         match self {
-            &SomeCircle(ref x) => x.get_shape_ptr(),
-            &SomeEdge(ref x) => x.get_shape_ptr(),
-            &SomePolygon(ref x) => x.get_shape_ptr(),
-            &SomeChain(ref x) => x.get_shape_ptr(),
+            &Circle(ref x) => x.get_shape_ptr(),
+            &Edge(ref x) => x.get_shape_ptr(),
+            &Polygon(ref x) => x.get_shape_ptr(),
+            &Chain(ref x) => x.get_shape_ptr(),
             _ => fail!("Truly unknown shape")
         }
     }

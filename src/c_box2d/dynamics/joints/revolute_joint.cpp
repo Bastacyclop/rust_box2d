@@ -65,7 +65,3 @@ f32 RevoluteJoint_get_max_motor_torque(const b2RevoluteJoint* self) {
 f32 RevoluteJoint_get_motor_torque(const b2RevoluteJoint* self, f32 inv_dt) {
     return self->GetMotorTorque(inv_dt);
 }
-
-void RevoluteJoint_dump(b2RevoluteJoint* self) {
-    self->Dump();
-}

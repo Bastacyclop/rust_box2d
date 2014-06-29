@@ -21,7 +21,3 @@ void GearJoint_set_ratio(b2GearJoint* self, f32 ratio) {
 f32 GearJoint_get_ratio(const b2GearJoint* self) {
     return self->GetRatio();
 }
-
-void GearJoint_dump(b2GearJoint* self) {
-    self->Dump();
-}

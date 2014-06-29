@@ -69,7 +69,3 @@ f32 PrismaticJoint_get_max_motor_force(const b2PrismaticJoint* self) {
 f32 PrismaticJoint_get_motor_force(const b2PrismaticJoint* self, f32 inv_dt) {
     return self->GetMotorForce(inv_dt);
 }
-
-void PrismaticJoint_dump(b2PrismaticJoint* self) {
-    self->Dump();
-}

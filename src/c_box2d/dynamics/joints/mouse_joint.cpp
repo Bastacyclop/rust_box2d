@@ -33,7 +33,3 @@ void MouseJoint_set_damping_ratio(b2MouseJoint* self, f32 ratio) {
 f32 MouseJoint_get_damping_ratio(const b2MouseJoint* self) {
     return self->GetDampingRatio();
 }
-
-void MouseJoint_dump(b2MouseJoint* self) {
-    self->Dump();
-}

@@ -35,7 +35,3 @@ void WeldJoint_set_damping_ratio(b2WeldJoint* self, f32 ratio) {
 f32 WeldJoint_get_damping_ratio(const b2WeldJoint* self) {
     return self->GetDampingRatio();
 }
-
-void WeldJoint_dump(b2WeldJoint* self) {
-    self->Dump();
-}

@@ -42,7 +42,3 @@ void DistanceJoint_set_damping_ratio(b2DistanceJoint* self,
 f32 DistanceJoint_get_damping_ratio(const b2DistanceJoint* self) {
     return self->GetDampingRatio();
 }
-
-void DistanceJoint_dump(b2DistanceJoint* self) {
-    self->Dump();
-}

@@ -42,7 +42,3 @@ f32 PulleyJoint_get_current_length_a(const b2PulleyJoint* self) {
 f32 PulleyJoint_get_current_length_b(const b2PulleyJoint* self) {
     return self->GetCurrentLengthB();
 }
-
-void PulleyJoint_dump(b2PulleyJoint* self) {
-    self->Dump();
-}

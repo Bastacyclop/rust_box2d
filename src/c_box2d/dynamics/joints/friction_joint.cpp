@@ -32,7 +32,3 @@ void FrictionJoint_set_max_torque(b2FrictionJoint* self, f32 torque) {
 f32 FrictionJoint_get_max_torque(const b2FrictionJoint* self) {
     return self->GetMaxTorque();
 }
-
-void FrictionJoint_dump(b2FrictionJoint* self) {
-    self->Dump();
-}

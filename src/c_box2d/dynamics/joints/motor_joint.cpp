@@ -44,7 +44,3 @@ void MotorJoint_set_correction_factor(b2MotorJoint* self, f32 factor) {
 f32 MotorJoint_get_correction_factor(const b2MotorJoint* self) {
     return self->GetCorrectionFactor();
 }
-
-void MotorJoint_dump(b2MotorJoint* self) {
-    self->Dump();
-}

@@ -2,9 +2,9 @@ b2WheelJointDef WheelJointDef_default() {
     return b2WheelJointDef();
 }
 void WheelJointDef_initialize(b2WheelJointDef* self,
-                                 b2Body* body_a, b2Body* body_b,
-                                 const b2Vec2* anchor,
-                                 const b2Vec2* axis) {
+                              b2Body* body_a, b2Body* body_b,
+                              const b2Vec2* anchor,
+                              const b2Vec2* axis) {
     self->Initialize(body_a, body_b, *anchor, *axis);
 }
 
@@ -62,8 +62,4 @@ void WheelJoint_set_spring_damping_ratio(b2WheelJoint* self, f32 ratio) {
 }
 f32 WheelJoint_get_spring_damping_ratio(const b2WheelJoint* self) {
     return self->GetSpringDampingRatio();
-}
-
-void WheelJoint_dump(b2WheelJoint* self) {
-    self->Dump();
 }

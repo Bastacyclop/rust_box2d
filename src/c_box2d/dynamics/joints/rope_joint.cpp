@@ -24,7 +24,3 @@ f32 RopeJoint_get_max_length(const b2RopeJoint* self) {
 b2LimitState RopeJoint_get_limit_state(const b2RopeJoint* self) {
     return self->GetLimitState();
 }
-
-void RopeJoint_dump(b2RopeJoint* self) {
-    self->Dump();
-}

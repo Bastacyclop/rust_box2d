@@ -1,7 +1,7 @@
 use ffi;
 use Wrapped;
 
-c_enum!(Type with
+c_enum!(JointType with
     UNKNOWN = 0,
     REVOLUTE = 1,
     PRISMATIC = 2,
@@ -18,17 +18,17 @@ c_enum!(Type with
 
 #[allow(dead_code)]
 #[packed]
-pub struct Def {
-    pub joint_type: Type,
+pub struct JointDef {
+    pub joint_type: JointType,
     user_data: ffi::UserData,
     body_a: *mut ffi::Body,
     body_b: *mut ffi::Body,
     pub collide_connected: bool,
 }
 
-wrap!(ffi::Joint into Unknown)
+wrap!(ffi::Joint into UnknownJoint)
 
-impl Drop for Unknown {
+impl Drop for UnknownJoint {
     fn drop(&mut self) {
     }
 }

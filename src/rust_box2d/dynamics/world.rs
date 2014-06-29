@@ -2,9 +2,10 @@ use std::iter::range_step;
 
 use ffi;
 use math::Vec2;
-use dynamics::body;
-use dynamics::Body;
-use dynamics::joint;
+use dynamics::{
+    Body, BodyDef,
+    UnknownJoint, JointDef
+};
 use Wrapped;
 
 wrap!(ffi::World into World)
@@ -15,7 +16,7 @@ impl World {
             Wrapped::from_ptr(ffi::World_new(&gravity))
         }
     }
-    pub fn create_body(&mut self, def: body::Def) -> Body {
+    pub fn create_body(&mut self, def: BodyDef) -> Body {
         unsafe {
             Wrapped::from_ptr(
                 ffi::World_create_body(self.get_mut_ptr(), &def)
@@ -29,14 +30,14 @@ impl World {
         }
     }
     pub fn create_joint(&mut self,
-                        def: joint::Def) -> joint::Unknown {
+                        def: JointDef) -> UnknownJoint {
         unsafe {
             Wrapped::from_ptr(
                 ffi::World_create_joint(self.get_mut_ptr(), &def)
                 )
         }
     }
-    pub fn destroy_joint(&mut self, joint: joint::Unknown) {
+    pub fn destroy_joint(&mut self, joint: UnknownJoint) {
         unsafe {
             let mut joint = joint;
             ffi::World_destroy_joint(self.get_mut_ptr(), joint.get_mut_ptr())

@@ -31,7 +31,7 @@ pub mod edge;
 pub mod circle;
 pub mod polygon;
 
-c_enum!(Type with
+c_enum!(ShapeType with
     CIRCLE = 0,
     EDGE = 1,
     POLYGON = 2,
@@ -68,7 +68,7 @@ pub trait Shape: WrappedShape {
             )
     }*/
         
-    fn get_type(&self) -> Type {
+    fn get_type(&self) -> ShapeType {
         unsafe {
             ffi::Shape_get_type(self.get_shape_ptr())
         }

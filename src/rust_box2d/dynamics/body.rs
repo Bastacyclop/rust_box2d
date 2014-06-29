@@ -2,15 +2,15 @@ use ffi;
 use math::Vec2;
 use Wrapped;
 
-pub enum Type {
-    Static,
-    Kinematic,
-    Dynamic,
-}
+c_enum!(BodyType with
+    STATIC = 0,
+    KINEMATIC = 1,
+    DYNAMIC = 2
+)
 
 #[allow(dead_code)]
-pub struct Def {
-    pub body_type: Type,
+pub struct BodyDef {
+    pub body_type: BodyType,
     pub position: Vec2,
     pub angle: f32,
     pub linear_velocity: Vec2,

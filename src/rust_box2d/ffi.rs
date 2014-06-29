@@ -1,9 +1,13 @@
 use math::Vec2;
 use math::Transform;
 
-use dynamics::body;
-use dynamics::joint;
-use collision::shape;
+use dynamics::{
+    BodyDef, BodyType,
+    JointDef, JointType,
+};
+use collision::{
+    ShapeType, MassData
+};
 
 pub struct World;
 pub struct DestructionListener;
@@ -40,9 +44,9 @@ extern {
     pub fn World_set_contact_filter(slf: *mut World, cf: *mut ContactFilter);
     pub fn World_set_contact_listener(slf: *mut World, cl: *mut ContactListener);
     pub fn World_set_debug_draw(slf: *mut World, dd: *mut Draw);
-    pub fn World_create_body(slf: *mut World, def: *body::Def) -> *mut Body;
+    pub fn World_create_body(slf: *mut World, def: *BodyDef) -> *mut Body;
     pub fn World_destroy_body(slf: *mut World, body: *mut Body);
-    pub fn World_create_joint(slf: *mut World, def: *joint::Def) -> *mut Joint;
+    pub fn World_create_joint(slf: *mut World, def: *JointDef) -> *mut Joint;
     pub fn World_destroy_joint(slf: *mut World, joint: *mut Joint);
     pub fn World_step(slf: *mut World,
                       time_step: f32,
@@ -83,10 +87,12 @@ extern {
     pub fn World_get_profile(slf: *World) -> *Profile;
     pub fn World_dump(slf: *mut World);
     
+    //pub fn BodyDef_default() -> BodyDef;
+    
     pub fn Shape_drop_virtual(slf: *mut Shape);
     pub fn Shape_clone_virtual(slf: *Shape,
                                alloc: *mut BlockAllocator) -> *mut Shape;
-    pub fn Shape_get_type(slf: *Shape) -> shape::Type;
+    pub fn Shape_get_type(slf: *Shape) -> ShapeType;
     pub fn Shape_get_child_count_virtual(slf: *Shape) -> i32;
     pub fn Shape_test_point_virtual(slf: *Shape,
                                     xf: *Transform,
@@ -100,7 +106,7 @@ extern {
                                       xf: *Transform,
                                       child_id: i32);
     pub fn Shape_compute_mass_virtual(slf: *Shape,
-                                      data: *mut shape::MassData,
+                                      data: *mut MassData,
                                       density: f32);
                                       
     pub fn ChainShape_new() -> *mut ChainShape;

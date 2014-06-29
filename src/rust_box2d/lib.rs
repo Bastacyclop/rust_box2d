@@ -6,11 +6,11 @@
 
 pub use common::math;
 
-pub mod ffi;
+mod ffi;
 
 #[macro_export]
 macro_rules! c_enum(
-    ([$name:ident] $($element:ident = $value:expr),+) => (
+    ($name:ident with $($element:ident = $value:expr),+) => (
         pub type $name = i32;
         $(
             pub static $element: $name = $value as $name;
@@ -18,31 +18,36 @@ macro_rules! c_enum(
     );
 )
 
+#[macro_export]
+macro_rules! wrap(
+    ($wrapped:ty into $wrap:ident) => (
+        pub struct $wrap {
+            ptr: *mut $wrapped
+        }
+        
+        impl Wrapped<$wrapped> for $wrap {
+            unsafe fn from_ptr(ptr: *mut $wrapped) -> $wrap {
+                assert!(!ptr.is_null())
+                $wrap {
+                    ptr: ptr
+                }   
+            }
+            unsafe fn get_ptr(&self) -> *$wrapped {
+                self.ptr as *$wrapped
+            }
+            unsafe fn get_mut_ptr(&mut self) -> *mut $wrapped {
+                self.ptr
+            }    
+        }
+    );
+)
+
 pub mod dynamics;
 pub mod common;
 pub mod collision;
 
-struct WrapStruct<T> {
-    ptr: *mut T
-}
-
-trait Wrapper<T> {
+trait Wrapped<T> {
     unsafe fn from_ptr(ptr: *mut T) -> Self;
     unsafe fn get_ptr(&self) -> *T;
     unsafe fn get_mut_ptr(&mut self) -> *mut T;
-}
-
-impl<T> Wrapper<T> for WrapStruct<T> {
-    unsafe fn from_ptr(ptr: *mut T) -> WrapStruct<T> {
-        assert!(!ptr.is_null())
-        WrapStruct {
-            ptr: ptr
-        }
-    }
-    unsafe fn get_ptr(&self) -> *T {
-        self.ptr as *T
-    }
-    unsafe fn get_mut_ptr(&mut self) -> *mut T {
-        self.ptr
-    }
 }

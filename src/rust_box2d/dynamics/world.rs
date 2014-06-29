@@ -5,31 +5,19 @@ use math::Vec2;
 use dynamics::body;
 use dynamics::Body;
 use dynamics::joint;
+use Wrapped;
 
-pub struct World {
-    ptr: *mut ffi::World,
-}
+wrap!(ffi::World into World)
 
 impl World {
-    pub unsafe fn from_ptr(ptr: *mut ffi::World) -> World {
-        assert!(!ptr.is_null());
-        World { ptr: ptr }
-    }
-    pub unsafe fn get_ptr(&self) -> *ffi::World {
-        self.ptr as *ffi::World
-    }
-    pub unsafe fn get_mut_ptr(&mut self) -> *mut ffi::World {
-        self.ptr
-    }
-    
     pub fn new(gravity: Vec2) -> World {
         unsafe {
-            World::from_ptr(ffi::World_new(&gravity))
+            Wrapped::from_ptr(ffi::World_new(&gravity))
         }
     }
-    pub fn create_body<'l>(&'l mut self, def: body::Def) -> Body<'l> {
+    pub fn create_body(&mut self, def: body::Def) -> Body {
         unsafe {
-            Body::from_ptr(
+            Wrapped::from_ptr(
                 ffi::World_create_body(self.get_mut_ptr(), &def)
                 )
         }
@@ -40,10 +28,10 @@ impl World {
             ffi::World_destroy_body(self.get_mut_ptr(), body.get_mut_ptr())
         }
     }
-    pub fn create_joint<'l>(&'l mut self,
-                            def: joint::Def) -> joint::Unknown<'l> {
+    pub fn create_joint(&mut self,
+                        def: joint::Def) -> joint::Unknown {
         unsafe {
-            joint::Unknown::from_ptr(
+            Wrapped::from_ptr(
                 ffi::World_create_joint(self.get_mut_ptr(), &def)
                 )
         }
@@ -56,8 +44,8 @@ impl World {
     }
     pub fn step(&mut self,
                 time_step: f32,
-                velocity_iterations: f32,
-                position_iterations: f32) {
+                velocity_iterations: i32,
+                position_iterations: i32) {
         unsafe {
             ffi::World_step(self.get_mut_ptr(),
                             time_step,
@@ -76,7 +64,7 @@ impl World {
         }
     }
     #[unstable]
-    pub fn get_mut_body_list<'l>(&'l mut self) -> Vec<Body<'l>> {
+    pub fn get_mut_body_list(&mut self) -> Vec<Body> {
         unsafe {
             let base = ffi::World_get_body_list(self.get_mut_ptr()) as uint;
             let count = self.get_body_count();
@@ -84,7 +72,7 @@ impl World {
             
             let mut vec = Vec::with_capacity(count);
             for ptr in range_step(base, base+(count*size), size) {
-                vec.push(Body::from_ptr(ptr as *mut ffi::Body));
+                vec.push(Wrapped::from_ptr(ptr as *mut ffi::Body));
             }
             vec
         }

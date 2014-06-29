@@ -1,7 +1,7 @@
 use ffi;
+use Wrapped;
 
-c_enum!(
-    [Type]
+c_enum!(Type with
     UNKNOWN = 0,
     REVOLUTE = 1,
     PRISMATIC = 2,
@@ -26,23 +26,9 @@ pub struct Def {
     pub collide_connected: bool,
 }
 
-pub struct Unknown<'l> {
-    ptr: *mut ffi::Joint,
-}
+wrap!(ffi::Joint into Unknown)
 
-impl<'l> Unknown<'l> {
-    pub unsafe fn from_ptr(ptr: *mut ffi::Joint) -> Unknown {
-        Unknown { ptr: ptr }
-    }
-    pub unsafe fn get_ptr(&self) -> *ffi::Joint {
-        self.ptr as *ffi::Joint
-    }
-    pub unsafe fn get_mut_ptr(&mut self) -> *mut ffi::Joint {
-        self.ptr
-    }
-}
-
-impl<'l> Drop for Unknown<'l> {
+impl Drop for Unknown {
     fn drop(&mut self) {
     }
 }

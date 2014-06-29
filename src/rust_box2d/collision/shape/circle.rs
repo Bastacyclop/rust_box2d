@@ -1,23 +1,22 @@
 use ffi;
 use math::Vec2;
-use super::{ShapeWrapper, Shape};
-use WrapStruct;
-use Wrapper;
+use super::{WrappedShape, Shape};
+use Wrapped;
 
-pub type CircleShape = WrapStruct<ffi::CircleShape>;
+wrap!(ffi::CircleShape into CircleShape)
 
-pub trait CircleShapeT: Wrapper<ffi::CircleShape> {
-    fn new() -> Self {
+impl CircleShape {
+    pub fn new() -> CircleShape {
         unsafe {
-            Wrapper::from_ptr(ffi::CircleShape_new())
+            Wrapped::from_ptr(ffi::CircleShape_new())
         }
     }
-    fn get_support(&self, dir: &Vec2) -> uint {
+    pub fn get_support(&self, dir: &Vec2) -> uint {
         unsafe {
             ffi::CircleShape_get_support(self.get_ptr(), dir) as uint
         }
     }
-    fn get_support_vertex(&self, dir: &Vec2) -> &Vec2 {
+    pub fn get_support_vertex(&self, dir: &Vec2) -> &Vec2 {
         unsafe {
             let support =
                 ffi::CircleShape_get_support_vertex(self.get_ptr(), dir);
@@ -25,12 +24,12 @@ pub trait CircleShapeT: Wrapper<ffi::CircleShape> {
             &*support
         }
     }
-    fn get_vertex_count(&self) -> uint {
+    pub fn get_vertex_count(&self) -> uint {
         unsafe {
             ffi::CircleShape_get_vertex_count(self.get_ptr()) as uint
         }
     }
-    fn get_vertex(&self, index: uint) -> &Vec2 {
+    pub fn get_vertex(&self, index: uint) -> &Vec2 {
         unsafe {
             let vertex =
                 ffi::CircleShape_get_vertex(self.get_ptr(), index as i32);
@@ -40,23 +39,11 @@ pub trait CircleShapeT: Wrapper<ffi::CircleShape> {
     }
 }
 
-impl CircleShapeT for CircleShape {}
+impl_shape!(for CircleShape
+    << ffi::Shape_as_circle_shape
+    >> ffi::CircleShape_as_shape
+    )
 
-impl ShapeWrapper for CircleShape {
-    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> CircleShape {
-        Wrapper::from_ptr(ffi::Shape_as_circle_shape(ptr))
-    }
-    unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
-        ffi::CircleShape_as_shape(self.ptr) as *ffi::Shape
-    }
-    unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape {
-        ffi::CircleShape_as_shape(self.ptr)
-    }
-}
-
-impl Shape for CircleShape {}
-
-#[unsafe_destructor]
 impl Drop for CircleShape {
     fn drop(&mut self) {
         unsafe {

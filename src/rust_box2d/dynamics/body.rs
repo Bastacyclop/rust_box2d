@@ -1,5 +1,6 @@
 use ffi;
 use math::Vec2;
+use Wrapped;
 
 pub enum Type {
     Static,
@@ -25,23 +26,9 @@ pub struct Def {
     pub gravity_scale: f32,
 }
 
-pub struct Body<'l> {
-    ptr: *mut ffi::Body,
-}
+wrap!(ffi::Body into Body)
 
-impl<'l> Body<'l> {
-    pub unsafe fn from_ptr<'l>(ptr: *mut ffi::Body) -> Body<'l> {
-        Body { ptr: ptr }
-    }
-    pub unsafe fn get_ptr(&self) -> *ffi::Body {
-        self.ptr as *ffi::Body
-    }
-    pub unsafe fn get_mut_ptr(&mut self) -> *mut ffi::Body {
-        self.ptr
-    }
-}
-
-impl<'l> Drop for Body<'l> {
+impl Drop for Body {
     fn drop(&mut self) {
     }
 }

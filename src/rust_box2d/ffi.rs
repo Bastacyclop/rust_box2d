@@ -46,8 +46,8 @@ extern {
     pub fn World_destroy_joint(slf: *mut World, joint: *mut Joint);
     pub fn World_step(slf: *mut World,
                       time_step: f32,
-                      velocity_iterations: f32,
-                      position_iterations: f32);
+                      velocity_iterations: i32,
+                      position_iterations: i32);
     pub fn World_clear_forces(slf: *mut World);
     pub fn World_draw_debug_data(slf: *mut World);
     pub fn World_query_aabb(slf: *World, qc: *mut QueryCallback, aabb: *AABB);

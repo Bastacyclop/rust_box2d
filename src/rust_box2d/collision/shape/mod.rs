@@ -2,18 +2,36 @@ use ffi;
 use math::Vec2;
 use math::Transform;
 
-pub use self::chain::{ChainShape, ChainShapeT};
-pub use self::edge::{EdgeShape, EdgeShapeT};
-pub use self::circle::{CircleShape, CircleShapeT};
-pub use self::polygon::{PolygonShape, PolygonShapeT};
+pub use self::chain::ChainShape;
+pub use self::edge::EdgeShape;
+pub use self::circle::CircleShape;
+pub use self::polygon::PolygonShape;
+
+#[macro_export]
+macro_rules! impl_shape(
+    (for $wrap:ty << $shape_as:path >> $as_shape:path) => (
+        impl WrappedShape for $wrap {
+            unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> $wrap {
+                Wrapped::from_ptr($shape_as(ptr))
+            }
+            unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
+                $as_shape(self.ptr) as *ffi::Shape
+            }
+            unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape {
+                $as_shape(self.ptr)
+            }
+        }
+        
+        impl Shape for $wrap {}
+    );
+)
 
 pub mod chain;
 pub mod edge;
 pub mod circle;
 pub mod polygon;
 
-c_enum!(
-    [Type]
+c_enum!(Type with
     CIRCLE = 0,
     EDGE = 1,
     POLYGON = 2,
@@ -37,18 +55,18 @@ impl MassData {
     }
 }
 
-trait ShapeWrapper {
+trait WrappedShape {
     unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Self;
     unsafe fn get_shape_ptr(&self) -> *ffi::Shape;
     unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape;
 }
 
-pub trait Shape: ShapeWrapper {
-    unsafe fn clone(&self, alloc: &mut ffi::BlockAllocator) -> Self {
-        ShapeWrapper::from_shape_ptr(
+pub trait Shape: WrappedShape {
+    /*fn clone(&self, alloc: &mut ffi::BlockAllocator) -> Self {
+        WrappedShape::from_shape_ptr(
             ffi::Shape_clone_virtual(self.get_shape_ptr(), alloc)
             )
-    }
+    }*/
         
     fn get_type(&self) -> Type {
         unsafe {
@@ -84,24 +102,45 @@ pub enum UnknownShape {
     SomeChain(ChainShape),
 }
 
-impl UnknownShape {
-    pub unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> UnknownShape {
+impl WrappedShape for UnknownShape {
+    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> UnknownShape {
         assert!(!ptr.is_null())
         let shape_type = ffi::Shape_get_type(ptr as *ffi::Shape);
         match shape_type {
             CIRCLE => SomeCircle(
-                ShapeWrapper::from_shape_ptr(ptr)
+                WrappedShape::from_shape_ptr(ptr)
                 ),
             EDGE => SomeEdge(
-                ShapeWrapper::from_shape_ptr(ptr)
+                WrappedShape::from_shape_ptr(ptr)
                 ),
             POLYGON => SomePolygon(
-                ShapeWrapper::from_shape_ptr(ptr)
+                WrappedShape::from_shape_ptr(ptr)
                 ),
             CHAIN => SomeChain(
-                ShapeWrapper::from_shape_ptr(ptr)
+                WrappedShape::from_shape_ptr(ptr)
                 ),
             _ => None,
         } 
     }
+    unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
+        match self {
+            &SomeCircle(ref x) => x.get_shape_ptr(),
+            &SomeEdge(ref x) => x.get_shape_ptr(),
+            &SomePolygon(ref x) => x.get_shape_ptr(),
+            &SomeChain(ref x) => x.get_shape_ptr(),
+            _ => fail!("Truly unknown shape")
+        }
+    }
+    unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape {
+        self.get_shape_ptr() as *mut ffi::Shape
+    }
 }
+
+/*#[unsafe_destructor]
+impl Drop for UnknownShape {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::Shape_drop_virtual(self.get_mut_shape_ptr())
+        }
+    }    
+}*/

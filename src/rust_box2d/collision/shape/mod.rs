@@ -39,6 +39,7 @@ c_enum!(ShapeType with
     COUNT = 4
 )
 
+#[packed]
 pub struct MassData {
     pub mass: f32,
     pub center: Vec2,
@@ -95,7 +96,7 @@ pub trait Shape: WrappedShape {
 }
 
 pub enum UnknownShape {
-    None,
+    Unknown,
     Circle(CircleShape),
     Edge(EdgeShape),
     Polygon(PolygonShape),
@@ -119,7 +120,7 @@ impl WrappedShape for UnknownShape {
             CHAIN => Chain(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
-            _ => None,
+            _ => Unknown,
         } 
     }
     unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
@@ -135,6 +136,8 @@ impl WrappedShape for UnknownShape {
         self.get_shape_ptr() as *mut ffi::Shape
     }
 }
+
+impl Shape for UnknownShape {}
 
 /*#[unsafe_destructor]
 impl Drop for UnknownShape {

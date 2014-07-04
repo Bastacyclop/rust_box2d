@@ -14,8 +14,8 @@ macro_rules! impl_shape(
             unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> $wrap {
                 Wrapped::from_ptr($shape_as(ptr))
             }
-            unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
-                $as_shape(self.ptr) as *ffi::Shape
+            unsafe fn get_shape_ptr(&self) -> *const ffi::Shape {
+                $as_shape(self.ptr) as *const ffi::Shape
             }
             unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape {
                 $as_shape(self.ptr)
@@ -58,7 +58,7 @@ impl MassData {
 
 trait WrappedShape {
     unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Self;
-    unsafe fn get_shape_ptr(&self) -> *ffi::Shape;
+    unsafe fn get_shape_ptr(&self) -> *const ffi::Shape;
     unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape;
 }
 
@@ -106,7 +106,7 @@ pub enum UnknownShape {
 impl WrappedShape for UnknownShape {
     unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> UnknownShape {
         assert!(!ptr.is_null())
-        let shape_type = ffi::Shape_get_type(ptr as *ffi::Shape);
+        let shape_type = ffi::Shape_get_type(ptr as *const ffi::Shape);
         match shape_type {
             CIRCLE => Circle(
                 WrappedShape::from_shape_ptr(ptr)
@@ -123,7 +123,7 @@ impl WrappedShape for UnknownShape {
             _ => Unknown,
         } 
     }
-    unsafe fn get_shape_ptr(&self) -> *ffi::Shape {
+    unsafe fn get_shape_ptr(&self) -> *const ffi::Shape {
         match self {
             &Circle(ref x) => x.get_shape_ptr(),
             &Edge(ref x) => x.get_shape_ptr(),

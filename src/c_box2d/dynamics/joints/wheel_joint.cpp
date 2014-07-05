@@ -1,6 +1,3 @@
-b2WheelJointDef WheelJointDef_default() {
-    return b2WheelJointDef();
-}
 void WheelJointDef_initialize(b2WheelJointDef* self,
                               b2Body* body_a, b2Body* body_b,
                               const b2Vec2* anchor,

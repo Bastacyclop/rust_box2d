@@ -1,4 +1,5 @@
 use ffi;
+use std::ptr;
 use math::Vec2;
 use Wrapped;
 use dynamics::Body;
@@ -76,6 +77,18 @@ pub struct JointDefBase {
     body_a: *mut ffi::Body,
     body_b: *mut ffi::Body,
     pub collide_connected: bool,
+}
+
+impl JointDefBase {
+    fn new(typ: JointType) -> JointDefBase {
+        JointDefBase {
+            joint_type: typ,
+            user_data: ptr::mut_null(),
+            body_a: ptr::mut_null(),
+            body_b: ptr::mut_null(),
+            collide_connected: false
+        }
+    }
 }
 
 pub trait JointDef {
@@ -352,11 +365,19 @@ impl DistanceJointDef {
                anchor_a: &Vec2,
                anchor_b: &Vec2) -> DistanceJointDef {
         unsafe {
-            let mut joint = ffi::DistanceJointDef_default();
+            let mut joint =
+                DistanceJointDef {
+                    base: JointDefBase::new(DISTANCE),
+                    local_anchor_a: Vec2 { x:0., y:0. },
+                    local_anchor_b: Vec2 { x:0., y:0. },
+                    length: 1.,
+                    frequency: 0.,
+                    damping_ratio: 0.
+                };
             ffi::DistanceJointDef_initialize(&mut joint,
-                                          body_a.get_mut_ptr(),
-                                          body_b.get_mut_ptr(),
-                                          anchor_a, anchor_b);
+                                             body_a.get_mut_ptr(),
+                                             body_b.get_mut_ptr(),
+                                             anchor_a, anchor_b);
             joint
         }
     }
@@ -366,11 +387,18 @@ impl FrictionJointDef {
                body_b: &mut Body,
                anchor: &Vec2) -> FrictionJointDef {
         unsafe {
-            let mut joint = ffi::FrictionJointDef_default();
+            let mut joint =
+                FrictionJointDef {
+                    base: JointDefBase::new(FRICTION),
+                    local_anchor_a: Vec2 { x:0., y:0. },
+                    local_anchor_b: Vec2 { x:0., y:0. },
+                    max_force: 0.,
+                    max_torque: 0.
+                };
             ffi::FrictionJointDef_initialize(&mut joint,
-                                          body_a.get_mut_ptr(),
-                                          body_b.get_mut_ptr(),
-                                          anchor);
+                                             body_a.get_mut_ptr(),
+                                             body_b.get_mut_ptr(),
+                                             anchor);
             joint
         }
     }
@@ -379,10 +407,12 @@ impl GearJointDef {
     pub fn new(joint_a: &mut Joint,
                joint_b: &mut Joint) -> GearJointDef {
         unsafe {
-            let mut joint = ffi::GearJointDef_default();
-            joint.joint_a = joint_a.get_mut_joint_ptr();
-            joint.joint_b = joint_b.get_mut_joint_ptr();
-            joint
+            GearJointDef {
+                base: JointDefBase::new(GEAR),
+                joint_a: joint_a.get_mut_joint_ptr(),
+                joint_b: joint_b.get_mut_joint_ptr(),
+                ratio: 1.
+            }
         }
     }
 }
@@ -390,7 +420,15 @@ impl MotorJointDef {
     pub fn new(body_a: &mut Body,
                body_b: &mut Body) -> MotorJointDef {
         unsafe {
-            let mut joint = ffi::MotorJointDef_default();
+            let mut joint = 
+                MotorJointDef {
+                    base: JointDefBase::new(MOTOR),
+                    linear_offset: Vec2 { x:0., y:0. },
+                    angular_offset: 0.,
+                    max_force: 1.,
+                    max_torque: 1.,
+                    correction_factor: 0.3
+                };
             ffi::MotorJointDef_initialize(&mut joint,
                                           body_a.get_mut_ptr(),
                                           body_b.get_mut_ptr());
@@ -401,7 +439,13 @@ impl MotorJointDef {
 impl MouseJointDef {
     pub fn new() -> MouseJointDef {
         unsafe {
-            ffi::MouseJointDef_default()
+            MouseJointDef {
+                base: JointDefBase::new(MOUSE),
+                target: Vec2 { x:0., y:0. },
+                max_force: 0.,
+                frequency: 5.,
+                damping_ratio: 0.7
+            }
         }
     }
 }
@@ -411,7 +455,20 @@ impl PrismaticJointDef {
                anchor: &Vec2,
                axis: &Vec2) -> PrismaticJointDef {
         unsafe {
-            let mut joint = ffi::PrismaticJointDef_default();
+            let mut joint =
+                PrismaticJointDef {
+                    base: JointDefBase::new(PRISMATIC),
+                    local_anchor_a: Vec2 { x:0., y:0. },
+                    local_anchor_b: Vec2 { x:0., y:0. },
+                    local_axis_a: Vec2 { x:1., y:0. },
+                    reference_angle: 0.,
+                    enable_limit: false,
+                    lower_translation: 0.,
+                    upper_translation: 0.,
+                    enable_motor: false,
+                    max_motor_force: 0.,
+                    motor_speed: 0.
+                };
             ffi::PrismaticJointDef_initialize(&mut joint,
                                               body_a.get_mut_ptr(),
                                               body_b.get_mut_ptr(),
@@ -429,7 +486,18 @@ impl PulleyJointDef {
                anchor_b: &Vec2,
                ratio: f32) -> PulleyJointDef {
         unsafe {
-            let mut joint = ffi::PulleyJointDef_default();
+            let mut joint =
+                PulleyJointDef {
+                    base: JointDefBase::new(PULLEY),
+                    ground_anchor_a: Vec2 { x:-1., y:1. },
+                    ground_anchor_b: Vec2 { x:1., y:1. },
+                    local_anchor_a: Vec2 { x:-1., y:0. },
+                    local_anchor_b: Vec2 { x:1., y:0. },
+                    length_a: 0.,
+                    length_b: 0.,
+                    ratio: 1.
+                };
+            joint.base.collide_connected = true;
             ffi::PulleyJointDef_initialize(&mut joint,
                                            body_a.get_mut_ptr(),
                                            body_b.get_mut_ptr(),
@@ -446,7 +514,19 @@ impl RevoluteJointDef {
                body_b: &mut Body,
                anchor: &Vec2) -> RevoluteJointDef {
         unsafe {
-            let mut joint = ffi::RevoluteJointDef_default();
+            let mut joint =
+                RevoluteJointDef {
+                    base: JointDefBase::new(REVOLUTE),
+                    local_anchor_a: Vec2 { x:0., y:0. },
+                    local_anchor_b: Vec2 { x:0., y:0. },
+                    reference_angle: 0.,
+                    lower_angle: 0.,
+                    upper_angle: 0.,
+                    max_motor_torque: 0.,
+                    motor_speed: 0.,
+                    enable_limit: false,
+                    enable_motor: false
+                };
             ffi::RevoluteJointDef_initialize(&mut joint,
                                              body_a.get_mut_ptr(),
                                              body_b.get_mut_ptr(),
@@ -458,7 +538,12 @@ impl RevoluteJointDef {
 impl RopeJointDef {
     pub fn new() -> RopeJointDef {
         unsafe {
-            ffi::RopeJointDef_default()
+            RopeJointDef {
+                base: JointDefBase::new(ROPE),
+                local_anchor_a: Vec2 { x:-1., y:0. },
+                local_anchor_b: Vec2 { x:1., y:0. },
+                max_length: 0.
+            }
         }
     }
 }
@@ -467,7 +552,15 @@ impl WeldJointDef {
                body_b: &mut Body,
                anchor: &Vec2) -> WeldJointDef {
         unsafe {
-            let mut joint = ffi::WeldJointDef_default();
+            let mut joint =
+                WeldJointDef {
+                    base: JointDefBase::new(WELD),
+                    local_anchor_a: Vec2 { x:0., y:0. },
+                    local_anchor_b: Vec2 { x:0., y:0. },
+                    reference_angle: 0.,
+                    frequency: 0.,
+                    damping_ratio: 0.
+                };
             ffi::WeldJointDef_initialize(&mut joint,
                                          body_a.get_mut_ptr(),
                                          body_b.get_mut_ptr(),
@@ -482,7 +575,18 @@ impl WheelJointDef {
                anchor: &Vec2,
                axis: &Vec2) -> WheelJointDef {
         unsafe {
-            let mut joint = ffi::WheelJointDef_default();
+            let mut joint =
+                WheelJointDef {
+                    base: JointDefBase::new(WHEEL),
+                    local_anchor_a: Vec2 { x:0., y:0. },
+                    local_anchor_b: Vec2 { x:0., y:0. },
+                    local_axis_a: Vec2 { x:1., y:0. },
+                    enable_motor: false,
+                    max_motor_torque: 0.,
+                    motor_speed: 0.,
+                    frequency: 2.,
+                    damping_ratio: 0.7
+                };
             ffi::WheelJointDef_initialize(&mut joint,
                                           body_a.get_mut_ptr(),
                                           body_b.get_mut_ptr(),

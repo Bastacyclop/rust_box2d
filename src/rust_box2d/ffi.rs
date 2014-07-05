@@ -108,7 +108,6 @@ extern {
     pub fn World_get_profile(slf: *const World) -> *const Profile;
     pub fn World_dump(slf: *mut World);
     
-    pub fn BodyDef_default() -> BodyDef;
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;
     pub fn Body_destroy_fixture(slf: *mut Body, fixture: *mut Fixture);
@@ -246,7 +245,6 @@ extern {
     pub fn PolygonShape_get_vertex(slf: *const PolygonShape, index: i32) -> *const Vec2;
     pub fn PolygonShape_validate(slf: *const PolygonShape) -> bool;
     
-    pub fn JointDef_default() -> JointDefBase;
     pub fn Joint_get_type(slf: *const Joint) -> JointType;
     pub fn Joint_get_body_a(slf: *mut Joint) -> *mut Body;
     pub fn Joint_get_body_b(slf: *mut Joint) -> *mut Body;
@@ -262,7 +260,6 @@ extern {
     pub fn Joint_dump_virtual(slf: *mut Joint);
     pub fn Joint_shift_origin_virtual(slf: *mut Joint, origin: *const Vec2);
     
-    pub fn DistanceJointDef_default() -> DistanceJointDef;
     pub fn DistanceJointDef_initialize(slf: *mut DistanceJointDef,
                                        body_a: *mut Body,
                                        body_b: *mut Body,
@@ -279,7 +276,6 @@ extern {
     pub fn DistanceJoint_set_damping_ratio(slf: *mut DistanceJoint, ratio: f32);
     pub fn DistanceJoint_get_damping_ratio(slf: *const DistanceJoint) -> f32;
     
-    pub fn FrictionJointDef_default() -> FrictionJointDef;
     pub fn FrictionJointDef_initialize(slf: *mut FrictionJointDef,
                                        body_a: *mut Body,
                                        body_b: *mut Body,
@@ -293,7 +289,6 @@ extern {
     pub fn FrictionJoint_set_max_torque(slf: *mut FrictionJoint, torque: f32);
     pub fn FrictionJoint_get_max_torque(slf: *const FrictionJoint) -> f32;
     
-    pub fn GearJointDef_default() -> GearJointDef;
     pub fn GearJoint_as_joint(slf: *mut GearJoint) -> *mut Joint;
     pub fn Joint_as_gear_joint(slf: *mut Joint) -> *mut GearJoint;
     pub fn GearJoint_get_joint_1(slf: *mut GearJoint) -> *const Joint;
@@ -301,7 +296,6 @@ extern {
     pub fn GearJoint_set_ratio(slf: *mut GearJoint, ratio: f32);
     pub fn GearJoint_get_ratio(slf: *const GearJoint) -> f32;
     
-    pub fn MotorJointDef_default() -> MotorJointDef;
     pub fn MotorJointDef_initialize(slf: *mut MotorJointDef,
                                     body_a: *mut Body,
                                     body_b: *mut Body);
@@ -318,7 +312,6 @@ extern {
     pub fn MotorJoint_set_correction_factor(slf: *mut MotorJoint, factor: f32);
     pub fn MotorJoint_get_correction_factor(slf: *const MotorJoint) -> f32;
     
-    pub fn MouseJointDef_default() -> MouseJointDef;
     pub fn MouseJoint_as_joint(slf: *mut MouseJoint) -> *mut Joint;
     pub fn Joint_as_mouse_joint(slf: *mut Joint) -> *mut MouseJoint;
     pub fn MouseJoint_set_target(slf: *mut MouseJoint, target: *const Vec2);
@@ -330,7 +323,6 @@ extern {
     pub fn MouseJoint_set_damping_ratio(slf: *mut MouseJoint, ratio: f32);
     pub fn MouseJoint_get_damping_ratio(slf: *const MouseJoint) -> f32; 
     
-    pub fn PrismaticJointDef_default() -> PrismaticJointDef;
     pub fn PrismaticJointDef_initialize(slf: *mut PrismaticJointDef,
                                         body_a: *mut Body,
                                         body_b: *mut Body,
@@ -360,7 +352,6 @@ extern {
     pub fn PrismaticJoint_get_motor_force(slf: *const PrismaticJoint,
                                           inv_dt: f32) -> f32;
                                          
-    pub fn PulleyJointDef_default() -> PulleyJointDef;
     pub fn PulleyJointDef_initialize(slf: *mut PulleyJointDef,
                                      body_a: *mut Body,
                                      body_b: *mut Body,
@@ -379,7 +370,6 @@ extern {
     pub fn PulleyJoint_get_current_length_a(slf: *const PulleyJoint) -> f32;
     pub fn PulleyJoint_get_current_length_b(slf: *const PulleyJoint) -> f32;
     
-    pub fn RevoluteJointDef_default() -> RevoluteJointDef;
     pub fn RevoluteJointDef_initialize(slf: *mut RevoluteJointDef,
                                        body_a: *mut Body,
                                        body_b: *mut Body,
@@ -406,7 +396,6 @@ extern {
     pub fn RevoluteJoint_get_max_motor_torque(slf: *const RevoluteJoint) -> f32;
     pub fn RevoluteJoint_get_motor_torque(slf: *const RevoluteJoint) -> f32;
     
-    pub fn RopeJointDef_default() -> RopeJointDef;
     pub fn RopeJoint_as_joint(slf: *mut RopeJoint) -> *mut Joint;
     pub fn Joint_as_rope_joint(slf: *mut Joint) -> *mut RopeJoint;
     pub fn RopeJoint_get_local_anchor_a(slf: *const RopeJoint) -> *const Vec2;
@@ -415,7 +404,6 @@ extern {
     pub fn RopeJoint_get_max_length(slf: *const RopeJoint) -> f32;
     pub fn RopeJoint_get_limit_state(slf: *const RopeJoint) -> LimitState;
     
-    pub fn WeldJointDef_default() -> WeldJointDef;
     pub fn WeldJointDef_initialize(slf: *mut WeldJointDef,
                                    body_a: *mut Body,
                                    body_b: *mut Body,
@@ -430,7 +418,6 @@ extern {
     pub fn WeldJoint_set_damping_ratio(slf: *mut WeldJoint, ratio: f32);
     pub fn WeldJoint_get_damping_ratio(slf: *const WeldJoint) -> f32;
 
-    pub fn WheelJointDef_default() -> WheelJointDef;
     pub fn WheelJointDef_initialize(slf: *mut WheelJointDef,
                                     body_a: *mut Body,
                                     body_b: *mut Body,

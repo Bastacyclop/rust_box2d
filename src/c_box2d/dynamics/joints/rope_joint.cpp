@@ -1,7 +1,3 @@
-b2RopeJointDef RopeJointDef_default() {
-    return b2RopeJointDef();
-}
-
 b2Joint* RopeJoint_as_joint(b2RopeJoint* self) {
     return static_cast<b2Joint*>(self);
 }

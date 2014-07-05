@@ -1,6 +1,3 @@
-b2PulleyJointDef PulleyJointDef_default() {
-    return b2PulleyJointDef();
-}
 void PulleyJointDef_initialize(b2PulleyJointDef* self,
                                b2Body* body_a, b2Body* body_b,
                                const b2Vec2* ground_anchor_a,

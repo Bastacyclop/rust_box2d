@@ -1,7 +1,3 @@
-b2JointDef JointDef_default() {
-    return b2JointDef();
-}
-
 i32 Joint_get_type(const b2Joint* self) {
     return self->GetType();
 }

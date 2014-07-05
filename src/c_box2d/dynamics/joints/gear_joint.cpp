@@ -1,7 +1,3 @@
-b2GearJointDef GearJointDef_default() {
-    return b2GearJointDef();
-}
-
 b2Joint* GearJoint_as_joint(b2GearJoint* self) {
     return static_cast<b2Joint*>(self);
 }

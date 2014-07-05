@@ -32,7 +32,7 @@ fn main () {
 
     assert_eq!(world.get_body_count(), 1);
 */
-    for _ in range(0, 60) {
+    for _ in range::<uint>(0, 60) {
         world.step(time_step, velocity_iterations, position_iterations);
         //let pos = b1.get_position();
         //println!("b1: [x:{}, y:{}]", pos.x, pos.y);

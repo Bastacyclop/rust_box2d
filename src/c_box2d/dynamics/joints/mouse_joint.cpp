@@ -1,7 +1,3 @@
-b2MouseJointDef MouseJointDef_default() {
-    return b2MouseJointDef();
-}
-
 b2Joint* MouseJoint_as_joint(b2MouseJoint* self) {
     return static_cast<b2Joint*>(self);
 }

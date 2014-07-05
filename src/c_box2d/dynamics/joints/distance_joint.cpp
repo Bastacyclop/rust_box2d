@@ -1,6 +1,3 @@
-b2DistanceJointDef DistanceJointDef_default() {
-    return b2DistanceJointDef();
-}
 void DistanceJointDef_initialize(b2DistanceJointDef* self,
                                  b2Body* body_a, b2Body* body_b,
                                  const b2Vec2* anchor_a,

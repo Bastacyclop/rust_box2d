@@ -1,6 +1,3 @@
-b2WeldJointDef WeldJointDef_default() {
-    return b2WeldJointDef();
-}
 void WeldJointDef_initialize(b2WeldJointDef* self,
                                  b2Body* body_a, b2Body* body_b,
                                  const b2Vec2* anchor) {

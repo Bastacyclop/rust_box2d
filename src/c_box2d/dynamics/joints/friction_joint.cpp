@@ -1,6 +1,3 @@
-b2FrictionJointDef FrictionJointDef_default() {
-    return b2FrictionJointDef();
-}
 void FrictionJointDef_initialize(b2FrictionJointDef* self,
                                  b2Body* body_a, b2Body* body_b,
                                  const b2Vec2* anchor) {

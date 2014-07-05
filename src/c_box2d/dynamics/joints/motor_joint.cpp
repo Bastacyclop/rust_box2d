@@ -1,6 +1,3 @@
-b2MotorJointDef MotorJointDef_default() {
-    return b2MotorJointDef();
-}
 void MotorJointDef_initialize(b2MotorJointDef* self,
                               b2Body* body_a, b2Body* body_b) {
     self->Initialize(body_a, body_b);

@@ -1,6 +1,3 @@
-b2PrismaticJointDef PrismaticJointDef_default() {
-    return b2PrismaticJointDef();
-}
 void PrismaticJointDef_initialize(b2PrismaticJointDef* self,
                                  b2Body* body_a, b2Body* body_b,
                                  const b2Vec2* anchor,

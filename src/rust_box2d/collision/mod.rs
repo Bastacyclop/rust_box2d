@@ -1,4 +1,4 @@
-pub use self::shape::{
+pub use self::shapes::{
     Shape, UnknownShape,
     PolygonShape, EdgeShape,
     CircleShape, ChainShape,
@@ -6,4 +6,4 @@ pub use self::shape::{
     POLYGON, EDGE, CIRCLE, CHAIN, COUNT
 };
 
-pub mod shape;
+pub mod shapes;

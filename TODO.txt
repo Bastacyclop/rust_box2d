@@ -10,4 +10,11 @@ Draw
 QueryCallback
 AABB
 RayCastCallback
-Filter
+RayCastInput
+RayCastOutput
+Contact
+ContactManager
+Profile
+JointEdge
+ContactEdge
+BlockAllocator

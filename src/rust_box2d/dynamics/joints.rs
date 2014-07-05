@@ -25,14 +25,14 @@ macro_rules! joint_def(
     ($name:ident $(($(($visibility:ident))*) $field:ident: $typ:ty),+) => (
         #[packed]
         #[allow(dead_code)]
-        pub struct $name<'l> {
-            pub base: JointDefBase<'l>,
+        pub struct $name {
+            pub base: JointDefBase,
             $(
                 $($visibility)* $field: $typ,
             )+
         }
         
-        impl<'l> JointDef for $name<'l> {
+        impl JointDef for $name {
             unsafe fn from_joint_def_ptr(ptr: *mut JointDefBase) -> $name {
                 *(ptr as *mut $name)
             }
@@ -70,7 +70,7 @@ c_enum!(LimitState with
 
 #[allow(dead_code)]
 #[packed]
-pub struct JointDefBase<'l> {
+pub struct JointDefBase {
     pub joint_type: JointType,
     user_data: ffi::UserData,
     body_a: *mut ffi::Body,
@@ -96,20 +96,20 @@ pub trait Joint: WrappedJoint {
             ffi::Joint_get_type(self.get_joint_ptr())
         }
     }
-    /*unsafe fn get_body_a(&mut self) -> Body {
+    fn get_body_a(&mut self) -> Body {
         unsafe {
             Wrapped::from_ptr(
                 ffi::Joint_get_body_a(self.get_mut_joint_ptr())
                 )
         }
     }
-    unsafe fn get_body_b(&mut self) -> Body {
+    fn get_body_b(&mut self) -> Body {
         unsafe {
             Wrapped::from_ptr(
                 ffi::Joint_get_body_b(self.get_mut_joint_ptr())
                 )
         }
-    }*/
+    }
     fn get_anchor_a(&self) -> Vec2 {
         unsafe  {
             ffi::Joint_get_anchor_a_virtual(self.get_joint_ptr())
@@ -130,14 +130,14 @@ pub trait Joint: WrappedJoint {
             ffi::Joint_get_reaction_torque_virtual(self.get_joint_ptr())
         }
     }
-    /*unsafe fn get_mut_next(&mut self) -> &mut UnknownJoint {
+    fn get_mut_next(&mut self) -> UnknownJoint {
         unsafe {
-            Wrapped::from_ptr(
+            WrappedJoint::from_joint_ptr(
                 ffi::Joint_get_next(self.get_mut_joint_ptr())
                 )
         }
     }
-    unsafe fn get_next(&self) -> &UnknownJoint {
+    /*unsafe fn get_next(&self) -> &UnknownJoint {
         unsafe {
             Wrapped::from_ptr(
                 ffi::Joint_get_next_const(self.get_joint_ptr())
@@ -220,22 +220,35 @@ impl WrappedJoint for UnknownJoint {
     }
     unsafe fn get_joint_ptr(&self) -> *const ffi::Joint {
         match self {
-            &Distance(x) => x.get_joint_ptr(),
-            &Friction(x) => x.get_joint_ptr(),
-            &Gear(x) => x.get_joint_ptr(),
-            &Motor(x) => x.get_joint_ptr(),
-            &Mouse(x) => x.get_joint_ptr(),
-            &Prismatic(x) => x.get_joint_ptr(),
-            &Pulley(x) => x.get_joint_ptr(),
-            &Revolute(x) => x.get_joint_ptr(),
-            &Rope(x) => x.get_joint_ptr(),
-            &Weld(x) => x.get_joint_ptr(),
-            &Wheel(x) => x.get_joint_ptr(),
+            &Distance(ref x) => x.get_joint_ptr(),
+            &Friction(ref x) => x.get_joint_ptr(),
+            &Gear(ref x) => x.get_joint_ptr(),
+            &Motor(ref x) => x.get_joint_ptr(),
+            &Mouse(ref x) => x.get_joint_ptr(),
+            &Prismatic(ref x) => x.get_joint_ptr(),
+            &Pulley(ref x) => x.get_joint_ptr(),
+            &Revolute(ref x) => x.get_joint_ptr(),
+            &Rope(ref x) => x.get_joint_ptr(),
+            &Weld(ref x) => x.get_joint_ptr(),
+            &Wheel(ref x) => x.get_joint_ptr(),
             _ => fail!("Truly unknown joint")
         }
     }
     unsafe fn get_mut_joint_ptr(&mut self) -> *mut ffi::Joint {
-        self.get_joint_ptr() as *mut ffi::Joint
+        match self {
+            &Distance(ref mut x) => x.get_mut_joint_ptr(),
+            &Friction(ref mut x) => x.get_mut_joint_ptr(),
+            &Gear(ref mut x) => x.get_mut_joint_ptr(),
+            &Motor(ref mut x) => x.get_mut_joint_ptr(),
+            &Mouse(ref mut x) => x.get_mut_joint_ptr(),
+            &Prismatic(ref mut x) => x.get_mut_joint_ptr(),
+            &Pulley(ref mut x) => x.get_mut_joint_ptr(),
+            &Revolute(ref mut x) => x.get_mut_joint_ptr(),
+            &Rope(ref mut x) => x.get_mut_joint_ptr(),
+            &Weld(ref mut x) => x.get_mut_joint_ptr(),
+            &Wheel(ref mut x) => x.get_mut_joint_ptr(),
+            _ => fail!("Truly unknown joint")
+        }
     }
 }
 
@@ -246,7 +259,6 @@ impl Drop for UnknownJoint {
     fn drop(&mut self) {
     }
 }*/
-
 
 joint_def!(DistanceJointDef
     () local_anchor_a: Vec2,
@@ -291,7 +303,6 @@ joint_def!(PrismaticJointDef
     ((pub)) max_motor_force: f32,
     ((pub)) motor_speed: f32
 )
-
 joint_def!(PulleyJointDef
     () ground_anchor_a: Vec2,
     () ground_anchor_b: Vec2,
@@ -335,11 +346,11 @@ joint_def!(WheelJointDef
     ((pub)) damping_ratio: f32
 )
 
-impl<'l> DistanceJointDef<'l> {    
-    pub fn new<'m>(body_a: &'m mut Body,
-                   body_b: &'m mut Body,
-                   anchor_a: &Vec2,
-                   anchor_b: &Vec2) -> DistanceJointDef<'m> {
+impl DistanceJointDef {    
+    pub fn new(body_a: &mut Body,
+               body_b: &mut Body,
+               anchor_a: &Vec2,
+               anchor_b: &Vec2) -> DistanceJointDef {
         unsafe {
             let mut joint = ffi::DistanceJointDef_default();
             ffi::DistanceJointDef_initialize(&mut joint,
@@ -350,10 +361,10 @@ impl<'l> DistanceJointDef<'l> {
         }
     }
 }
-impl<'l> FrictionJointDef<'l> {    
-    pub fn new<'m>(body_a: &'m mut Body,
-                   body_b: &'m mut Body,
-                   anchor: &Vec2) -> FrictionJointDef<'m> {
+impl FrictionJointDef {
+    pub fn new(body_a: &mut Body,
+               body_b: &mut Body,
+               anchor: &Vec2) -> FrictionJointDef {
         unsafe {
             let mut joint = ffi::FrictionJointDef_default();
             ffi::FrictionJointDef_initialize(&mut joint,
@@ -364,9 +375,9 @@ impl<'l> FrictionJointDef<'l> {
         }
     }
 }
-impl<'l> GearJointDef<'l> {
-    pub fn new<'m>(joint_a: &'m mut Joint,
-                   joint_b: &'m mut Joint) -> GearJointDef<'m> {
+impl GearJointDef {
+    pub fn new(joint_a: &mut Joint,
+               joint_b: &mut Joint) -> GearJointDef {
         unsafe {
             let mut joint = ffi::GearJointDef_default();
             joint.joint_a = joint_a.get_mut_joint_ptr();
@@ -375,9 +386,9 @@ impl<'l> GearJointDef<'l> {
         }
     }
 }
-impl<'l> MotorJointDef<'l> {
-    pub fn new<'m>(body_a: &'m mut Body,
-                   body_b: &'m mut Body) -> MotorJointDef<'m> {
+impl MotorJointDef {
+    pub fn new(body_a: &mut Body,
+               body_b: &mut Body) -> MotorJointDef {
         unsafe {
             let mut joint = ffi::MotorJointDef_default();
             ffi::MotorJointDef_initialize(&mut joint,
@@ -387,18 +398,18 @@ impl<'l> MotorJointDef<'l> {
         }
     }
 }
-impl<'l> MouseJointDef<'l> {
-    pub fn new<'m>() -> MouseJointDef<'m> {
+impl MouseJointDef {
+    pub fn new() -> MouseJointDef {
         unsafe {
             ffi::MouseJointDef_default()
         }
     }
 }
-impl<'l> PrismaticJointDef<'l> {
-    pub fn new<'m>(body_a: &'m mut Body,
-                   body_b: &'m mut Body,
-                   anchor: &Vec2,
-                   axis: &Vec2) -> PrismaticJointDef<'m> {
+impl PrismaticJointDef {
+    pub fn new(body_a: &mut Body,
+               body_b: &mut Body,
+               anchor: &Vec2,
+               axis: &Vec2) -> PrismaticJointDef {
         unsafe {
             let mut joint = ffi::PrismaticJointDef_default();
             ffi::PrismaticJointDef_initialize(&mut joint,
@@ -409,14 +420,14 @@ impl<'l> PrismaticJointDef<'l> {
         }
     }
 }
-impl<'l> PulleyJointDef<'l> {
-    pub fn new<'m>(body_a: &'m mut Body,
-                   body_b: &'m mut Body,
-                   ground_anchor_a: &Vec2,
-                   ground_anchor_b: &Vec2,
-                   anchor_a: &Vec2,
-                   anchor_b: &Vec2,
-                   ratio: f32) -> PulleyJointDef<'m> {
+impl PulleyJointDef {
+    pub fn new(body_a: &mut Body,
+               body_b: &mut Body,
+               ground_anchor_a: &Vec2,
+               ground_anchor_b: &Vec2,
+               anchor_a: &Vec2,
+               anchor_b: &Vec2,
+               ratio: f32) -> PulleyJointDef {
         unsafe {
             let mut joint = ffi::PulleyJointDef_default();
             ffi::PulleyJointDef_initialize(&mut joint,
@@ -430,10 +441,10 @@ impl<'l> PulleyJointDef<'l> {
         }
     }
 }
-impl<'l> RevoluteJointDef<'l> {
-    pub fn new<'m>(body_a: &'m mut Body,
-                   body_b: &'m mut Body,
-                   anchor: &Vec2) -> RevoluteJointDef<'m> {
+impl RevoluteJointDef {
+    pub fn new(body_a: &mut Body,
+               body_b: &mut Body,
+               anchor: &Vec2) -> RevoluteJointDef {
         unsafe {
             let mut joint = ffi::RevoluteJointDef_default();
             ffi::RevoluteJointDef_initialize(&mut joint,
@@ -444,38 +455,38 @@ impl<'l> RevoluteJointDef<'l> {
         }
     }
 }
-impl<'l> RopeJointDef<'l> {
-    pub fn new<'m>() -> RopeJointDef<'m> {
+impl RopeJointDef {
+    pub fn new() -> RopeJointDef {
         unsafe {
             ffi::RopeJointDef_default()
         }
     }
 }
-impl<'l> WeldJointDef<'l> {
-    pub fn new<'m>(body_a: &'m mut Body,
-                   body_b: &'m mut Body,
-                   anchor: &Vec2) -> WeldJointDef<'m> {
+impl WeldJointDef {
+    pub fn new(body_a: &mut Body,
+               body_b: &mut Body,
+               anchor: &Vec2) -> WeldJointDef {
         unsafe {
             let mut joint = ffi::WeldJointDef_default();
             ffi::WeldJointDef_initialize(&mut joint,
-                                             body_a.get_mut_ptr(),
-                                             body_b.get_mut_ptr(),
-                                             anchor);
+                                         body_a.get_mut_ptr(),
+                                         body_b.get_mut_ptr(),
+                                         anchor);
             joint
         }
     }
 }
-impl<'l> WheelJointDef<'l> {
-    pub fn new<'m>(body_a: &'m mut Body,
-                   body_b: &'m mut Body,
-                   anchor: &Vec2,
-                   axis: &Vec2) -> WheelJointDef<'m> {
+impl WheelJointDef {
+    pub fn new(body_a: &mut Body,
+               body_b: &mut Body,
+               anchor: &Vec2,
+               axis: &Vec2) -> WheelJointDef {
         unsafe {
             let mut joint = ffi::WheelJointDef_default();
             ffi::WheelJointDef_initialize(&mut joint,
-                                             body_a.get_mut_ptr(),
-                                             body_b.get_mut_ptr(),
-                                             anchor, axis);
+                                          body_a.get_mut_ptr(),
+                                          body_b.get_mut_ptr(),
+                                          anchor, axis);
             joint
         }
     }
@@ -535,6 +546,7 @@ impl DistanceJoint {
         }
     }
 }
+
 impl FrictionJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
@@ -567,8 +579,9 @@ impl FrictionJoint {
         }
     }
 }
-impl GearJoint {/*
-    pub fn get_joint_a(&self) -> UnknownJoint {
+
+impl GearJoint {
+    /*pub fn get_joint_a(&self) -> UnknownJoint {
         unsafe {
             WrappedJoint::from_joint_ptr(
                 ffi::GearJoint_get_joint_1(self.get_ptr())
@@ -593,6 +606,7 @@ impl GearJoint {/*
         }
     }
 }
+
 impl MotorJoint {
     pub fn set_linear_offset(&mut self, offset: &Vec2) {
         unsafe {
@@ -645,6 +659,7 @@ impl MotorJoint {
         }
     }
 }
+
 impl MouseJoint {
     pub fn set_target(&mut self, target: &Vec2) {
         unsafe {
@@ -687,6 +702,7 @@ impl MouseJoint {
         }
     }
 }
+
 impl PrismaticJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
@@ -770,6 +786,7 @@ impl PrismaticJoint {
         }
     }
 }
+
 impl PulleyJoint {
     pub fn get_ground_anchor_a(&self) -> Vec2 {
         unsafe {
@@ -807,6 +824,7 @@ impl PulleyJoint {
         }
     }
 }
+
 impl RevoluteJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
@@ -890,6 +908,7 @@ impl RevoluteJoint {
         }
     }
 }
+
 impl RopeJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
@@ -917,6 +936,7 @@ impl RopeJoint {
         }
     }
 }
+
 impl WeldJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
@@ -954,6 +974,7 @@ impl WeldJoint {
         }
     }
 }
+
 impl WheelJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {

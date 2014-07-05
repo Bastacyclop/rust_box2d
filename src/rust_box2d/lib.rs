@@ -8,7 +8,6 @@ pub use common::math;
 
 mod ffi;
 
-#[macro_export]
 macro_rules! c_enum(
     ($name:ident with $($element:ident = $value:expr),+) => (
         pub type $name = i32;
@@ -18,9 +17,9 @@ macro_rules! c_enum(
     );
 )
 
-#[macro_export]
 macro_rules! wrap(
     ($wrapped:ty into $wrap:ident) => (
+        #[packed]
         pub struct $wrap {
             ptr: *mut $wrapped
         }

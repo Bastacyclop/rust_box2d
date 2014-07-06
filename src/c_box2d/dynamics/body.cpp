@@ -1,7 +1,3 @@
-b2BodyDef BodyDef_default() {
-    return b2BodyDef();
-}
-
 b2Fixture* Body_create_fixture(b2Body* self, const b2FixtureDef* def) {
     return self->CreateFixture(def);
 }

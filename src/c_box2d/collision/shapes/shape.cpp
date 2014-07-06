@@ -1,10 +1,10 @@
 void Shape_drop_virtual(b2Shape* self) {
     delete self;
 }
-b2Shape* Shape_clone_virtual(const b2Shape* self, 
+/*b2Shape* Shape_clone_virtual(const b2Shape* self, 
                              b2BlockAllocator* allocator) {
     return self->Clone(allocator);
-}
+}*/
 
 i32 Shape_get_type(const b2Shape* self) {
     return self->GetType();

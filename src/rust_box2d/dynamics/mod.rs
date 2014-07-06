@@ -236,12 +236,13 @@ impl Drop for World {
 }
 
 c_enum!(BodyType with
-    STATIC = 0,
-    KINEMATIC = 1,
-    DYNAMIC = 2
+    STATIC_BODY = 0,
+    KINEMATIC_BODY = 1,
+    DYNAMIC_BODY = 2
 )
 
 #[allow(dead_code)]
+#[packed]
 pub struct BodyDef {
     pub body_type: BodyType,
     pub position: Vec2,
@@ -262,7 +263,7 @@ pub struct BodyDef {
 impl BodyDef {
     pub fn new() -> BodyDef {
         BodyDef {
-            body_type: STATIC,
+            body_type: STATIC_BODY,
             position: Vec2 { x:0., y:0. },
             angle: 0.,
             linear_velocity: Vec2 { x:0., y:0. },
@@ -700,9 +701,9 @@ impl Fixture {
             clone_from_ptr(ffi::Fixture_get_aabb(self.get_ptr(), child_index as i32))
         }
     }
-    pub fn dump(&mut self) {
+    pub fn dump(&mut self, child_count: uint) {
         unsafe {
-            ffi::Fixture_dump(self.get_mut_ptr())
+            ffi::Fixture_dump(self.get_mut_ptr(), child_count as i32)
         }
     }
 }

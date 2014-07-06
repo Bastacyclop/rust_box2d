@@ -16,7 +16,7 @@ use collision::{
     ShapeType, MassData, AABB, RayCastInput, RayCastOutput
 };
 
-pub struct BlockAllocator;
+//pub struct BlockAllocator;
 pub struct DestructionListener;
 pub struct ContactFilter;
 pub struct ContactListener;
@@ -102,7 +102,7 @@ extern {
     pub fn World_set_auto_clear_forces(slf: *mut World, flag: bool);
     pub fn World_get_auto_clear_forces(slf: *const World) -> bool;
     pub fn World_shift_origin(slf: *mut World, origin: *const Vec2);
-    pub fn World_get_contact_manager(slf: *const World) -> *const ContactManager;
+    //pub fn World_get_contact_manager(slf: *const World) -> *const ContactManager;
     pub fn World_get_profile(slf: *const World) -> *const Profile;
     pub fn World_dump(slf: *mut World);
     
@@ -171,8 +171,8 @@ extern {
     pub fn Body_get_contact_list_const(slf: *const Body) -> *const ContactEdge;
     pub fn Body_get_next(slf: *mut Body) -> *mut Body;
     pub fn Body_get_next_const(slf: *const Body) -> *const Body;
-    pub fn Body_get_user_data(slf: *const Body) -> UserData;
-    pub fn Body_set_user_data(slf: *mut Body, data: UserData);
+    //pub fn Body_get_user_data(slf: *const Body) -> UserData;
+    //pub fn Body_set_user_data(slf: *mut Body, data: UserData);
     pub fn Body_get_world(slf: *mut Body) -> *mut World;
     pub fn Body_get_world_const(slf: *const Body) -> *const World;
     pub fn Body_dump(slf: *mut Body);                 
@@ -204,11 +204,11 @@ extern {
     pub fn Fixture_get_restitution(slf: *const Fixture) -> f32;
     pub fn Fixture_set_restitution(slf: *mut Fixture, restitution: f32);
     pub fn Fixture_get_aabb(slf: *const Fixture, child_id: i32) -> *const AABB;
-    pub fn Fixture_dump(slf: *mut Fixture);
+    pub fn Fixture_dump(slf: *mut Fixture, body_id: i32);
     
     pub fn Shape_drop_virtual(slf: *mut Shape);
-    pub fn Shape_clone_virtual(slf: *const Shape,
-                               alloc: *mut BlockAllocator) -> *mut Shape;
+    //pub fn Shape_clone_virtual(slf: *const Shape,
+    //                           alloc: *mut BlockAllocator) -> *mut Shape;
     pub fn Shape_get_type(slf: *const Shape) -> ShapeType;
     pub fn Shape_get_child_count_virtual(slf: *const Shape) -> i32;
     pub fn Shape_test_point_virtual(slf: *const Shape,
@@ -284,8 +284,8 @@ extern {
     pub fn Joint_get_reaction_torque_virtual(slf: *const Joint) -> f32;
     pub fn Joint_get_next(slf: *mut Joint) -> *mut Joint;
     pub fn Joint_get_next_const(slf: *const Joint) -> *const Joint;
-    pub fn Joint_get_user_data(slf: *const Joint) -> UserData;
-    pub fn Joint_set_user_data(slf: *mut Joint, data: UserData);
+    //pub fn Joint_get_user_data(slf: *const Joint) -> UserData;
+    //pub fn Joint_set_user_data(slf: *mut Joint, data: UserData);
     pub fn Joint_is_active(slf: *const Joint) -> bool;
     pub fn Joint_dump_virtual(slf: *mut Joint);
     pub fn Joint_shift_origin_virtual(slf: *mut Joint, origin: *const Vec2);

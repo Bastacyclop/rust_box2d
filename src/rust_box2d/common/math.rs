@@ -1,8 +1,66 @@
+use std::num::Zero;
+
 #[deriving(Clone, PartialEq, Show)]
 #[packed]
 pub struct Vec2 {
     pub x: f32,
     pub y: f32,
+}
+
+impl Vec2 {
+    pub fn sqr_norm(&self) -> f32 {
+        self.x * self.x + self.y * self.y
+    }
+    pub fn norm(&self) -> f32 {
+        self.sqr_norm().sqrt()
+    }
+    pub fn sqew(&self) -> Vec2 {
+        Vec2 { x: -self.y, y: self.x }
+    }
+}
+
+impl Add<Vec2, Vec2> for Vec2 {
+    fn add(&self, rhs: &Vec2) -> Vec2 {
+        Vec2 { x: self.x+rhs.x, y: self.y+rhs.y }
+    }
+}
+
+impl Sub<Vec2, Vec2> for Vec2 {
+    fn sub(&self, rhs: &Vec2) -> Vec2 {
+        Vec2 { x: self.x-rhs.x, y: self.y-rhs.y }
+    }
+}
+
+impl Zero for Vec2 {
+    fn zero() -> Vec2 {
+        Vec2 { x: 0., y: 0. }
+    }
+    fn is_zero(&self) -> bool {
+        if self.x == 0. &&
+           self.y == 0. {
+            true  
+        } else {
+            false
+        }
+    }
+}
+
+impl Mul<f32, Vec2> for Vec2 {
+    fn mul(&self, rhs: &f32) -> Vec2 {
+        Vec2 { x: self.x*(*rhs), y: self.y*(*rhs) }
+    }
+}
+
+impl Div<f32, Vec2> for Vec2 {
+    fn div(&self, rhs: &f32) -> Vec2 {
+        Vec2 { x: self.x/(*rhs), y: self.y/(*rhs) }
+    }
+}
+
+impl Neg<Vec2> for Vec2 {
+    fn neg(&self) -> Vec2 {
+        Vec2 { x: -self.x, y: -self.y }
+    }
 }
 
 #[deriving(Clone, PartialEq, Show)]
@@ -12,9 +70,24 @@ pub struct Rot {
     pub cos: f32,
 }
 
+impl Rot {
+    pub fn identity() -> Rot {
+        Rot { sin: 0., cos: 1. }
+    }
+}
+
 #[deriving(Clone, PartialEq, Show)]
 #[packed]
 pub struct Transform {
-    pub p: Vec2,
-    pub q: Rot,
+    pub pos: Vec2,
+    pub rot: Rot,
+}
+
+impl Transform {
+    pub fn identity() -> Transform {
+        Transform {
+            pos: Zero::zero(),
+            rot: Rot::identity()
+        }
+    }
 }

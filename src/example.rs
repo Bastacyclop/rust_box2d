@@ -19,7 +19,7 @@ fn main () {
         shape.set_as_box(2., 3.);
 
     let mut body_def = b2::dynamics::BodyDef::new();
-        body_def.body_type = b2::dynamics::DYNAMIC;
+        body_def.body_type = b2::dynamics::DYNAMIC_BODY;
         body_def.position = b2::math::Vec2 { x: 0., y: 4. };
         body_def.linear_velocity = b2::math::Vec2 { x: 1. , y: 4. };
 

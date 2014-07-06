@@ -4,6 +4,7 @@ use math::Vec2;
 use Wrapped;
 use clone_from_ptr;
 use dynamics::Body;
+use self::private::{JointDef, WrappedJoint};
 
 macro_rules! impl_joint(
     (for $wrap:ty << $joint_as:path >> $as_joint:path) => (
@@ -48,6 +49,24 @@ macro_rules! joint_def(
     );
 )
 
+#[allow(visible_private_types)]
+pub mod private {
+    use ffi;
+    use super::JointDefBase;
+    
+    pub trait JointDef {
+        unsafe fn from_joint_def_ptr(ptr: *mut JointDefBase) -> Self;
+        unsafe fn get_joint_def_ptr(&self) -> *const JointDefBase;
+        unsafe fn get_mut_joint_def_ptr(&mut self) -> *mut JointDefBase;
+    }
+
+    pub trait WrappedJoint {
+        unsafe fn from_joint_ptr(ptr: *mut ffi::Joint) -> Self;
+        unsafe fn get_joint_ptr(&self) -> *const ffi::Joint;
+        unsafe fn get_mut_joint_ptr(&mut self) -> *mut ffi::Joint;
+    }
+}
+
 c_enum!(JointType with
     UNKNOWN = 0,
     REVOLUTE = 1,
@@ -90,18 +109,6 @@ impl JointDefBase {
             collide_connected: false
         }
     }
-}
-
-pub trait JointDef {
-    unsafe fn from_joint_def_ptr(ptr: *mut JointDefBase) -> Self;
-    unsafe fn get_joint_def_ptr(&self) -> *const JointDefBase;
-    unsafe fn get_mut_joint_def_ptr(&mut self) -> *mut JointDefBase;
-}
-
-pub trait WrappedJoint {
-    unsafe fn from_joint_ptr(ptr: *mut ffi::Joint) -> Self;
-    unsafe fn get_joint_ptr(&self) -> *const ffi::Joint;
-    unsafe fn get_mut_joint_ptr(&mut self) -> *mut ffi::Joint;
 }
 
 pub trait Joint: WrappedJoint {

@@ -10,7 +10,7 @@ fn main () {
     let position_iterations = 2;
 
     let gravity = b2::math::Vec2 { x: 0., y: -10. };
-    let mut world = b2::dynamics::World::new(gravity);
+    let mut world = b2::dynamics::World::new(&gravity);
 
     assert_eq!(world.get_body_count(), 0);
     assert_eq!(world.get_gravity(), gravity);

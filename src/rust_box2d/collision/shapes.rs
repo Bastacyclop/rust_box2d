@@ -1,7 +1,9 @@
 use ffi;
 use math::Vec2;
 use math::Transform;
+use collision::{RayCastInput, RayCastOutput, AABB};
 use Wrapped;
+use self::private::WrappedShape;
 
 macro_rules! impl_shape(
     (for $wrap:ty << $shape_as:path >> $as_shape:path) => (
@@ -20,6 +22,16 @@ macro_rules! impl_shape(
         impl Shape for $wrap {}
     );
 )
+
+#[allow(visible_private_types)]
+pub mod private {
+    use ffi;
+    pub trait WrappedShape {
+        unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Self;
+        unsafe fn get_shape_ptr(&self) -> *const ffi::Shape;
+        unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape;
+    }
+}
 
 c_enum!(ShapeType with
     CIRCLE = 0,
@@ -46,12 +58,6 @@ impl MassData {
     }
 }
 
-pub trait WrappedShape {
-    unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Self;
-    unsafe fn get_shape_ptr(&self) -> *const ffi::Shape;
-    unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape;
-}
-
 pub trait Shape: WrappedShape {
     /*fn clone(&self, alloc: &mut ffi::BlockAllocator) -> Self {
         WrappedShape::from_shape_ptr(
@@ -73,6 +79,24 @@ pub trait Shape: WrappedShape {
     fn test_point(&self, xf: &Transform, p: &Vec2) -> bool {
         unsafe {
             ffi::Shape_test_point_virtual(self.get_shape_ptr(), xf, p)
+        }
+    }
+    fn ray_cast(&self, input: &RayCastInput,
+                transform: &Transform, child_index: uint) -> RayCastOutput {
+        unsafe {
+            let mut output = RayCastOutput::new();
+            ffi::Shape_ray_cast_virtual(self.get_shape_ptr(),
+                                        &mut output, input,
+                                        transform, child_index as i32);
+            output
+        }
+    }
+    fn compute_aabb(&self, xf: &Transform, child_index: uint) -> AABB {
+        unsafe {
+            let mut aabb = AABB::new();
+            ffi::Shape_compute_aabb_virtual(self.get_shape_ptr(), &mut aabb,
+                                            xf, child_index as i32);
+            aabb
         }
     }
     fn compute_mass(&self, density: f32) -> MassData {

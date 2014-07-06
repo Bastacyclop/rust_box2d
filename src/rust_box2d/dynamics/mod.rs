@@ -1,5 +1,5 @@
 pub use self::joints::{
-    UnknownJoint, JointType, JointDefBase, JointDef, Joint,
+    UnknownJoint, JointType, JointDefBase, Joint,
     DistanceJointDef, DistanceJoint,
     FrictionJointDef, FrictionJoint,
     GearJointDef, GearJoint,
@@ -16,22 +16,36 @@ pub use self::joints::{
 use std::ptr;
 use ffi;
 use math::{Vec2, Transform};
-use dynamics::joints::WrappedJoint;
+use dynamics::joints::private::{WrappedJoint, JointDef};
 use Wrapped;
 use clone_from_ptr;
-use collision::AABB;
+use collision::{RayCastInput, RayCastOutput, AABB};
 use collision::shapes::{
-    Shape, ShapeType, WrappedShape, UnknownShape, MassData
+    Shape, ShapeType, UnknownShape, MassData
 };
+use collision::shapes::private::WrappedShape;
 
 pub mod joints;
 
 wrap!(ffi::World into World)
 
+#[packed]
+#[deriving(Clone)]
+pub struct Profile {
+    pub step: f32,
+    pub collide: f32,
+    pub solve: f32,
+    pub solve_init: f32,
+    pub solve_velocity: f32,
+    pub solve_position: f32,
+    pub brad_phase: f32,
+    pub solve_TOI: f32
+}
+
 impl World {
-    pub fn new(gravity: Vec2) -> World {
+    pub fn new(gravity: &Vec2) -> World {
         unsafe {
-            Wrapped::from_ptr(ffi::World_new(&gravity))
+            Wrapped::from_ptr(ffi::World_new(gravity))
         }
     }
     pub fn create_body(&mut self, def: &BodyDef) -> Body {
@@ -199,6 +213,11 @@ impl World {
     pub fn shift_origin(&mut self, origin: &Vec2) {
         unsafe {
             ffi::World_shift_origin(self.get_mut_ptr(), origin)
+        }
+    }
+    pub fn get_profile(&self) -> Profile {
+        unsafe {
+            clone_from_ptr(ffi::World_get_profile(self.get_ptr()))
         }
     }
     pub fn dump(&mut self) {
@@ -628,6 +647,15 @@ impl Fixture {
     pub fn test_point(&self, point: &Vec2) -> bool {
         unsafe {
             ffi::Fixture_test_point(self.get_ptr(), point)
+        }
+    }
+    pub fn ray_cast(&self, input: &RayCastInput, child_index: uint
+                    ) -> RayCastOutput {
+        unsafe {
+            let mut output = RayCastOutput::new();
+            ffi::Fixture_ray_cast(self.get_ptr(), &mut output,
+                                  input, child_index as i32);
+            output
         }
     }
     pub fn get_mass_data(&self) -> MassData {

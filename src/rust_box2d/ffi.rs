@@ -9,7 +9,7 @@ use dynamics::{
     MouseJointDef, PrismaticJointDef,
     PulleyJointDef, RevoluteJointDef,
     RopeJointDef, WeldJointDef, WheelJointDef,
-    Filter
+    Filter, Profile
 };
 use dynamics::joints::LimitState;
 use collision::{
@@ -25,7 +25,6 @@ pub struct QueryCallback;
 pub struct RayCastCallback;
 pub struct Contact;
 pub struct ContactManager;
-pub struct Profile;
 pub struct JointEdge;
 pub struct ContactEdge;
 
@@ -193,10 +192,10 @@ extern {
     pub fn Fixture_get_user_data(slf: *const Fixture) -> UserData;
     pub fn Fixture_set_user_data(slf: *mut Fixture, data: UserData);
     pub fn Fixture_test_point(slf: *const Fixture, p: *const Vec2) -> bool;
-    pub fn FIxture_ray_cast(slf: *const Fixture,
+    pub fn Fixture_ray_cast(slf: *const Fixture,
                             output: *mut RayCastOutput,
                             input: *const RayCastInput,
-                            child_id: i32) -> bool;
+                            child_index: i32) -> bool;
     pub fn Fixture_get_mass_data(slf: *const Fixture, data: *mut MassData);
     pub fn Fixture_set_density(slf: *mut Fixture, density: f32);
     pub fn Fixture_get_density(slf: *const Fixture) -> f32;
@@ -218,7 +217,8 @@ extern {
     pub fn Shape_ray_cast_virtual(slf: *const Shape,
                                   output: *mut RayCastOutput,
                                   input: *const RayCastInput,
-                                  transform: *const Transform) -> bool;
+                                  transform: *const Transform,
+                                  child_index: i32) -> bool;
     pub fn Shape_compute_aabb_virtual(slf: *const Shape,
                                       aabb: *mut AABB,
                                       xf: *const Transform,

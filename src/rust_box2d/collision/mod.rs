@@ -25,9 +25,27 @@ pub struct RayCastOutput {
     pub fraction: f32
 }
 
+impl RayCastOutput {
+    pub fn new() -> RayCastOutput {
+        RayCastOutput {
+            normal: Vec2 {x:0., y:0.},
+            fraction: 0.
+        }
+    }
+}
+
 #[packed]
 #[deriving(Clone)]
 pub struct AABB {
     pub lower_bound: Vec2,
     pub upper_bound: Vec2
+}
+
+impl AABB {
+    pub fn new() -> AABB {
+        AABB {
+            lower_bound: Vec2 { x:0., y:0. },
+            upper_bound: Vec2 { x:0., y:0. }
+        }
+    }
 }

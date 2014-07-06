@@ -2,6 +2,7 @@ use ffi;
 use std::ptr;
 use math::Vec2;
 use Wrapped;
+use clone_from_ptr;
 use dynamics::Body;
 
 macro_rules! impl_joint(
@@ -267,12 +268,6 @@ impl WrappedJoint for UnknownJoint {
 
 impl Joint for UnknownJoint {}
 
-/*
-impl Drop for UnknownJoint {
-    fn drop(&mut self) {
-    }
-}*/
-
 joint_def!(DistanceJointDef
     () local_anchor_a: Vec2,
     () local_anchor_b: Vec2,
@@ -438,14 +433,12 @@ impl MotorJointDef {
 }
 impl MouseJointDef {
     pub fn new() -> MouseJointDef {
-        unsafe {
-            MouseJointDef {
-                base: JointDefBase::new(MOUSE),
-                target: Vec2 { x:0., y:0. },
-                max_force: 0.,
-                frequency: 5.,
-                damping_ratio: 0.7
-            }
+        MouseJointDef {
+            base: JointDefBase::new(MOUSE),
+            target: Vec2 { x:0., y:0. },
+            max_force: 0.,
+            frequency: 5.,
+            damping_ratio: 0.7
         }
     }
 }
@@ -537,13 +530,11 @@ impl RevoluteJointDef {
 }
 impl RopeJointDef {
     pub fn new() -> RopeJointDef {
-        unsafe {
-            RopeJointDef {
-                base: JointDefBase::new(ROPE),
-                local_anchor_a: Vec2 { x:-1., y:0. },
-                local_anchor_b: Vec2 { x:1., y:0. },
-                max_length: 0.
-            }
+        RopeJointDef {
+            base: JointDefBase::new(ROPE),
+            local_anchor_a: Vec2 { x:-1., y:0. },
+            local_anchor_b: Vec2 { x:1., y:0. },
+            max_length: 0.
         }
     }
 }
@@ -684,8 +675,8 @@ impl FrictionJoint {
     }
 }
 
-impl GearJoint {
-    /*pub fn get_joint_a(&self) -> UnknownJoint {
+impl GearJoint {/*
+    pub fn get_joint_a(&self) -> UnknownJoint {
         unsafe {
             WrappedJoint::from_joint_ptr(
                 ffi::GearJoint_get_joint_1(self.get_ptr())
@@ -719,7 +710,7 @@ impl MotorJoint {
     }
     pub fn get_linear_offset(&self) -> Vec2 {
         unsafe {
-            *ffi::MotorJoint_get_linear_offset(self.get_ptr()).clone()
+            clone_from_ptr(ffi::MotorJoint_get_linear_offset(self.get_ptr()))
         }
     }
     pub fn set_angular_offset(&mut self, offset: f32) {
@@ -772,7 +763,7 @@ impl MouseJoint {
     }
     pub fn get_target(&self) -> Vec2 {
         unsafe {
-            *ffi::MouseJoint_get_target(self.get_ptr()).clone()
+            clone_from_ptr(ffi::MouseJoint_get_target(self.get_ptr()))
         }
     }
     pub fn set_max_force(&mut self, force: f32) {
@@ -810,12 +801,17 @@ impl MouseJoint {
 impl PrismaticJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
-            *ffi::PrismaticJoint_get_local_anchor_a(self.get_ptr()).clone()
+            clone_from_ptr(ffi::PrismaticJoint_get_local_anchor_a(self.get_ptr()))
         }
     }
     pub fn get_local_anchor_b(&self) -> Vec2 {
         unsafe {
-            *ffi::PrismaticJoint_get_local_anchor_b(self.get_ptr()).clone()
+            clone_from_ptr(ffi::PrismaticJoint_get_local_anchor_b(self.get_ptr()))
+        }
+    }
+    pub fn get_local_axis_a(&self) -> Vec2 {
+        unsafe {
+            clone_from_ptr(ffi::PrismaticJoint_get_local_axis_a(self.get_ptr()))
         }
     }
     pub fn get_reference_angle(&self) -> f32 {
@@ -932,12 +928,12 @@ impl PulleyJoint {
 impl RevoluteJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
-            *ffi::RevoluteJoint_get_local_anchor_a(self.get_ptr()).clone()
+            clone_from_ptr(ffi::RevoluteJoint_get_local_anchor_a(self.get_ptr()))
         }
     }
     pub fn get_local_anchor_b(&self) -> Vec2 {
         unsafe {
-            *ffi::RevoluteJoint_get_local_anchor_b(self.get_ptr()).clone()
+            clone_from_ptr(ffi::RevoluteJoint_get_local_anchor_b(self.get_ptr()))
         }
     }
     pub fn get_referance_angle(&self) -> f32 {
@@ -968,7 +964,7 @@ impl RevoluteJoint {
     pub fn get_limits(&self) -> (f32, f32) {
         unsafe {
             (ffi::RevoluteJoint_get_lower_limit(self.get_ptr()),
-             ffi::RevoluteJoint_get_lower_limit(self.get_ptr()))
+             ffi::RevoluteJoint_get_upper_limit(self.get_ptr()))
         }
     }
     pub fn set_limits(&mut self, lower: f32, upper: f32) {
@@ -1016,12 +1012,12 @@ impl RevoluteJoint {
 impl RopeJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
-            *ffi::RopeJoint_get_local_anchor_a(self.get_ptr()).clone()
+            clone_from_ptr(ffi::RopeJoint_get_local_anchor_a(self.get_ptr()))
         }
     }
     pub fn get_local_anchor_b(&self) -> Vec2 {
         unsafe {
-            *ffi::RopeJoint_get_local_anchor_b(self.get_ptr()).clone()
+            clone_from_ptr(ffi::RopeJoint_get_local_anchor_b(self.get_ptr()))
         }
     }
     pub fn set_max_length(&mut self, length: f32) {
@@ -1044,12 +1040,12 @@ impl RopeJoint {
 impl WeldJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
-            *ffi::WeldJoint_get_local_anchor_a(self.get_ptr()).clone()
+            clone_from_ptr(ffi::WeldJoint_get_local_anchor_a(self.get_ptr()))
         }
     }
     pub fn get_local_anchor_b(&self) -> Vec2 {
         unsafe {
-            *ffi::WeldJoint_get_local_anchor_b(self.get_ptr()).clone()
+            clone_from_ptr(ffi::WeldJoint_get_local_anchor_b(self.get_ptr()))
         }
     }
     pub fn get_referance_angle(&self) -> f32 {
@@ -1082,17 +1078,17 @@ impl WeldJoint {
 impl WheelJoint {
     pub fn get_local_anchor_a(&self) -> Vec2 {
         unsafe {
-            *ffi::WheelJoint_get_local_anchor_a(self.get_ptr()).clone()
+            clone_from_ptr(ffi::WheelJoint_get_local_anchor_a(self.get_ptr()))
         }
     }
     pub fn get_local_anchor_b(&self) -> Vec2 {
         unsafe {
-            *ffi::WheelJoint_get_local_anchor_b(self.get_ptr()).clone()
+            clone_from_ptr(ffi::WheelJoint_get_local_anchor_b(self.get_ptr()))
         }
     }
     pub fn get_local_axis_a(&self) -> Vec2 {
         unsafe {
-            *ffi::WheelJoint_get_local_anchor_a(self.get_ptr()).clone()
+            clone_from_ptr(ffi::WheelJoint_get_local_axis_a(self.get_ptr()))
         }
     }
     pub fn get_joint_translation(&self) -> f32 {

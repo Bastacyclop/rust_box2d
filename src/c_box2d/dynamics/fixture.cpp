@@ -1,7 +1,3 @@
-b2FixtureDef FixtureDef_default() {
-    return b2FixtureDef();
-}
-
 i32 Fixture_get_type(const b2Fixture* self) {
     return self->GetType();
 }

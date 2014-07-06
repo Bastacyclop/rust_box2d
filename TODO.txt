@@ -8,10 +8,7 @@ ContactFilter
 ContactListener
 Draw
 QueryCallback
-AABB
 RayCastCallback
-RayCastInput
-RayCastOutput
 Contact
 ContactManager
 Profile

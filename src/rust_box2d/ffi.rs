@@ -8,32 +8,31 @@ use dynamics::{
     GearJointDef, MotorJointDef,
     MouseJointDef, PrismaticJointDef,
     PulleyJointDef, RevoluteJointDef,
-    RopeJointDef, WeldJointDef, WheelJointDef  
+    RopeJointDef, WeldJointDef, WheelJointDef,
+    Filter
 };
 use dynamics::joints::LimitState;
 use collision::{
-    ShapeType, MassData
+    ShapeType, MassData, AABB, RayCastInput, RayCastOutput
 };
 
-pub struct World;
+pub struct BlockAllocator;
 pub struct DestructionListener;
 pub struct ContactFilter;
 pub struct ContactListener;
 pub struct Draw;
-pub struct Body;
 pub struct QueryCallback;
-pub struct AABB;
 pub struct RayCastCallback;
 pub struct Contact;
 pub struct ContactManager;
 pub struct Profile;
-pub struct Fixture;
 pub struct JointEdge;
 pub struct ContactEdge;
+
+pub struct World;
+pub struct Body;
+pub struct Fixture;
 pub struct Shape;
-pub struct RayCastInput;
-pub struct RayCastOutput;
-pub struct BlockAllocator;
 pub struct ChainShape;
 pub struct EdgeShape;
 pub struct CircleShape;
@@ -110,6 +109,8 @@ extern {
     
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;
+    pub fn Body_create_fast_fixture(slf: *mut Body, shape: *const Shape,
+                                    density: f32) -> *mut Fixture;
     pub fn Body_destroy_fixture(slf: *mut Body, fixture: *mut Fixture);
     pub fn Body_set_transform(slf: *mut Body, pos: *const Vec2, angle: f32);
     pub fn Body_get_transform(slf: *const Body) -> *const Transform;
@@ -176,6 +177,35 @@ extern {
     pub fn Body_get_world(slf: *mut Body) -> *mut World;
     pub fn Body_get_world_const(slf: *const Body) -> *const World;
     pub fn Body_dump(slf: *mut Body);                 
+    
+    pub fn Fixture_get_type(slf: *const Fixture) -> ShapeType;
+    pub fn Fixture_get_shape(slf: *mut Fixture) -> *mut Shape;
+    pub fn Fixture_get_shape_const(slf: *const Fixture) -> *const Shape;
+    pub fn Fixture_set_sensor(slf: *mut Fixture, flag: bool);
+    pub fn Fixture_is_sensor(slf: *const Fixture) -> bool;
+    pub fn Fixture_set_filter_data(slf: *mut Fixture, filter: *const Filter);
+    pub fn Fixture_get_filter_data(slf: *const Fixture) -> *const Filter;
+    pub fn Fixture_refilter(slf: *mut Fixture);
+    pub fn Fixture_get_body(slf: *mut Fixture) -> *mut Body;
+    pub fn Fixture_get_body_const(slf: *const Fixture) -> *const Body;
+    pub fn Fixture_get_next(slf: *mut Fixture) -> *mut Fixture;
+    pub fn Fixture_get_next_const(slf: *const Fixture) -> *const Fixture;
+    pub fn Fixture_get_user_data(slf: *const Fixture) -> UserData;
+    pub fn Fixture_set_user_data(slf: *mut Fixture, data: UserData);
+    pub fn Fixture_test_point(slf: *const Fixture, p: *const Vec2) -> bool;
+    pub fn FIxture_ray_cast(slf: *const Fixture,
+                            output: *mut RayCastOutput,
+                            input: *const RayCastInput,
+                            child_id: i32) -> bool;
+    pub fn Fixture_get_mass_data(slf: *const Fixture, data: *mut MassData);
+    pub fn Fixture_set_density(slf: *mut Fixture, density: f32);
+    pub fn Fixture_get_density(slf: *const Fixture) -> f32;
+    pub fn Fixture_get_friction(slf: *const Fixture) -> f32;
+    pub fn Fixture_set_friction(slf: *mut Fixture, friction: f32);
+    pub fn Fixture_get_restitution(slf: *const Fixture) -> f32;
+    pub fn Fixture_set_restitution(slf: *mut Fixture, restitution: f32);
+    pub fn Fixture_get_aabb(slf: *const Fixture, child_id: i32) -> *const AABB;
+    pub fn Fixture_dump(slf: *mut Fixture);
     
     pub fn Shape_drop_virtual(slf: *mut Shape);
     pub fn Shape_clone_virtual(slf: *const Shape,

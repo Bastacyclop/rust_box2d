@@ -46,7 +46,7 @@ impl MassData {
     }
 }
 
-trait WrappedShape {
+pub trait WrappedShape {
     unsafe fn from_shape_ptr(ptr: *mut ffi::Shape) -> Self;
     unsafe fn get_shape_ptr(&self) -> *const ffi::Shape;
     unsafe fn get_mut_shape_ptr(&mut self) -> *mut ffi::Shape;

@@ -50,3 +50,10 @@ trait Wrapped<T> {
     unsafe fn get_ptr(&self) -> *const T;
     unsafe fn get_mut_ptr(&mut self) -> *mut T;
 }
+
+fn clone_from_ptr<T: Clone>(t: *const T) -> T {
+    unsafe {
+        assert!(!t.is_null())
+        (*t).clone()
+    }
+}

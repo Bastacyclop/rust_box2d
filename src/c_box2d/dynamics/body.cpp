@@ -5,6 +5,11 @@ b2BodyDef BodyDef_default() {
 b2Fixture* Body_create_fixture(b2Body* self, const b2FixtureDef* def) {
     return self->CreateFixture(def);
 }
+b2Fixture* Body_create_fast_fixture(b2Body* self,
+                                    const b2Shape* shape,
+                                    f32 density) {
+    return self->CreateFixture(shape, density);
+}
 void Body_destroy_fixture(b2Body* self, b2Fixture* fixture) {
     self->DestroyFixture(fixture);
 }

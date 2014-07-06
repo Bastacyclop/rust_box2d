@@ -5,15 +5,15 @@ use b2::collision::PolygonShape;
 fn main () {
     println!("Rust Box2D example");
 
-    let time_step = 1. / 60.;
+    let time_step = 1./60.;
     let velocity_iterations = 6;
     let position_iterations = 2;
 
     let gravity = b2::math::Vec2 { x: 0., y: -10. };
     let mut world = b2::dynamics::World::new(&gravity);
 
-    assert_eq!(world.get_body_count(), 0);
-    assert_eq!(world.get_gravity(), gravity);
+    assert_eq!(world.body_count(), 0);
+    assert_eq!(world.gravity(), gravity);
 
     let mut shape = PolygonShape::new();
         shape.set_as_box(2., 3.);
@@ -31,13 +31,13 @@ fn main () {
     
     body.create_fixture(&fixture_def);
 
-    assert_eq!(world.get_body_count(), 1);
+    assert_eq!(world.body_count(), 1);
 
     for _ in range::<uint>(0, 60) {
         world.step(time_step, velocity_iterations, position_iterations);
-        println!("body: {}", body.get_position());
+        println!("body: {}", body.position());
     }
 
     world.destroy_body(body);
-    assert_eq!(world.get_body_count(), 0);
+    assert_eq!(world.body_count(), 0);
 }

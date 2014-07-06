@@ -5,10 +5,9 @@ use dynamics::{
     BodyDef, BodyType, FixtureDef,
     JointDefBase, JointType,
     DistanceJointDef, FrictionJointDef,
-    GearJointDef, MotorJointDef,
-    MouseJointDef, PrismaticJointDef,
+    MotorJointDef, PrismaticJointDef,
     PulleyJointDef, RevoluteJointDef,
-    RopeJointDef, WeldJointDef, WheelJointDef,
+    WeldJointDef, WheelJointDef,
     Filter, Profile
 };
 use dynamics::joints::LimitState;
@@ -189,8 +188,8 @@ extern {
     pub fn Fixture_get_body_const(slf: *const Fixture) -> *const Body;
     pub fn Fixture_get_next(slf: *mut Fixture) -> *mut Fixture;
     pub fn Fixture_get_next_const(slf: *const Fixture) -> *const Fixture;
-    pub fn Fixture_get_user_data(slf: *const Fixture) -> UserData;
-    pub fn Fixture_set_user_data(slf: *mut Fixture, data: UserData);
+    //pub fn Fixture_get_user_data(slf: *const Fixture) -> UserData;
+    //pub fn Fixture_set_user_data(slf: *mut Fixture, data: UserData);
     pub fn Fixture_test_point(slf: *const Fixture, p: *const Vec2) -> bool;
     pub fn Fixture_ray_cast(slf: *const Fixture,
                             output: *mut RayCastOutput,

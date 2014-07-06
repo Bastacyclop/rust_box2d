@@ -31,10 +31,10 @@ macro_rules! wrap(
                     ptr: ptr
                 }   
             }
-            unsafe fn get_ptr(&self) -> *const $wrapped {
+            unsafe fn ptr(&self) -> *const $wrapped {
                 self.ptr as *const $wrapped
             }
-            unsafe fn get_mut_ptr(&mut self) -> *mut $wrapped {
+            unsafe fn mut_ptr(&mut self) -> *mut $wrapped {
                 self.ptr
             }    
         }
@@ -47,8 +47,8 @@ pub mod collision;
 
 trait Wrapped<T> {
     unsafe fn from_ptr(ptr: *mut T) -> Self;
-    unsafe fn get_ptr(&self) -> *const T;
-    unsafe fn get_mut_ptr(&mut self) -> *mut T;
+    unsafe fn ptr(&self) -> *const T;
+    unsafe fn mut_ptr(&mut self) -> *mut T;
 }
 
 fn clone_from_ptr<T: Clone>(t: *const T) -> T {

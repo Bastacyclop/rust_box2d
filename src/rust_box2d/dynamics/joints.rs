@@ -12,10 +12,10 @@ macro_rules! impl_joint(
             unsafe fn from_joint_ptr(ptr: *mut ffi::Joint) -> $wrap {
                 Wrapped::from_ptr($joint_as(ptr))
             }
-            unsafe fn get_joint_ptr(&self) -> *const ffi::Joint {
+            unsafe fn joint_ptr(&self) -> *const ffi::Joint {
                 $as_joint(self.ptr) as *const ffi::Joint
             }
-            unsafe fn get_mut_joint_ptr(&mut self) -> *mut ffi::Joint {
+            unsafe fn mut_joint_ptr(&mut self) -> *mut ffi::Joint {
                 $as_joint(self.ptr)
             }
         }
@@ -39,10 +39,10 @@ macro_rules! joint_def(
             unsafe fn from_joint_def_ptr(ptr: *mut JointDefBase) -> $name {
                 *(ptr as *mut $name)
             }
-            unsafe fn get_joint_def_ptr(&self) -> *const JointDefBase {
+            unsafe fn joint_def_ptr(&self) -> *const JointDefBase {
                 self as *const $name as *const JointDefBase
             }
-            unsafe fn get_mut_joint_def_ptr(&mut self) -> *mut JointDefBase {
+            unsafe fn mut_joint_def_ptr(&mut self) -> *mut JointDefBase {
                 self as *mut $name as *mut JointDefBase
             }
         }
@@ -56,14 +56,14 @@ pub mod private {
     
     pub trait JointDef {
         unsafe fn from_joint_def_ptr(ptr: *mut JointDefBase) -> Self;
-        unsafe fn get_joint_def_ptr(&self) -> *const JointDefBase;
-        unsafe fn get_mut_joint_def_ptr(&mut self) -> *mut JointDefBase;
+        unsafe fn joint_def_ptr(&self) -> *const JointDefBase;
+        unsafe fn mut_joint_def_ptr(&mut self) -> *mut JointDefBase;
     }
 
     pub trait WrappedJoint {
         unsafe fn from_joint_ptr(ptr: *mut ffi::Joint) -> Self;
-        unsafe fn get_joint_ptr(&self) -> *const ffi::Joint;
-        unsafe fn get_mut_joint_ptr(&mut self) -> *mut ffi::Joint;
+        unsafe fn joint_ptr(&self) -> *const ffi::Joint;
+        unsafe fn mut_joint_ptr(&mut self) -> *mut ffi::Joint;
     }
 }
 
@@ -112,72 +112,72 @@ impl JointDefBase {
 }
 
 pub trait Joint: WrappedJoint {
-    fn get_type(&self) -> JointType {
+    fn joint_type(&self) -> JointType {
         unsafe {
-            ffi::Joint_get_type(self.get_joint_ptr())
+            ffi::Joint_get_type(self.joint_ptr())
         }
     }
-    fn get_body_a(&mut self) -> Body {
+    fn body_a(&mut self) -> Body {
         unsafe {
             Wrapped::from_ptr(
-                ffi::Joint_get_body_a(self.get_mut_joint_ptr())
+                ffi::Joint_get_body_a(self.mut_joint_ptr())
                 )
         }
     }
-    fn get_body_b(&mut self) -> Body {
+    fn body_b(&mut self) -> Body {
         unsafe {
             Wrapped::from_ptr(
-                ffi::Joint_get_body_b(self.get_mut_joint_ptr())
+                ffi::Joint_get_body_b(self.mut_joint_ptr())
                 )
         }
     }
-    fn get_anchor_a(&self) -> Vec2 {
+    fn anchor_a(&self) -> Vec2 {
         unsafe  {
-            ffi::Joint_get_anchor_a_virtual(self.get_joint_ptr())
+            ffi::Joint_get_anchor_a_virtual(self.joint_ptr())
         }
     }
-    fn get_anchor_b(&self) -> Vec2 {
+    fn anchor_b(&self) -> Vec2 {
         unsafe {
-            ffi::Joint_get_anchor_b_virtual(self.get_joint_ptr())
+            ffi::Joint_get_anchor_b_virtual(self.joint_ptr())
         }
     }
-    fn get_reaction_force(&self) -> Vec2 {
+    fn reaction_force(&self) -> Vec2 {
         unsafe {
-            ffi::Joint_get_reaction_force_virtual(self.get_joint_ptr()).clone()
+            ffi::Joint_get_reaction_force_virtual(self.joint_ptr()).clone()
         }
     }
-    fn get_reaction_torque(&self) -> f32 {
+    fn reaction_torque(&self) -> f32 {
         unsafe {
-            ffi::Joint_get_reaction_torque_virtual(self.get_joint_ptr())
+            ffi::Joint_get_reaction_torque_virtual(self.joint_ptr())
         }
     }
-    fn get_mut_next(&mut self) -> UnknownJoint {
+    fn mut_next(&mut self) -> UnknownJoint {
         unsafe {
             WrappedJoint::from_joint_ptr(
-                ffi::Joint_get_next(self.get_mut_joint_ptr())
+                ffi::Joint_get_next(self.mut_joint_ptr())
                 )
         }
     }
-    /*unsafe fn get_next(&self) -> &UnknownJoint {
+    /*unsafe fn next(&self) -> &UnknownJoint {
         unsafe {
             Wrapped::from_ptr(
-                ffi::Joint_get_next_const(self.get_joint_ptr())
+                ffi::Joint_get_next_const(self.joint_ptr())
                 )
         }
     }*/
     fn is_active(&self) -> bool {
         unsafe {
-            ffi::Joint_is_active(self.get_joint_ptr())
+            ffi::Joint_is_active(self.joint_ptr())
         }
     }
     fn dump(&mut self) {
         unsafe {
-            ffi::Joint_dump_virtual(self.get_mut_joint_ptr())
+            ffi::Joint_dump_virtual(self.mut_joint_ptr())
         }
     }
     fn shift_origin(&mut self, origin: &Vec2) {
         unsafe {
-            ffi::Joint_shift_origin_virtual(self.get_mut_joint_ptr(),
+            ffi::Joint_shift_origin_virtual(self.mut_joint_ptr(),
                                             origin)
         }
     }   
@@ -239,35 +239,35 @@ impl WrappedJoint for UnknownJoint {
             _ => Unknown
         }
     }
-    unsafe fn get_joint_ptr(&self) -> *const ffi::Joint {
+    unsafe fn joint_ptr(&self) -> *const ffi::Joint {
         match self {
-            &Distance(ref x) => x.get_joint_ptr(),
-            &Friction(ref x) => x.get_joint_ptr(),
-            &Gear(ref x) => x.get_joint_ptr(),
-            &Motor(ref x) => x.get_joint_ptr(),
-            &Mouse(ref x) => x.get_joint_ptr(),
-            &Prismatic(ref x) => x.get_joint_ptr(),
-            &Pulley(ref x) => x.get_joint_ptr(),
-            &Revolute(ref x) => x.get_joint_ptr(),
-            &Rope(ref x) => x.get_joint_ptr(),
-            &Weld(ref x) => x.get_joint_ptr(),
-            &Wheel(ref x) => x.get_joint_ptr(),
+            &Distance(ref x) => x.joint_ptr(),
+            &Friction(ref x) => x.joint_ptr(),
+            &Gear(ref x) => x.joint_ptr(),
+            &Motor(ref x) => x.joint_ptr(),
+            &Mouse(ref x) => x.joint_ptr(),
+            &Prismatic(ref x) => x.joint_ptr(),
+            &Pulley(ref x) => x.joint_ptr(),
+            &Revolute(ref x) => x.joint_ptr(),
+            &Rope(ref x) => x.joint_ptr(),
+            &Weld(ref x) => x.joint_ptr(),
+            &Wheel(ref x) => x.joint_ptr(),
             _ => fail!("Truly unknown joint")
         }
     }
-    unsafe fn get_mut_joint_ptr(&mut self) -> *mut ffi::Joint {
+    unsafe fn mut_joint_ptr(&mut self) -> *mut ffi::Joint {
         match self {
-            &Distance(ref mut x) => x.get_mut_joint_ptr(),
-            &Friction(ref mut x) => x.get_mut_joint_ptr(),
-            &Gear(ref mut x) => x.get_mut_joint_ptr(),
-            &Motor(ref mut x) => x.get_mut_joint_ptr(),
-            &Mouse(ref mut x) => x.get_mut_joint_ptr(),
-            &Prismatic(ref mut x) => x.get_mut_joint_ptr(),
-            &Pulley(ref mut x) => x.get_mut_joint_ptr(),
-            &Revolute(ref mut x) => x.get_mut_joint_ptr(),
-            &Rope(ref mut x) => x.get_mut_joint_ptr(),
-            &Weld(ref mut x) => x.get_mut_joint_ptr(),
-            &Wheel(ref mut x) => x.get_mut_joint_ptr(),
+            &Distance(ref mut x) => x.mut_joint_ptr(),
+            &Friction(ref mut x) => x.mut_joint_ptr(),
+            &Gear(ref mut x) => x.mut_joint_ptr(),
+            &Motor(ref mut x) => x.mut_joint_ptr(),
+            &Mouse(ref mut x) => x.mut_joint_ptr(),
+            &Prismatic(ref mut x) => x.mut_joint_ptr(),
+            &Pulley(ref mut x) => x.mut_joint_ptr(),
+            &Revolute(ref mut x) => x.mut_joint_ptr(),
+            &Rope(ref mut x) => x.mut_joint_ptr(),
+            &Weld(ref mut x) => x.mut_joint_ptr(),
+            &Wheel(ref mut x) => x.mut_joint_ptr(),
             _ => fail!("Truly unknown joint")
         }
     }
@@ -377,8 +377,8 @@ impl DistanceJointDef {
                     damping_ratio: 0.
                 };
             ffi::DistanceJointDef_initialize(&mut joint,
-                                             body_a.get_mut_ptr(),
-                                             body_b.get_mut_ptr(),
+                                             body_a.mut_ptr(),
+                                             body_b.mut_ptr(),
                                              anchor_a, anchor_b);
             joint
         }
@@ -398,8 +398,8 @@ impl FrictionJointDef {
                     max_torque: 0.
                 };
             ffi::FrictionJointDef_initialize(&mut joint,
-                                             body_a.get_mut_ptr(),
-                                             body_b.get_mut_ptr(),
+                                             body_a.mut_ptr(),
+                                             body_b.mut_ptr(),
                                              anchor);
             joint
         }
@@ -411,8 +411,8 @@ impl GearJointDef {
         unsafe {
             GearJointDef {
                 base: JointDefBase::new(GEAR),
-                joint_a: joint_a.get_mut_joint_ptr(),
-                joint_b: joint_b.get_mut_joint_ptr(),
+                joint_a: joint_a.mut_joint_ptr(),
+                joint_b: joint_b.mut_joint_ptr(),
                 ratio: 1.
             }
         }
@@ -432,8 +432,8 @@ impl MotorJointDef {
                     correction_factor: 0.3
                 };
             ffi::MotorJointDef_initialize(&mut joint,
-                                          body_a.get_mut_ptr(),
-                                          body_b.get_mut_ptr());
+                                          body_a.mut_ptr(),
+                                          body_b.mut_ptr());
             joint
         }
     }
@@ -470,8 +470,8 @@ impl PrismaticJointDef {
                     motor_speed: 0.
                 };
             ffi::PrismaticJointDef_initialize(&mut joint,
-                                              body_a.get_mut_ptr(),
-                                              body_b.get_mut_ptr(),
+                                              body_a.mut_ptr(),
+                                              body_b.mut_ptr(),
                                               anchor, axis);
             joint
         }
@@ -499,8 +499,8 @@ impl PulleyJointDef {
                 };
             joint.base.collide_connected = true;
             ffi::PulleyJointDef_initialize(&mut joint,
-                                           body_a.get_mut_ptr(),
-                                           body_b.get_mut_ptr(),
+                                           body_a.mut_ptr(),
+                                           body_b.mut_ptr(),
                                            ground_anchor_a,
                                            ground_anchor_b,
                                            anchor_a, anchor_b,
@@ -528,8 +528,8 @@ impl RevoluteJointDef {
                     enable_motor: false
                 };
             ffi::RevoluteJointDef_initialize(&mut joint,
-                                             body_a.get_mut_ptr(),
-                                             body_b.get_mut_ptr(),
+                                             body_a.mut_ptr(),
+                                             body_b.mut_ptr(),
                                              anchor);
             joint
         }
@@ -560,8 +560,8 @@ impl WeldJointDef {
                     damping_ratio: 0.
                 };
             ffi::WeldJointDef_initialize(&mut joint,
-                                         body_a.get_mut_ptr(),
-                                         body_b.get_mut_ptr(),
+                                         body_a.mut_ptr(),
+                                         body_b.mut_ptr(),
                                          anchor);
             joint
         }
@@ -586,8 +586,8 @@ impl WheelJointDef {
                     damping_ratio: 0.7
                 };
             ffi::WheelJointDef_initialize(&mut joint,
-                                          body_a.get_mut_ptr(),
-                                          body_b.get_mut_ptr(),
+                                          body_a.mut_ptr(),
+                                          body_b.mut_ptr(),
                                           anchor, axis);
             joint
         }
@@ -607,104 +607,104 @@ wrap!(ffi::WeldJoint into WeldJoint)
 wrap!(ffi::WheelJoint into WheelJoint)
 
 impl DistanceJoint {
-    pub fn get_local_anchor_a(&self) -> Vec2 {
+    pub fn local_anchor_a(&self) -> Vec2 {
         unsafe {
-            *ffi::DistanceJoint_get_local_anchor_a(self.get_ptr()).clone()
+            *ffi::DistanceJoint_get_local_anchor_a(self.ptr()).clone()
         }
     }
-    pub fn get_local_anchor_b(&self) -> Vec2 {
+    pub fn local_anchor_b(&self) -> Vec2 {
         unsafe {
-            *ffi::DistanceJoint_get_local_anchor_b(self.get_ptr()).clone()
+            *ffi::DistanceJoint_get_local_anchor_b(self.ptr()).clone()
         }
     }
     pub fn set_length(&mut self, length: f32) {
         unsafe {
-            ffi::DistanceJoint_set_length(self.get_mut_ptr(), length)
+            ffi::DistanceJoint_set_length(self.mut_ptr(), length)
         }
     }
-    pub fn get_length(&self) -> f32 {
+    pub fn length(&self) -> f32 {
         unsafe {
-            ffi::DistanceJoint_get_length(self.get_ptr())
+            ffi::DistanceJoint_get_length(self.ptr())
         }
     }
     pub fn set_frequency(&mut self, frequency: f32) {
         unsafe {
-            ffi::DistanceJoint_set_frequency(self.get_mut_ptr(), frequency)
+            ffi::DistanceJoint_set_frequency(self.mut_ptr(), frequency)
         }
     }
-    pub fn get_frequency(&self) -> f32 {
+    pub fn frequency(&self) -> f32 {
         unsafe {
-            ffi::DistanceJoint_get_frequency(self.get_ptr())
+            ffi::DistanceJoint_get_frequency(self.ptr())
         }
     }
     pub fn set_damping_ratio(&mut self, ratio: f32) {
         unsafe {
-            ffi::DistanceJoint_set_damping_ratio(self.get_mut_ptr(), ratio)
+            ffi::DistanceJoint_set_damping_ratio(self.mut_ptr(), ratio)
         }
     }
-    pub fn get_damping_ratio(&self) -> f32 {
+    pub fn damping_ratio(&self) -> f32 {
         unsafe {
-            ffi::DistanceJoint_get_damping_ratio(self.get_ptr())
+            ffi::DistanceJoint_get_damping_ratio(self.ptr())
         }
     }
 }
 
 impl FrictionJoint {
-    pub fn get_local_anchor_a(&self) -> Vec2 {
+    pub fn local_anchor_a(&self) -> Vec2 {
         unsafe {
-            *ffi::FrictionJoint_get_local_anchor_a(self.get_ptr()).clone()
+            *ffi::FrictionJoint_get_local_anchor_a(self.ptr()).clone()
         }
     }
-    pub fn get_local_anchor_b(&self) -> Vec2 {
+    pub fn local_anchor_b(&self) -> Vec2 {
         unsafe {
-            *ffi::FrictionJoint_get_local_anchor_b(self.get_ptr()).clone()
+            *ffi::FrictionJoint_get_local_anchor_b(self.ptr()).clone()
         }
     }
     pub fn set_max_force(&mut self, force: f32) {
         unsafe {
-            ffi::FrictionJoint_set_max_force(self.get_mut_ptr(), force)
+            ffi::FrictionJoint_set_max_force(self.mut_ptr(), force)
         }
     }
-    pub fn get_max_force(&self) -> f32 {
+    pub fn max_force(&self) -> f32 {
         unsafe {
-            ffi::FrictionJoint_get_max_force(self.get_ptr())
+            ffi::FrictionJoint_get_max_force(self.ptr())
         }
     }
     pub fn set_max_torque(&mut self, torque: f32) {
         unsafe {
-            ffi::FrictionJoint_set_max_torque(self.get_mut_ptr(), torque)
+            ffi::FrictionJoint_set_max_torque(self.mut_ptr(), torque)
         }
     }
-    pub fn get_max_torque(&self) -> f32 {
+    pub fn max_torque(&self) -> f32 {
         unsafe {
-            ffi::FrictionJoint_get_max_torque(self.get_ptr())
+            ffi::FrictionJoint_get_max_torque(self.ptr())
         }
     }
 }
 
 impl GearJoint {/*
-    pub fn get_joint_a(&self) -> UnknownJoint {
+    pub fn joint_a(&self) -> UnknownJoint {
         unsafe {
             WrappedJoint::from_joint_ptr(
-                ffi::GearJoint_get_joint_1(self.get_ptr())
+                ffi::GearJoint_get_joint_1(self.ptr())
                 )
         }
     }
-    pub fn get_joint_b(&self) -> UnknownJoint {
+    pub fn joint_b(&self) -> UnknownJoint {
         unsafe {
             WrappedJoint::from_joint_ptr(
-                ffi::GearJoint_get_joint_2(self.get_ptr())
+                ffi::GearJoint_get_joint_2(self.ptr())
                 )
         }
     }*/
     pub fn set_ratio(&mut self, ratio: f32) {
         unsafe {
-            ffi::GearJoint_set_ratio(self.get_mut_ptr(), ratio)
+            ffi::GearJoint_set_ratio(self.mut_ptr(), ratio)
         }
     }
-    pub fn get_ratio(&self) -> f32 {
+    pub fn ratio(&self) -> f32 {
         unsafe {
-            ffi::GearJoint_get_ratio(self.get_ptr())
+            ffi::GearJoint_get_ratio(self.ptr())
         }
     }
 }
@@ -712,52 +712,52 @@ impl GearJoint {/*
 impl MotorJoint {
     pub fn set_linear_offset(&mut self, offset: &Vec2) {
         unsafe {
-            ffi::MotorJoint_set_linear_offset(self.get_mut_ptr(), offset)
+            ffi::MotorJoint_set_linear_offset(self.mut_ptr(), offset)
         }
     }
-    pub fn get_linear_offset(&self) -> Vec2 {
+    pub fn linear_offset(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::MotorJoint_get_linear_offset(self.get_ptr()))
+            clone_from_ptr(ffi::MotorJoint_get_linear_offset(self.ptr()))
         }
     }
     pub fn set_angular_offset(&mut self, offset: f32) {
         unsafe {
-            ffi::MotorJoint_set_angular_offset(self.get_mut_ptr(), offset)
+            ffi::MotorJoint_set_angular_offset(self.mut_ptr(), offset)
         }
     }
-    pub fn get_angular_offset(&self) -> f32 {
+    pub fn angular_offset(&self) -> f32 {
         unsafe {
-            ffi::MotorJoint_get_angular_offset(self.get_ptr())
+            ffi::MotorJoint_get_angular_offset(self.ptr())
         }
     }
     pub fn set_max_force(&mut self, force: f32) {
         unsafe {
-            ffi::MotorJoint_set_max_force(self.get_mut_ptr(), force)
+            ffi::MotorJoint_set_max_force(self.mut_ptr(), force)
         }
     }
-    pub fn get_max_force(&self) -> f32 {
+    pub fn max_force(&self) -> f32 {
         unsafe {
-            ffi::MotorJoint_get_max_force(self.get_ptr())
+            ffi::MotorJoint_get_max_force(self.ptr())
         }
     }
     pub fn set_max_torque(&mut self, torque: f32) {
         unsafe {
-            ffi::MotorJoint_set_max_torque(self.get_mut_ptr(), torque)
+            ffi::MotorJoint_set_max_torque(self.mut_ptr(), torque)
         }
     }
-    pub fn get_max_torque(&self) -> f32 {
+    pub fn max_torque(&self) -> f32 {
         unsafe {
-            ffi::MotorJoint_get_max_torque(self.get_ptr())
+            ffi::MotorJoint_get_max_torque(self.ptr())
         }
     }
     pub fn set_correction_factor(&mut self, factor: f32) {
         unsafe {
-            ffi::MotorJoint_set_correction_factor(self.get_mut_ptr(), factor)
+            ffi::MotorJoint_set_correction_factor(self.mut_ptr(), factor)
         }
     }
-    pub fn get_correction_factor(&self) -> f32 {
+    pub fn correction_factor(&self) -> f32 {
         unsafe {
-            ffi::MotorJoint_get_correction_factor(self.get_ptr())
+            ffi::MotorJoint_get_correction_factor(self.ptr())
         }
     }
 }
@@ -765,402 +765,402 @@ impl MotorJoint {
 impl MouseJoint {
     pub fn set_target(&mut self, target: &Vec2) {
         unsafe {
-            ffi::MouseJoint_set_target(self.get_mut_ptr(), target)
+            ffi::MouseJoint_set_target(self.mut_ptr(), target)
         }
     }
-    pub fn get_target(&self) -> Vec2 {
+    pub fn target(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::MouseJoint_get_target(self.get_ptr()))
+            clone_from_ptr(ffi::MouseJoint_get_target(self.ptr()))
         }
     }
     pub fn set_max_force(&mut self, force: f32) {
         unsafe {
-            ffi::MouseJoint_set_max_force(self.get_mut_ptr(), force)
+            ffi::MouseJoint_set_max_force(self.mut_ptr(), force)
         }
     }
-    pub fn get_max_force(&self) -> f32 {
+    pub fn max_force(&self) -> f32 {
         unsafe {
-            ffi::MouseJoint_get_max_force(self.get_ptr())
+            ffi::MouseJoint_get_max_force(self.ptr())
         }
     }
     pub fn set_frequency(&mut self, frequency: f32) {
         unsafe {
-            ffi::MouseJoint_set_frequency(self.get_mut_ptr(), frequency)
+            ffi::MouseJoint_set_frequency(self.mut_ptr(), frequency)
         }
     }
-    pub fn get_frequency(&self) -> f32 {
+    pub fn frequency(&self) -> f32 {
         unsafe {
-            ffi::MouseJoint_get_frequency(self.get_ptr())
+            ffi::MouseJoint_get_frequency(self.ptr())
         }
     }
     pub fn set_damping_ratio(&mut self, ratio: f32) {
         unsafe {
-            ffi::MouseJoint_set_damping_ratio(self.get_mut_ptr(), ratio)
+            ffi::MouseJoint_set_damping_ratio(self.mut_ptr(), ratio)
         }
     }
-    pub fn get_damping_ratio(&self) -> f32 {
+    pub fn damping_ratio(&self) -> f32 {
         unsafe {
-            ffi::MouseJoint_get_damping_ratio(self.get_ptr())
+            ffi::MouseJoint_get_damping_ratio(self.ptr())
         }
     }
 }
 
 impl PrismaticJoint {
-    pub fn get_local_anchor_a(&self) -> Vec2 {
+    pub fn local_anchor_a(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::PrismaticJoint_get_local_anchor_a(self.get_ptr()))
+            clone_from_ptr(ffi::PrismaticJoint_get_local_anchor_a(self.ptr()))
         }
     }
-    pub fn get_local_anchor_b(&self) -> Vec2 {
+    pub fn local_anchor_b(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::PrismaticJoint_get_local_anchor_b(self.get_ptr()))
+            clone_from_ptr(ffi::PrismaticJoint_get_local_anchor_b(self.ptr()))
         }
     }
-    pub fn get_local_axis_a(&self) -> Vec2 {
+    pub fn local_axis_a(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::PrismaticJoint_get_local_axis_a(self.get_ptr()))
+            clone_from_ptr(ffi::PrismaticJoint_get_local_axis_a(self.ptr()))
         }
     }
-    pub fn get_reference_angle(&self) -> f32 {
+    pub fn reference_angle(&self) -> f32 {
         unsafe {
-            ffi::PrismaticJoint_get_reference_angle(self.get_ptr())
+            ffi::PrismaticJoint_get_reference_angle(self.ptr())
         }
     }
-    pub fn get_joint_translation(&self) -> f32 {
+    pub fn joint_translation(&self) -> f32 {
         unsafe {
-            ffi::PrismaticJoint_get_joint_translation(self.get_ptr())
+            ffi::PrismaticJoint_get_joint_translation(self.ptr())
         }
     }
-    pub fn get_joint_speed(&self) -> f32 {
+    pub fn joint_speed(&self) -> f32 {
         unsafe {
-            ffi::PrismaticJoint_get_joint_speed(self.get_ptr())
+            ffi::PrismaticJoint_get_joint_speed(self.ptr())
         }
     }
     pub fn is_limit_enabled(&self) -> bool {
         unsafe {
-            ffi::PrismaticJoint_is_limit_enabled(self.get_ptr())
+            ffi::PrismaticJoint_is_limit_enabled(self.ptr())
         }
     }
     pub fn enable_limit(&mut self, flag: bool) {
         unsafe {
-            ffi::PrismaticJoint_enable_limit(self.get_mut_ptr(), flag)
+            ffi::PrismaticJoint_enable_limit(self.mut_ptr(), flag)
         }
     }
-    pub fn get_limits(&self) -> (f32, f32) {
+    pub fn limits(&self) -> (f32, f32) {
         unsafe {
-            (ffi::PrismaticJoint_get_lower_limit(self.get_ptr()),
-             ffi::PrismaticJoint_get_upper_limit(self.get_ptr()))
+            (ffi::PrismaticJoint_get_lower_limit(self.ptr()),
+             ffi::PrismaticJoint_get_upper_limit(self.ptr()))
         }
     }
     pub fn set_limits(&mut self, lower: f32, upper: f32) {
         unsafe {
-            ffi::PrismaticJoint_set_limits(self.get_mut_ptr(), lower, upper)
+            ffi::PrismaticJoint_set_limits(self.mut_ptr(), lower, upper)
         }
     }
     pub fn is_motor_enabled(&self) -> bool {
         unsafe {
-            ffi::PrismaticJoint_is_motor_enabled(self.get_ptr())
+            ffi::PrismaticJoint_is_motor_enabled(self.ptr())
         }
     }
     pub fn enable_motor(&mut self, flag: bool) {
         unsafe {
-            ffi::PrismaticJoint_enable_motor(self.get_mut_ptr(), flag)
+            ffi::PrismaticJoint_enable_motor(self.mut_ptr(), flag)
         }
     }
     pub fn set_motor_speed(&mut self, speed: f32) {
         unsafe {
-            ffi::PrismaticJoint_set_motor_speed(self.get_mut_ptr(), speed)
+            ffi::PrismaticJoint_set_motor_speed(self.mut_ptr(), speed)
         }
     }
-    pub fn get_motor_speed(&self) -> f32 {
+    pub fn motor_speed(&self) -> f32 {
         unsafe {
-            ffi::PrismaticJoint_get_motor_speed(self.get_ptr())
+            ffi::PrismaticJoint_get_motor_speed(self.ptr())
         }
     }
     pub fn set_max_motor_force(&mut self, force: f32) {
         unsafe {
-            ffi::PrismaticJoint_set_max_motor_force(self.get_mut_ptr(), force)
+            ffi::PrismaticJoint_set_max_motor_force(self.mut_ptr(), force)
         }
     }
-    pub fn get_max_motor_force(&self) -> f32 {
+    pub fn max_motor_force(&self) -> f32 {
         unsafe {
-            ffi::PrismaticJoint_get_max_motor_force(self.get_ptr())
+            ffi::PrismaticJoint_get_max_motor_force(self.ptr())
         }
     }
-    pub fn get_motor_force(&self, inv_dt: f32) -> f32 {
+    pub fn motor_force(&self, inv_dt: f32) -> f32 {
         unsafe {
-            ffi::PrismaticJoint_get_motor_force(self.get_ptr(), inv_dt)
+            ffi::PrismaticJoint_get_motor_force(self.ptr(), inv_dt)
         }
     }
 }
 
 impl PulleyJoint {
-    pub fn get_ground_anchor_a(&self) -> Vec2 {
+    pub fn ground_anchor_a(&self) -> Vec2 {
         unsafe {
-            ffi::PulleyJoint_get_ground_anchor_a(self.get_ptr())
+            ffi::PulleyJoint_get_ground_anchor_a(self.ptr())
         }
     }
-    pub fn get_ground_anchor_b(&self) -> Vec2 {
+    pub fn ground_anchor_b(&self) -> Vec2 {
         unsafe {
-            ffi::PulleyJoint_get_ground_anchor_b(self.get_ptr())
+            ffi::PulleyJoint_get_ground_anchor_b(self.ptr())
         }
     }
-    pub fn get_length_a(&self) -> f32 {
+    pub fn length_a(&self) -> f32 {
         unsafe {
-            ffi::PulleyJoint_get_length_a(self.get_ptr())
+            ffi::PulleyJoint_get_length_a(self.ptr())
         }
     }
-    pub fn get_length_b(&self) -> f32 {
+    pub fn length_b(&self) -> f32 {
         unsafe {
-            ffi::PulleyJoint_get_length_b(self.get_ptr())
+            ffi::PulleyJoint_get_length_b(self.ptr())
         }
     }
-    pub fn get_ratio(&self) -> f32 {
+    pub fn ratio(&self) -> f32 {
         unsafe {
-            ffi::PulleyJoint_get_ratio(self.get_ptr())
+            ffi::PulleyJoint_get_ratio(self.ptr())
         }
     }
-    pub fn get_current_length_a(&self) -> f32 {
+    pub fn current_length_a(&self) -> f32 {
         unsafe {
-            ffi::PulleyJoint_get_current_length_a(self.get_ptr())
+            ffi::PulleyJoint_get_current_length_a(self.ptr())
         }
     }
-    pub fn get_current_length_b(&self) -> f32 {
+    pub fn current_length_b(&self) -> f32 {
         unsafe {
-            ffi::PulleyJoint_get_current_length_b(self.get_ptr())
+            ffi::PulleyJoint_get_current_length_b(self.ptr())
         }
     }
 }
 
 impl RevoluteJoint {
-    pub fn get_local_anchor_a(&self) -> Vec2 {
+    pub fn local_anchor_a(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::RevoluteJoint_get_local_anchor_a(self.get_ptr()))
+            clone_from_ptr(ffi::RevoluteJoint_get_local_anchor_a(self.ptr()))
         }
     }
-    pub fn get_local_anchor_b(&self) -> Vec2 {
+    pub fn local_anchor_b(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::RevoluteJoint_get_local_anchor_b(self.get_ptr()))
+            clone_from_ptr(ffi::RevoluteJoint_get_local_anchor_b(self.ptr()))
         }
     }
-    pub fn get_referance_angle(&self) -> f32 {
+    pub fn referance_angle(&self) -> f32 {
         unsafe {
-            ffi::RevoluteJoint_get_reference_angle(self.get_ptr())
+            ffi::RevoluteJoint_get_reference_angle(self.ptr())
         }
     }
-    pub fn get_joint_angle(&self) -> f32 {
+    pub fn joint_angle(&self) -> f32 {
         unsafe {
-            ffi::RevoluteJoint_get_joint_angle(self.get_ptr())
+            ffi::RevoluteJoint_get_joint_angle(self.ptr())
         }
     }
-    pub fn get_joint_speed(&self) -> f32 {
+    pub fn joint_speed(&self) -> f32 {
         unsafe {
-            ffi::RevoluteJoint_get_joint_speed(self.get_ptr())
+            ffi::RevoluteJoint_get_joint_speed(self.ptr())
         }
     }
     pub fn is_limit_enabled(&self) -> bool {
         unsafe {
-            ffi::RevoluteJoint_is_limit_enabled(self.get_ptr())
+            ffi::RevoluteJoint_is_limit_enabled(self.ptr())
         }
     }
     pub fn enable_limit(&mut self, flag: bool) {
         unsafe {
-            ffi::RevoluteJoint_enable_limit(self.get_mut_ptr(), flag)
+            ffi::RevoluteJoint_enable_limit(self.mut_ptr(), flag)
         }
     }
-    pub fn get_limits(&self) -> (f32, f32) {
+    pub fn limits(&self) -> (f32, f32) {
         unsafe {
-            (ffi::RevoluteJoint_get_lower_limit(self.get_ptr()),
-             ffi::RevoluteJoint_get_upper_limit(self.get_ptr()))
+            (ffi::RevoluteJoint_get_lower_limit(self.ptr()),
+             ffi::RevoluteJoint_get_upper_limit(self.ptr()))
         }
     }
     pub fn set_limits(&mut self, lower: f32, upper: f32) {
         unsafe {
-            ffi::RevoluteJoint_set_limits(self.get_mut_ptr(), lower, upper)
+            ffi::RevoluteJoint_set_limits(self.mut_ptr(), lower, upper)
         }
     }
     pub fn is_motor_enabled(&self) -> bool {
         unsafe {
-            ffi::RevoluteJoint_is_motor_enabled(self.get_ptr())
+            ffi::RevoluteJoint_is_motor_enabled(self.ptr())
         }
     }
     pub fn enable_motor(&mut self, flag: bool) {
         unsafe {
-            ffi::RevoluteJoint_enable_motor(self.get_mut_ptr(), flag)
+            ffi::RevoluteJoint_enable_motor(self.mut_ptr(), flag)
         }
     }
     pub fn set_motor_speed(&mut self, speed: f32) {
         unsafe {
-            ffi::RevoluteJoint_set_motor_speed(self.get_mut_ptr(), speed)
+            ffi::RevoluteJoint_set_motor_speed(self.mut_ptr(), speed)
         }
     }
-    pub fn get_motor_speed(&self) -> f32 {
+    pub fn motor_speed(&self) -> f32 {
         unsafe {
-            ffi::RevoluteJoint_get_motor_speed(self.get_ptr())
+            ffi::RevoluteJoint_get_motor_speed(self.ptr())
         }
     }
     pub fn set_max_motor_torque(&mut self, torque: f32) {
         unsafe {
-            ffi::RevoluteJoint_set_max_motor_torque(self.get_mut_ptr(), torque)
+            ffi::RevoluteJoint_set_max_motor_torque(self.mut_ptr(), torque)
         }
     }
-    pub fn get_max_motor_torque(&self) -> f32 {
+    pub fn max_motor_torque(&self) -> f32 {
         unsafe {
-            ffi::RevoluteJoint_get_max_motor_torque(self.get_ptr())
+            ffi::RevoluteJoint_get_max_motor_torque(self.ptr())
         }
     }
-    pub fn get_motor_torque(&self) -> f32 {
+    pub fn motor_torque(&self) -> f32 {
         unsafe {
-            ffi::RevoluteJoint_get_motor_torque(self.get_ptr())
+            ffi::RevoluteJoint_get_motor_torque(self.ptr())
         }
     }
 }
 
 impl RopeJoint {
-    pub fn get_local_anchor_a(&self) -> Vec2 {
+    pub fn local_anchor_a(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::RopeJoint_get_local_anchor_a(self.get_ptr()))
+            clone_from_ptr(ffi::RopeJoint_get_local_anchor_a(self.ptr()))
         }
     }
-    pub fn get_local_anchor_b(&self) -> Vec2 {
+    pub fn local_anchor_b(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::RopeJoint_get_local_anchor_b(self.get_ptr()))
+            clone_from_ptr(ffi::RopeJoint_get_local_anchor_b(self.ptr()))
         }
     }
     pub fn set_max_length(&mut self, length: f32) {
         unsafe {
-            ffi::RopeJoint_set_max_length(self.get_mut_ptr(), length)
+            ffi::RopeJoint_set_max_length(self.mut_ptr(), length)
         }
     }
-    pub fn get_max_length(&self) -> f32 {
+    pub fn max_length(&self) -> f32 {
         unsafe {
-            ffi::RopeJoint_get_max_length(self.get_ptr())
+            ffi::RopeJoint_get_max_length(self.ptr())
         }
     }
-    pub fn get_limit_state(&self) -> LimitState {
+    pub fn limit_state(&self) -> LimitState {
         unsafe {
-            ffi::RopeJoint_get_limit_state(self.get_ptr())
+            ffi::RopeJoint_get_limit_state(self.ptr())
         }
     }
 }
 
 impl WeldJoint {
-    pub fn get_local_anchor_a(&self) -> Vec2 {
+    pub fn local_anchor_a(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::WeldJoint_get_local_anchor_a(self.get_ptr()))
+            clone_from_ptr(ffi::WeldJoint_get_local_anchor_a(self.ptr()))
         }
     }
-    pub fn get_local_anchor_b(&self) -> Vec2 {
+    pub fn local_anchor_b(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::WeldJoint_get_local_anchor_b(self.get_ptr()))
+            clone_from_ptr(ffi::WeldJoint_get_local_anchor_b(self.ptr()))
         }
     }
-    pub fn get_referance_angle(&self) -> f32 {
+    pub fn referance_angle(&self) -> f32 {
         unsafe {
-            ffi::WeldJoint_get_reference_angle(self.get_ptr())
+            ffi::WeldJoint_get_reference_angle(self.ptr())
         }
     }
     pub fn set_frequency(&mut self, frequency: f32) {
         unsafe {
-            ffi::WeldJoint_set_frequency(self.get_mut_ptr(), frequency)
+            ffi::WeldJoint_set_frequency(self.mut_ptr(), frequency)
         }
     }
-    pub fn get_frequency(&self) -> f32 {
+    pub fn frequency(&self) -> f32 {
         unsafe {
-            ffi::WeldJoint_get_frequency(self.get_ptr())
+            ffi::WeldJoint_get_frequency(self.ptr())
         }
     }
     pub fn set_damping_ratio(&mut self, ratio: f32) {
         unsafe {
-            ffi::WeldJoint_set_damping_ratio(self.get_mut_ptr(), ratio)
+            ffi::WeldJoint_set_damping_ratio(self.mut_ptr(), ratio)
         }
     }
-    pub fn get_damping_ratio(&self) -> f32 {
+    pub fn damping_ratio(&self) -> f32 {
         unsafe {
-            ffi::WeldJoint_get_damping_ratio(self.get_ptr())
+            ffi::WeldJoint_get_damping_ratio(self.ptr())
         }
     }
 }
 
 impl WheelJoint {
-    pub fn get_local_anchor_a(&self) -> Vec2 {
+    pub fn local_anchor_a(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::WheelJoint_get_local_anchor_a(self.get_ptr()))
+            clone_from_ptr(ffi::WheelJoint_get_local_anchor_a(self.ptr()))
         }
     }
-    pub fn get_local_anchor_b(&self) -> Vec2 {
+    pub fn local_anchor_b(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::WheelJoint_get_local_anchor_b(self.get_ptr()))
+            clone_from_ptr(ffi::WheelJoint_get_local_anchor_b(self.ptr()))
         }
     }
-    pub fn get_local_axis_a(&self) -> Vec2 {
+    pub fn local_axis_a(&self) -> Vec2 {
         unsafe {
-            clone_from_ptr(ffi::WheelJoint_get_local_axis_a(self.get_ptr()))
+            clone_from_ptr(ffi::WheelJoint_get_local_axis_a(self.ptr()))
         }
     }
-    pub fn get_joint_translation(&self) -> f32 {
+    pub fn joint_translation(&self) -> f32 {
         unsafe {
-            ffi::WheelJoint_get_joint_translation(self.get_ptr())
+            ffi::WheelJoint_get_joint_translation(self.ptr())
         }
     }
-    pub fn get_joint_speed(&self) -> f32 {
+    pub fn joint_speed(&self) -> f32 {
         unsafe {
-            ffi::WheelJoint_get_joint_speed(self.get_ptr())
+            ffi::WheelJoint_get_joint_speed(self.ptr())
         }
     }
     pub fn is_motor_enabled(&self) -> bool {
         unsafe {
-            ffi::WheelJoint_is_motor_enabled(self.get_ptr())
+            ffi::WheelJoint_is_motor_enabled(self.ptr())
         }
     }
     pub fn enable_motor(&mut self, flag: bool) {
         unsafe {
-            ffi::WheelJoint_enable_motor(self.get_mut_ptr(), flag)
+            ffi::WheelJoint_enable_motor(self.mut_ptr(), flag)
         }
     }
     pub fn set_motor_speed(&mut self, speed: f32) {
         unsafe {
-            ffi::WheelJoint_set_motor_speed(self.get_mut_ptr(), speed)
+            ffi::WheelJoint_set_motor_speed(self.mut_ptr(), speed)
         }
     }
-    pub fn get_motor_speed(&self) -> f32 {
+    pub fn motor_speed(&self) -> f32 {
         unsafe {
-            ffi::WheelJoint_get_motor_speed(self.get_ptr())
+            ffi::WheelJoint_get_motor_speed(self.ptr())
         }
     }
     pub fn set_max_motor_torque(&mut self, torque: f32) {
         unsafe {
-            ffi::WheelJoint_set_max_motor_torque(self.get_mut_ptr(), torque)
+            ffi::WheelJoint_set_max_motor_torque(self.mut_ptr(), torque)
         }
     }
-    pub fn get_max_motor_torque(&self) -> f32 {
+    pub fn max_motor_torque(&self) -> f32 {
         unsafe {
-            ffi::WheelJoint_get_max_motor_torque(self.get_ptr())
+            ffi::WheelJoint_get_max_motor_torque(self.ptr())
         }
     }
-    pub fn get_motor_torque(&self) -> f32 {
+    pub fn motor_torque(&self) -> f32 {
         unsafe {
-            ffi::WheelJoint_get_motor_torque(self.get_ptr())
+            ffi::WheelJoint_get_motor_torque(self.ptr())
         }
     }
     pub fn set_spring_frequency(&mut self, frequency: f32) {
         unsafe {
-            ffi::WheelJoint_set_spring_frequency(self.get_mut_ptr(), frequency)
+            ffi::WheelJoint_set_spring_frequency(self.mut_ptr(), frequency)
         }
     }
-    pub fn get_spring_frequency(&self) -> f32 {
+    pub fn spring_frequency(&self) -> f32 {
         unsafe {
-            ffi::WheelJoint_get_spring_frequency(self.get_ptr())
+            ffi::WheelJoint_get_spring_frequency(self.ptr())
         }
     }
     pub fn set_spring_damping_ratio(&mut self, ratio: f32) {
         unsafe {
-            ffi::WheelJoint_set_spring_damping_ratio(self.get_mut_ptr(), ratio)
+            ffi::WheelJoint_set_spring_damping_ratio(self.mut_ptr(), ratio)
         }
     }
-    pub fn get_spring_damping_ratio(&self) -> f32 {
+    pub fn spring_damping_ratio(&self) -> f32 {
         unsafe {
-            ffi::WheelJoint_get_spring_damping_ratio(self.get_ptr())
+            ffi::WheelJoint_get_spring_damping_ratio(self.ptr())
         }
     }
 }

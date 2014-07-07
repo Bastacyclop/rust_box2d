@@ -46,6 +46,11 @@ impl World {
             Wrapped::from_ptr(ffi::World_new(gravity))
         }
     }
+    pub fn set_destruction_listener(&mut self, dc: &mut DestructionCallbacks) {
+        unsafe {
+            ffi::World_set_destruction_listener(self.mut_ptr(), dc.as_listener())
+        }
+    }
     pub fn create_body(&mut self, def: &BodyDef) -> Body {
         unsafe {
             Wrapped::from_ptr(
@@ -709,6 +714,43 @@ impl Fixture {
     pub fn dump(&mut self, child_count: uint) {
         unsafe {
             ffi::Fixture_dump(self.mut_ptr(), child_count as i32)
+        }
+    }
+}
+
+wrap!(ffi::DestructionCallbacks into DestructionCallbacks)
+
+unsafe extern fn foreign_goodbye_joint(ptr: *mut ffi::Joint,
+                                       goodbye_joint: fn(UnknownJoint)) {
+    goodbye_joint(WrappedJoint::from_joint_ptr(ptr))
+}
+unsafe extern fn foreign_goodbye_fixture(ptr: *mut ffi::Fixture,
+                                         goodbye_fixture: fn(Fixture)) {
+    goodbye_fixture(Wrapped::from_ptr(ptr))
+}
+
+impl DestructionCallbacks {
+    pub fn new(goodbye_joint: fn(UnknownJoint),
+               goodbye_fixture: fn(Fixture)
+               ) -> DestructionCallbacks {
+        unsafe {
+            Wrapped::from_ptr(
+                ffi::DestructionCallbacks_new(foreign_goodbye_joint,
+                                              foreign_goodbye_fixture,
+                                              goodbye_joint,
+                                              goodbye_fixture)
+            )
+        }
+    }
+    unsafe fn as_listener(&mut self) -> *mut ffi::DestructionListener {
+        ffi::DestructionCallbacks_as_listener(self.mut_ptr())
+    }
+}
+
+impl Drop for DestructionCallbacks {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::DestructionCallbacks_drop(self.mut_ptr())
         }
     }
 }

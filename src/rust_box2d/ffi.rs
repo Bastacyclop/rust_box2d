@@ -1,6 +1,7 @@
 use math::Vec2;
 use math::Transform;
 
+use dynamics;
 use dynamics::{
     BodyDef, BodyType, FixtureDef,
     JointDefBase, JointType,
@@ -17,6 +18,7 @@ use collision::{
 
 //pub struct BlockAllocator;
 pub struct DestructionListener;
+pub struct DestructionCallbacks;
 pub struct ContactFilter;
 pub struct ContactListener;
 pub struct Draw;
@@ -104,6 +106,19 @@ extern {
     //pub fn World_get_contact_manager(slf: *const World) -> *const ContactManager;
     pub fn World_get_profile(slf: *const World) -> *const Profile;
     pub fn World_dump(slf: *mut World);
+    
+    pub fn DestructionCallbacks_new(goodbye_joint: unsafe extern fn(
+                                        *mut Joint, fn(dynamics::UnknownJoint)
+                                        ),
+                                    goodbye_fixture: unsafe extern fn(
+                                        *mut Fixture, fn(dynamics::Fixture)
+                                        ),
+                                    joint_obj: fn(dynamics::UnknownJoint),
+                                    fixture_obj: fn(dynamics::Fixture)
+                                    ) -> *mut DestructionCallbacks;
+    pub fn DestructionCallbacks_as_listener(slf: *mut DestructionCallbacks
+                                            ) -> *mut DestructionListener;
+    pub fn DestructionCallbacks_drop(slf: *mut DestructionCallbacks);
     
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;

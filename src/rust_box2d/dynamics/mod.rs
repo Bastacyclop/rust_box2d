@@ -1,26 +1,24 @@
 pub use self::joints::{
-    UnknownJoint, JointType, JointDefBase, Joint,
-    DistanceJointDef, DistanceJoint,
-    FrictionJointDef, FrictionJoint,
-    GearJointDef, GearJoint,
-    MotorJointDef, MotorJoint,
-    MouseJointDef, MouseJoint,
-    PrismaticJointDef, PrismaticJoint,
-    PulleyJointDef, PulleyJoint,
-    RevoluteJointDef, RevoluteJoint,
-    RopeJointDef, RopeJoint,
-    WeldJointDef, WeldJoint,
-    WheelJointDef, WheelJoint
+    UNKNOWN_JOINT, UnknownJoint, JointType, JointDefBase, Joint,
+    DISTANCE_JOINT, DistanceJointDef, DistanceJoint,
+    FRICTION_JOINT, FrictionJointDef, FrictionJoint,
+    GEAR_JOINT, GearJointDef, GearJoint,
+    MOTOR_JOINT, MotorJointDef, MotorJoint,
+    MOUSE_JOINT, MouseJointDef, MouseJoint,
+    PRISMATIC_JOINT, PrismaticJointDef, PrismaticJoint,
+    PULLEY_JOINT, PulleyJointDef, PulleyJoint,
+    REVOLUTE_JOINT, RevoluteJointDef, RevoluteJoint,
+    ROPE_JOINT, RopeJointDef, RopeJoint,
+    WELD_JOINT, WeldJointDef, WeldJoint,
+    WHEEL_JOINT, WheelJointDef, WheelJoint
 };
 
 use std::ptr;
-use ffi;
+use {ffi, Wrapped, clone_from_ptr};
 use math::{Vec2, Transform};
 use dynamics::joints::private::{WrappedJoint, JointDef};
-use Wrapped;
-use clone_from_ptr;
-use collision::{RayCastInput, RayCastOutput, AABB};
-use collision::shapes::{
+use collision::{
+    RayCastInput, RayCastOutput, AABB,
     Shape, ShapeType, UnknownShape, MassData
 };
 use collision::shapes::private::WrappedShape;
@@ -61,13 +59,18 @@ impl World {
             ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr())
         }
     }
-    pub fn create_joint(&mut self,
-                        def: &JointDef) -> UnknownJoint {
+    pub fn create_joint<J: Joint>(&mut self,
+                                  def: &JointDef) -> J {
         unsafe {
-            WrappedJoint::from_joint_ptr(
+            let joint: J = WrappedJoint::from_joint_ptr(
                 ffi::World_create_joint(self.mut_ptr(),
                                         def.joint_def_ptr())
+                );
+            assert!(
+                joint.joint_type() == WrappedJoint::joint_type(None::<*const J>)
+                || self::UNKNOWN_JOINT == WrappedJoint::joint_type(None::<*const J>)
                 )
+            joint
         }
     }
     pub fn destroy_joint<J: Joint>(&mut self, joint: J) {
@@ -110,12 +113,12 @@ impl World {
             vec
         }
     }*/
-    pub fn set_allow_sleeping(&mut self, flag: bool) {
+    pub fn set_sleeping_allowed(&mut self, flag: bool) {
         unsafe {
             ffi::World_set_allow_sleeping(self.mut_ptr(), flag)
         }
     }
-    pub fn allow_sleeping(&self) -> bool {
+    pub fn is_sleeping_allowed(&self) -> bool {
         unsafe {
             ffi::World_get_allow_sleeping(self.ptr())
         }
@@ -125,7 +128,7 @@ impl World {
             ffi::World_set_warm_starting(self.mut_ptr(), flag)
         }
     }
-    pub fn warm_starting(&self) -> bool {
+    pub fn is_warm_starting(&self) -> bool {
         unsafe {
             ffi::World_get_warm_starting(self.ptr())
         }
@@ -135,7 +138,7 @@ impl World {
             ffi::World_set_continuous_physics(self.mut_ptr(), flag)
         }
     }
-    pub fn continuous_physics(&self) -> bool {
+    pub fn is_continuous_physics(&self) -> bool {
         unsafe {
             ffi::World_get_continuous_physics(self.ptr())
         }
@@ -145,7 +148,7 @@ impl World {
             ffi::World_set_sub_stepping(self.mut_ptr(), flag)
         }
     }
-    pub fn sub_stepping(&self) -> bool {
+    pub fn is_sub_stepping(&self) -> bool {
         unsafe {
             ffi::World_get_sub_stepping(self.ptr())
         }
@@ -200,12 +203,12 @@ impl World {
             ffi::World_is_locked(self.ptr())
         }
     }
-    pub fn set_auto_clear_forces(&mut self, flag: bool) {
+    pub fn set_auto_clearing_forces(&mut self, flag: bool) {
         unsafe {
             ffi::World_set_auto_clear_forces(self.mut_ptr(), flag)
         }
     }
-    pub fn auto_clear_forces(&self) -> bool {
+    pub fn is_auto_clearing_forces(&self) -> bool {
         unsafe {
             ffi::World_get_auto_clear_forces(self.ptr())
         }
@@ -468,7 +471,7 @@ impl Body {
             ffi::Body_set_gravity_scale(self.mut_ptr(), scale)
         }
     }
-    pub fn set_type(&mut self, typ: BodyType) {
+    pub fn set_body_type(&mut self, typ: BodyType) {
         unsafe {
             ffi::Body_set_type(self.mut_ptr(), typ)
         }
@@ -518,12 +521,12 @@ impl Body {
             ffi::Body_is_active(self.ptr())
         }
     }
-    pub fn set_fixed_rotation(&mut self, flag: bool) {
+    pub fn set_rotation_fixed(&mut self, flag: bool) {
         unsafe {
             ffi::Body_set_fixed_rotation(self.mut_ptr(), flag)
         }
     }
-    pub fn is_fixed_rotation(&self) -> bool {
+    pub fn is_rotation_fixed(&self) -> bool {
         unsafe {
             ffi::Body_is_fixed_rotation(self.ptr())
         }
@@ -552,6 +555,7 @@ impl Body {
 
 #[allow(dead_code)]
 #[deriving(Clone)]
+#[packed]
 pub struct Filter {
     pub category_bits: u16,
     pub mask_bits: u16,
@@ -569,6 +573,7 @@ impl Filter {
 }
 
 #[allow(dead_code)]
+#[packed]
 pub struct FixtureDef {
     shape: *const ffi::Shape,
     user_data: ffi::UserData,

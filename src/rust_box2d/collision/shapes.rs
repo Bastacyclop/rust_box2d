@@ -1,8 +1,6 @@
-use ffi;
-use math::Vec2;
-use math::Transform;
+use {ffi, Wrapped, clone_from_ptr};
+use math::{Vec2, Transform};
 use collision::{RayCastInput, RayCastOutput, AABB};
-use Wrapped;
 use self::private::WrappedShape;
 
 macro_rules! impl_shape(
@@ -34,11 +32,11 @@ pub mod private {
 }
 
 c_enum!(ShapeType with
-    CIRCLE = 0,
-    EDGE = 1,
-    POLYGON = 2,
-    CHAIN = 3,
-    COUNT = 4
+    CIRCLE_SHAPE = 0,
+    EDGE_SHAPE = 1,
+    POLYGON_SHAPE = 2,
+    CHAIN_SHAPE = 3,
+    COUNT_SHAPE = 4
 )
 
 #[packed]
@@ -122,16 +120,16 @@ impl WrappedShape for UnknownShape {
         assert!(!ptr.is_null())
         let shape_type = ffi::Shape_get_type(ptr as *const ffi::Shape);
         match shape_type {
-            CIRCLE => Circle(
+            CIRCLE_SHAPE => Circle(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
-            EDGE => Edge(
+            EDGE_SHAPE => Edge(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
-            POLYGON => Polygon(
+            POLYGON_SHAPE => Polygon(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
-            CHAIN => Chain(
+            CHAIN_SHAPE => Chain(
                 WrappedShape::from_shape_ptr(ptr)
                 ),
             _ => Unknown,
@@ -158,15 +156,6 @@ impl WrappedShape for UnknownShape {
 }
 
 impl Shape for UnknownShape {}
-
-/*#[unsafe_destructor]
-impl Drop for UnknownShape {
-    fn drop(&mut self) {
-        unsafe {
-            ffi::Shape_drop_virtual(self.mut_shape_ptr())
-        }
-    }    
-}*/
 
 wrap!(ffi::ChainShape into ChainShape)
 wrap!(ffi::CircleShape into CircleShape)
@@ -232,10 +221,7 @@ impl CircleShape {
     }
     pub fn support_vertex(&self, dir: &Vec2) -> Vec2 {
         unsafe {
-            let support =
-                ffi::CircleShape_get_support_vertex(self.ptr(), dir);
-            assert!(!support.is_null());
-            *support.clone()
+            clone_from_ptr(ffi::CircleShape_get_support_vertex(self.ptr(), dir))
         }
     }
     pub fn vertex_count(&self) -> uint {
@@ -245,10 +231,7 @@ impl CircleShape {
     }
     pub fn vertex(&self, index: uint) -> Vec2 {
         unsafe {
-            let vertex =
-                ffi::CircleShape_get_vertex(self.ptr(), index as i32);
-            assert!(!vertex.is_null());
-            *vertex.clone()
+            clone_from_ptr(ffi::CircleShape_get_vertex(self.ptr(), index as i32))
         }
     }
 }
@@ -299,10 +282,7 @@ impl PolygonShape {
     }
     pub fn vertex(&self, index: uint) -> Vec2 {
         unsafe {
-            let vertex =
-                ffi::PolygonShape_get_vertex(self.ptr(), index as i32);
-            assert!(!vertex.is_null());
-            *vertex.clone()
+            clone_from_ptr(ffi::PolygonShape_get_vertex(self.ptr(), index as i32))
         }
     }
     pub fn validate(&self) -> bool {

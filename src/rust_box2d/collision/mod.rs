@@ -3,7 +3,7 @@ pub use self::shapes::{
     PolygonShape, EdgeShape,
     CircleShape, ChainShape,
     MassData, ShapeType,
-    POLYGON, EDGE, CIRCLE, CHAIN, COUNT
+    POLYGON_SHAPE, EDGE_SHAPE, CIRCLE_SHAPE, CHAIN_SHAPE, COUNT_SHAPE
 };
 
 use math::Vec2;

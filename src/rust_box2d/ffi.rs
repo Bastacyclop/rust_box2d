@@ -9,21 +9,26 @@ use dynamics::{
     MotorJointDef, PrismaticJointDef,
     PulleyJointDef, RevoluteJointDef,
     WeldJointDef, WheelJointDef,
-    Filter, Profile
+    Filter, Profile, Manifold, ContactImpulse
 };
 use dynamics::joints::LimitState;
 use collision::{
     ShapeType, MassData, AABB, RayCastInput, RayCastOutput
 };
 
-//pub struct BlockAllocator;
 pub struct DestructionListener;
-pub struct DestructionCallbacks;
+pub struct CDestructionListener;
 pub struct ContactFilter;
+pub struct CContactFilter;
 pub struct ContactListener;
-pub struct Draw;
+pub struct CContactListener;
 pub struct QueryCallback;
+pub struct CQueryCallback;
 pub struct RayCastCallback;
+pub struct CRayCastCallback;
+pub struct Draw;
+pub struct CDraw;
+
 pub struct Contact;
 pub struct ContactManager;
 pub struct JointEdge;
@@ -74,7 +79,7 @@ extern {
     pub fn World_draw_debug_data(slf: *mut World);
     pub fn World_query_aabb(slf: *const World, qc: *mut QueryCallback,
                             aabb: *const AABB);
-    pub fn World_ray_cast(slf: *const World, rccb: *const RayCastCallback,
+    pub fn World_ray_cast(slf: *const World, rcc: *mut RayCastCallback,
                           p1: *const Vec2, p2: *const Vec2);
     pub fn World_get_body_list(slf: *mut World) -> *mut Body;
     pub fn World_get_body_list_const(slf: *const World) -> *const Body;
@@ -107,18 +112,59 @@ extern {
     pub fn World_get_profile(slf: *const World) -> *const Profile;
     pub fn World_dump(slf: *mut World);
     
-    pub fn DestructionCallbacks_new(goodbye_joint: unsafe extern fn(
-                                        *mut Joint, fn(dynamics::UnknownJoint)
-                                        ),
-                                    goodbye_fixture: unsafe extern fn(
-                                        *mut Fixture, fn(dynamics::Fixture)
-                                        ),
-                                    joint_obj: fn(dynamics::UnknownJoint),
-                                    fixture_obj: fn(dynamics::Fixture)
-                                    ) -> *mut DestructionCallbacks;
-    pub fn DestructionCallbacks_as_listener(slf: *mut DestructionCallbacks
-                                            ) -> *mut DestructionListener;
-    pub fn DestructionCallbacks_drop(slf: *mut DestructionCallbacks);
+    pub fn CDestructionListener_new(
+        goodbye_joint: unsafe extern fn(*mut Joint, fn(dynamics::UnknownJoint)),
+        goodbye_fixture: unsafe extern fn(*mut Fixture, fn(dynamics::Fixture)),
+        goodbye_joint_object: fn(dynamics::UnknownJoint),
+        goodbye_fixture_object: fn(dynamics::Fixture)
+        ) -> *mut CDestructionListener;
+    pub fn CDestructionListener_as_base(slf: *mut CDestructionListener
+                                        ) -> *mut DestructionListener;
+    pub fn CDestructionListener_drop(slf: *mut CDestructionListener);
+    pub fn CContactFilter_new(
+        should_collide: unsafe extern fn(*mut Fixture, *mut Fixture,
+                                         fn(dynamics::Fixture, dynamics::Fixture
+                                            ) -> bool
+                                         ) -> bool,
+        should_collide_object: fn(dynamics::Fixture, dynamics::Fixture) -> bool
+        ) -> *mut CContactFilter;
+    pub fn CContactFilter_as_base(slf: *mut CContactFilter
+                                  ) -> *mut ContactFilter;
+    pub fn CContactFilter_drop(slf: *mut CContactFilter);
+    pub fn CContactListener_new(
+        begin_contact: unsafe extern fn(*mut Contact, fn(dynamics::Contact)),
+        end_contact: unsafe extern fn(*mut Contact, fn(dynamics::Contact)),
+        pre_solve: unsafe extern fn(*mut Contact, *const Manifold,
+                                    fn(dynamics::Contact, &Manifold)
+                                    ),
+        post_solve: unsafe extern fn(*mut Contact, *const ContactImpulse,
+                                     fn(dynamics::Contact, &ContactImpulse)
+                                     ),
+        begin_contact_object: fn(dynamics::Contact),
+        end_contact_object: fn(dynamics::Contact),
+        pre_solve_object: fn(dynamics::Contact, &Manifold),
+        post_solve_object: fn(dynamics::Contact, &ContactImpulse)
+        ) -> *mut CContactListener;
+    pub fn CContactListener_as_base(slf: *mut CContactListener
+                                    ) -> *mut ContactListener;
+    pub fn CContactListener_drop(slf: *mut CContactListener);
+    pub fn CQueryCallback_new(
+        report_fixture: unsafe extern fn(*mut Fixture, fn(dynamics::Fixture) -> bool
+                                         ) -> bool,
+        report_fixture_object: fn(dynamics::Fixture) -> bool
+        ) -> *mut CQueryCallback;
+    pub fn CQueryCallback_as_base(slf: *mut CQueryCallback
+                                  ) -> *mut QueryCallback;
+    pub fn CQueryCallback_drop(slf: *mut CQueryCallback);
+    pub fn CRayCastCallback_new(
+        hit_fixture: unsafe extern fn(*mut Fixture, *const Vec2, *const Vec2, f32,
+                                      fn(dynamics::Fixture, &Vec2, &Vec2, f32) -> f32
+                                      ) -> f32,
+        hit_fixture_object: fn(dynamics::Fixture, &Vec2, &Vec2, f32) -> f32
+        ) -> *mut CRayCastCallback;
+    pub fn CRayCastCallback_as_base(slf: *mut CRayCastCallback
+                                    ) -> *mut RayCastCallback;
+    pub fn CRayCastCallback_drop(slf: *mut CRayCastCallback);
     
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;

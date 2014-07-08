@@ -14,7 +14,7 @@ pub use self::joints::{
 };
 
 use std::ptr;
-use {ffi, Wrapped, clone_from_ptr};
+use {ffi, Wrapped, clone_from_ptr, settings};
 use math::{Vec2, Transform};
 use dynamics::joints::private::{WrappedJoint, JointDef};
 use collision::{
@@ -46,9 +46,19 @@ impl World {
             Wrapped::from_ptr(ffi::World_new(gravity))
         }
     }
-    pub fn set_destruction_listener(&mut self, dc: &mut DestructionCallbacks) {
+    pub fn set_destruction_listener(&mut self, dc: &mut DestructionListener) {
         unsafe {
-            ffi::World_set_destruction_listener(self.mut_ptr(), dc.as_listener())
+            ffi::World_set_destruction_listener(self.mut_ptr(), dc.as_base())
+        }
+    }
+    pub fn set_contact_filter(&mut self, cf: &mut ContactFilter) {
+        unsafe {
+            ffi::World_set_contact_filter(self.mut_ptr(), cf.as_base())
+        }
+    }
+    pub fn set_contact_listener(&mut self, cl: &mut ContactListener) {
+        unsafe {
+            ffi::World_set_contact_listener(self.mut_ptr(), cl.as_base())
         }
     }
     pub fn create_body(&mut self, def: &BodyDef) -> Body {
@@ -64,12 +74,10 @@ impl World {
             ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr())
         }
     }
-    pub fn create_joint<J: Joint>(&mut self,
-                                  def: &JointDef) -> J {
+    pub fn create_joint<J: Joint>(&mut self, def: &JointDef) -> J {
         unsafe {
             let joint: J = WrappedJoint::from_joint_ptr(
-                ffi::World_create_joint(self.mut_ptr(),
-                                        def.joint_def_ptr())
+                ffi::World_create_joint(self.mut_ptr(), def.joint_def_ptr())
                 );
             assert!(
                 joint.joint_type() == WrappedJoint::joint_type(None::<*const J>)
@@ -81,8 +89,7 @@ impl World {
     pub fn destroy_joint<J: Joint>(&mut self, joint: J) {
         unsafe {
             let mut joint = joint;
-            ffi::World_destroy_joint(self.mut_ptr(),
-                                     joint.mut_joint_ptr())
+            ffi::World_destroy_joint(self.mut_ptr(), joint.mut_joint_ptr())
         }
     }
     pub fn step(&mut self,
@@ -104,6 +111,16 @@ impl World {
     pub fn draw_debug_data(&mut self) {
         unsafe {
             ffi::World_draw_debug_data(self.mut_ptr())
+        }
+    }
+    pub fn query_aabb(&self, qc: &mut QueryCallback, aabb: &AABB) {
+        unsafe {
+            ffi::World_query_aabb(self.ptr(), qc.as_base(), aabb)
+        }
+    }
+    pub fn ray_cast(&self, rcc: &mut RayCastCallback, p1: &Vec2, p2: &Vec2) {
+        unsafe {
+            ffi::World_ray_cast(self.ptr(), rcc.as_base(), p1, p2)
         }
     }
     /*pub fn mut_body_list(&mut self) -> Vec<Body> {
@@ -718,39 +735,210 @@ impl Fixture {
     }
 }
 
-wrap!(ffi::DestructionCallbacks into DestructionCallbacks)
+pub struct ContactImpulse {
+    pub normal_impulses: [f32, ..settings::MAX_MANIFOLD_POINTS],
+    pub tangent_impulses: [f32, ..settings::MAX_MANIFOLD_POINTS],
+    pub count: i32
+}
 
-unsafe extern fn foreign_goodbye_joint(ptr: *mut ffi::Joint,
+c_enum!(ManifoldType with
+    CIRCLES_MANIFOLD = 0,
+    FACE_A_MANIFOLD = 1,
+    FACE_B_MANIFOLD = 2
+)
+
+pub struct Manifold {
+    pub points: [ManifoldPoint, ..settings::MAX_MANIFOLD_POINTS],
+    pub local_normal: Vec2,
+    pub local_point: Vec2,
+    pub manifold_type: ManifoldType,
+    pub count: i32
+}
+
+pub struct ManifoldPoint {
+    pub local_point: Vec2,
+    pub normal_impulse: f32,
+    pub tangent_impulse: f32,
+    pub id: u32
+}
+
+wrap!(ffi::Contact into Contact)
+
+/*impl Contact {
+
+}*/
+
+wrap!(ffi::CDestructionListener into DestructionListener)
+wrap!(ffi::CContactFilter into ContactFilter)
+wrap!(ffi::CContactListener into ContactListener)
+wrap!(ffi::CQueryCallback into QueryCallback)
+wrap!(ffi::CRayCastCallback into RayCastCallback)
+
+unsafe extern fn foreign_goodbye_joint(joint: *mut ffi::Joint,
                                        goodbye_joint: fn(UnknownJoint)) {
-    goodbye_joint(WrappedJoint::from_joint_ptr(ptr))
+    goodbye_joint(WrappedJoint::from_joint_ptr(joint))
 }
-unsafe extern fn foreign_goodbye_fixture(ptr: *mut ffi::Fixture,
+unsafe extern fn foreign_goodbye_fixture(fixture: *mut ffi::Fixture,
                                          goodbye_fixture: fn(Fixture)) {
-    goodbye_fixture(Wrapped::from_ptr(ptr))
+    goodbye_fixture(Wrapped::from_ptr(fixture))
 }
 
-impl DestructionCallbacks {
+unsafe extern fn foreign_should_collide(fixture_a: *mut ffi::Fixture,
+                                        fixture_b: *mut ffi::Fixture,
+                                        should_collide: fn(Fixture, Fixture) -> bool
+                                        ) -> bool {
+    should_collide(Wrapped::from_ptr(fixture_a), Wrapped::from_ptr(fixture_b))
+}
+
+unsafe extern fn foreign_begin_contact(contact: *mut ffi::Contact,
+                                       begin_contact: fn(Contact)) {
+    begin_contact(Wrapped::from_ptr(contact))
+}
+unsafe extern fn foreign_end_contact(contact: *mut ffi::Contact,
+                                     end_contact: fn(Contact)) {
+    end_contact(Wrapped::from_ptr(contact))
+}
+unsafe extern fn foreign_pre_solve(contact: *mut ffi::Contact,
+                                   old_manifold: *const Manifold,
+                                   pre_solve: fn(Contact, &Manifold)) {
+    assert!(!old_manifold.is_null())
+    pre_solve(Wrapped::from_ptr(contact), &*old_manifold)
+}
+unsafe extern fn foreign_post_solve(contact: *mut ffi::Contact,
+                                    impulse: *const ContactImpulse,
+                                    post_solve: fn(Contact, &ContactImpulse)) {
+    assert!(!impulse.is_null())
+    post_solve(Wrapped::from_ptr(contact), &*impulse)
+}
+
+unsafe extern fn foreign_report_fixture(fixture: *mut ffi::Fixture,
+                                        report_fixture: fn(Fixture) -> bool
+                                        ) -> bool {
+    report_fixture(Wrapped::from_ptr(fixture))
+}
+
+unsafe extern fn foreign_hit_fixture(fixture: *mut ffi::Fixture,
+                                     point: *const Vec2,
+                                     normal: *const Vec2,
+                                     fraction: f32,
+                                     hit_fixture: fn(Fixture, &Vec2, &Vec2, f32) -> f32
+                                     ) -> f32 {
+    assert!(!point.is_null())
+    assert!(!normal.is_null())
+    hit_fixture(Wrapped::from_ptr(fixture), &*point, &*normal, fraction)
+}
+
+impl DestructionListener {
     pub fn new(goodbye_joint: fn(UnknownJoint),
                goodbye_fixture: fn(Fixture)
-               ) -> DestructionCallbacks {
+               ) -> DestructionListener {
         unsafe {
             Wrapped::from_ptr(
-                ffi::DestructionCallbacks_new(foreign_goodbye_joint,
+                ffi::CDestructionListener_new(foreign_goodbye_joint,
                                               foreign_goodbye_fixture,
                                               goodbye_joint,
                                               goodbye_fixture)
-            )
+                )
         }
     }
-    unsafe fn as_listener(&mut self) -> *mut ffi::DestructionListener {
-        ffi::DestructionCallbacks_as_listener(self.mut_ptr())
+    unsafe fn as_base(&mut self) -> *mut ffi::DestructionListener {
+        ffi::CDestructionListener_as_base(self.mut_ptr())
     }
 }
 
-impl Drop for DestructionCallbacks {
+impl ContactFilter {
+    pub fn new(should_collide: fn(Fixture, Fixture) -> bool) -> ContactFilter {
+        unsafe {
+            Wrapped::from_ptr(
+                ffi::CContactFilter_new(foreign_should_collide,
+                                        should_collide)
+                )
+        }
+    }
+    unsafe fn as_base(&mut self) -> *mut ffi::ContactFilter {
+        ffi::CContactFilter_as_base(self.mut_ptr())
+    }
+}
+
+impl ContactListener {
+    pub fn new(begin_contact: fn(Contact),
+               end_contact: fn(Contact),
+               pre_solve: fn(Contact, &Manifold),
+               post_solve: fn(Contact, &ContactImpulse)) -> ContactListener {
+        unsafe {
+            Wrapped::from_ptr(
+                ffi::CContactListener_new(foreign_begin_contact,
+                                          foreign_end_contact,
+                                          foreign_pre_solve,
+                                          foreign_post_solve,
+                                          begin_contact,
+                                          end_contact,
+                                          pre_solve,
+                                          post_solve)
+                )
+        }          
+    }
+    unsafe fn as_base(&mut self) -> *mut ffi::ContactListener {
+        ffi::CContactListener_as_base(self.mut_ptr())
+    }
+}
+
+impl QueryCallback {
+    pub fn new(report_fixture: fn(Fixture) -> bool) -> QueryCallback {
+        unsafe {
+            Wrapped::from_ptr(
+                ffi::CQueryCallback_new(foreign_report_fixture,
+                                        report_fixture)
+                )
+        }
+    }
+    unsafe fn as_base(&mut self) -> *mut ffi::QueryCallback {
+        ffi::CQueryCallback_as_base(self.mut_ptr())
+    }
+}
+
+impl RayCastCallback {
+    pub fn new(hit_fixture: fn(Fixture, &Vec2, &Vec2, f32) -> f32) -> RayCastCallback {
+        unsafe {
+            Wrapped::from_ptr(
+                ffi::CRayCastCallback_new(foreign_hit_fixture,
+                                          hit_fixture)
+                )
+        }
+    }
+    unsafe fn as_base(&mut self) -> *mut ffi::RayCastCallback {
+        ffi::CRayCastCallback_as_base(self.mut_ptr())
+    }
+}
+
+impl Drop for DestructionListener {
     fn drop(&mut self) {
         unsafe {
-            ffi::DestructionCallbacks_drop(self.mut_ptr())
+            ffi::CDestructionListener_drop(self.mut_ptr())
+        }
+    }
+}
+
+impl Drop for ContactFilter {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::CContactFilter_drop(self.mut_ptr())
+        }
+    }
+}
+
+impl Drop for ContactListener {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::CContactListener_drop(self.mut_ptr())
+        }
+    }
+}
+
+impl Drop for QueryCallback {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::CQueryCallback_drop(self.mut_ptr())
         }
     }
 }

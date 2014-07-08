@@ -5,6 +5,7 @@
 #![feature(macro_rules)]
 
 pub use common::math;
+pub use common::settings;
 
 mod ffi;
 

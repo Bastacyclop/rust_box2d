@@ -10,6 +10,7 @@ typedef unsigned short u16;
 typedef unsigned int u32;
 typedef float f32;
 typedef double f64;
+typedef i32 RustObject;
 
 #include "c_box2d/dynamics/body.cpp"
 #include "c_box2d/dynamics/fixture.cpp"

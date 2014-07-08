@@ -21,14 +21,12 @@ macro_rules! impl_joint(
             }
         }
         
-        impl Joint for $wrap {
-        }
+        impl Joint for $wrap {}
     );
 )
 
 macro_rules! joint_def(
     ($name:ident $(($(($visibility:ident))*) $field:ident: $typ:ty),+) => (
-        #[packed]
         #[allow(dead_code)]
         pub struct $name {
             pub base: JointDefBase,
@@ -94,7 +92,6 @@ c_enum!(LimitState with
 )
 
 #[allow(dead_code)]
-#[packed]
 pub struct JointDefBase {
     pub joint_type: JointType,
     user_data: ffi::UserData,

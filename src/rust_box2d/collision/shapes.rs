@@ -39,7 +39,6 @@ c_enum!(ShapeType with
     COUNT_SHAPE = 4
 )
 
-#[packed]
 pub struct MassData {
     pub mass: f32,
     pub center: Vec2,

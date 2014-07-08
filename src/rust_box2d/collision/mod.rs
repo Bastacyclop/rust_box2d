@@ -10,7 +10,6 @@ use math::Vec2;
 
 pub mod shapes;
 
-#[packed]
 #[deriving(Clone)]
 pub struct RayCastInput {
     pub p1: Vec2,
@@ -18,7 +17,6 @@ pub struct RayCastInput {
     pub max_fraction: f32
 }
 
-#[packed]
 #[deriving(Clone)]
 pub struct RayCastOutput {
     pub normal: Vec2,
@@ -34,7 +32,6 @@ impl RayCastOutput {
     }
 }
 
-#[packed]
 #[deriving(Clone)]
 pub struct AABB {
     pub lower_bound: Vec2,

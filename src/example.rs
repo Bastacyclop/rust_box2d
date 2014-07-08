@@ -35,6 +35,7 @@ fn main () {
     let mut body_def = BodyDef::new();
         body_def.body_type = b2::dynamics::DYNAMIC_BODY;
         body_def.position = Vec2 { x: 0., y: 4. };
+        //body_def.gravity_scale = 1.;
     let mut body = world.create_body(&body_def);
 
     assert_eq!(body.body_type(), b2::dynamics::DYNAMIC_BODY);

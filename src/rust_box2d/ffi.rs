@@ -1,6 +1,4 @@
-use math::Vec2;
-use math::Transform;
-
+use math::{Vec2, Transform};
 use dynamics;
 use dynamics::{
     BodyDef, BodyType, FixtureDef,
@@ -53,7 +51,11 @@ pub struct RopeJoint;
 pub struct WeldJoint;
 pub struct WheelJoint;
 
-pub type UserData = *mut i32;
+pub enum c_void {
+    __variant1,
+    __variant2,
+}
+pub type UserData = *mut c_void;
 
 #[link(name = "c_box2d", kind = "static")]
 extern {    

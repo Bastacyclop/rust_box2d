@@ -28,7 +28,6 @@ pub mod joints;
 
 wrap!(ffi::World into World)
 
-#[packed]
 #[deriving(Clone)]
 pub struct Profile {
     pub step: f32,
@@ -273,7 +272,6 @@ c_enum!(BodyType with
 )
 
 #[allow(dead_code)]
-#[packed]
 pub struct BodyDef {
     pub body_type: BodyType,
     pub position: Vec2,
@@ -583,7 +581,6 @@ impl Body {
 
 #[allow(dead_code)]
 #[deriving(Clone)]
-#[packed]
 pub struct Filter {
     pub category_bits: u16,
     pub mask_bits: u16,
@@ -601,7 +598,6 @@ impl Filter {
 }
 
 #[allow(dead_code)]
-#[packed]
 pub struct FixtureDef {
     shape: *const ffi::Shape,
     user_data: ffi::UserData,
@@ -741,7 +737,6 @@ impl Fixture {
     }
 }
 
-#[packed]
 pub struct ContactImpulse {
     pub normal_impulses: [f32, ..settings::MAX_MANIFOLD_POINTS],
     pub tangent_impulses: [f32, ..settings::MAX_MANIFOLD_POINTS],
@@ -754,7 +749,6 @@ c_enum!(ManifoldType with
     FACE_B_MANIFOLD = 2
 )
 
-#[packed]
 pub struct Manifold {
     pub points: [ManifoldPoint, ..settings::MAX_MANIFOLD_POINTS],
     pub local_normal: Vec2,
@@ -763,7 +757,6 @@ pub struct Manifold {
     pub count: i32
 }
 
-#[packed]
 pub struct ManifoldPoint {
     pub local_point: Vec2,
     pub normal_impulse: f32,
@@ -960,7 +953,6 @@ impl Drop for RayCastCallback {
     }
 }
 
-#[packed]
 pub struct Color {
     pub r: f32,
     pub g: f32,

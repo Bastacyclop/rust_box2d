@@ -20,7 +20,6 @@ macro_rules! c_enum(
 
 macro_rules! wrap(
     ($wrapped:ty into $wrap:ident) => (
-        #[packed]
         pub struct $wrap {
             ptr: *mut $wrapped
         }

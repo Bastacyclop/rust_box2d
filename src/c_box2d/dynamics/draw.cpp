@@ -5,7 +5,7 @@ typedef void (*DrawSegmentCB)(const b2Vec2*, const b2Vec2*, const b2Color*, Rust
 typedef void (*DrawTransformCB)(const b2Transform*, RustObject);
 
 struct CDraw: public b2Draw {
-    CDraw() {}
+    CDraw(): b2Draw() {}
     ~CDraw() override {}
     
     void DrawPolygon(const b2Vec2* vertices, i32 count,
@@ -84,4 +84,20 @@ b2Draw* CDraw_as_base(CDraw* self) {
 
 void CDraw_drop(CDraw* self) {
     delete self;
+}
+
+void CDraw_set_flags(CDraw* self, u32 flags) {
+    self->SetFlags(flags);
+}
+
+u32 CDraw_get_flags(const CDraw* self) {
+    return self->GetFlags();
+}
+
+void CDraw_append_flags(CDraw* self, u32 flags) {
+    self->AppendFlags(flags);
+}
+
+void CDraw_clear_flags(CDraw* self, u32 flags) {
+    self->ClearFlags(flags);
 }

@@ -4,12 +4,10 @@ use math::Transform;
 use dynamics;
 use dynamics::{
     BodyDef, BodyType, FixtureDef,
-    JointDefBase, JointType,
-    DistanceJointDef, FrictionJointDef,
-    MotorJointDef, PrismaticJointDef,
-    PulleyJointDef, RevoluteJointDef,
+    JointDefBase, JointType, DistanceJointDef, FrictionJointDef,
+    MotorJointDef, PrismaticJointDef, PulleyJointDef, RevoluteJointDef,
     WeldJointDef, WheelJointDef,
-    Filter, Profile, Manifold, ContactImpulse, Color
+    Filter, Profile, Manifold, ContactImpulse, Color, DrawFlags
 };
 use dynamics::joints::LimitState;
 use collision::{
@@ -187,6 +185,10 @@ extern {
         ) -> *mut CDraw;
     pub fn CDraw_as_base(slf: *mut CDraw) -> *mut Draw;
     pub fn CDraw_drop(slf: *mut CDraw);
+    pub fn CDraw_set_flags(slf: *mut CDraw, flags: DrawFlags);
+    pub fn CDraw_get_flags(slf: *const CDraw) -> DrawFlags;
+    pub fn CDraw_append_flags(slf: *mut CDraw, flags: DrawFlags);
+    pub fn CDraw_clear_flags(slf: *mut CDraw, flags: DrawFlags);
     
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;

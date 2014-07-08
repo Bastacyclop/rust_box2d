@@ -968,6 +968,14 @@ pub struct Color {
     pub a: f32
 }
 
+c_enum!(DrawFlags with
+    DRAW_SHAPE = 0x0001,
+    DRAW_JOINT = 0x0002,
+    DRAW_AABB = 0x0004,
+    DRAW_PAIR = 0x0008,
+    DRAW_CENTER_OF_MASS = 0x0010
+)
+
 wrap!(ffi::CDraw into Draw)
 
 unsafe extern fn foreign_draw_polygon(vertices: *const Vec2, count: i32,
@@ -1038,6 +1046,26 @@ impl Draw {
     }
     unsafe fn as_base(&mut self) -> *mut ffi::Draw {
         ffi::CDraw_as_base(self.mut_ptr())
+    }
+    pub fn set_flags(&mut self, flags: DrawFlags) {
+        unsafe {
+            ffi::CDraw_set_flags(self.mut_ptr(), flags)
+        }
+    }
+    pub fn flags(&self) -> DrawFlags {
+        unsafe {
+            ffi::CDraw_get_flags(self.ptr())
+        }
+    }
+    pub fn add_flags(&mut self, flags: DrawFlags) {
+        unsafe {
+            ffi::CDraw_append_flags(self.mut_ptr(), flags)
+        }
+    }
+    pub fn remove_flags(&mut self, flags: DrawFlags) {
+        unsafe {
+            ffi::CDraw_clear_flags(self.mut_ptr(), flags)
+        }
     }
 }
 

@@ -9,7 +9,7 @@ use dynamics::{
     MotorJointDef, PrismaticJointDef,
     PulleyJointDef, RevoluteJointDef,
     WeldJointDef, WheelJointDef,
-    Filter, Profile, Manifold, ContactImpulse
+    Filter, Profile, Manifold, ContactImpulse, Color
 };
 use dynamics::joints::LimitState;
 use collision::{
@@ -165,6 +165,28 @@ extern {
     pub fn CRayCastCallback_as_base(slf: *mut CRayCastCallback
                                     ) -> *mut RayCastCallback;
     pub fn CRayCastCallback_drop(slf: *mut CRayCastCallback);
+    
+    pub fn CDraw_new(
+        draw_polygon: unsafe extern fn(*const Vec2, i32, *const Color,
+                                       fn(Vec<Vec2>, &Color)), 
+        draw_solid_polygon: unsafe extern fn(*const Vec2, i32, *const Color,
+                                             fn(Vec<Vec2>, &Color)),
+        draw_circle: unsafe extern fn(*const Vec2, f32, *const Color,
+                                      fn(&Vec2, f32, &Color)),
+        draw_solid_circle: unsafe extern fn(*const Vec2, f32, *const Vec2, *const Color,
+                                            fn(&Vec2, f32, &Vec2, &Color)),
+        draw_segment: unsafe extern fn(*const Vec2, *const Vec2, *const Color,
+                                       fn(&Vec2, &Vec2, &Color)),
+        draw_transform: unsafe extern fn(*const Transform, fn(&Transform)),
+        draw_polygon_object: fn(Vec<Vec2>, &Color),
+        draw_solid_polygon_object: fn(Vec<Vec2>, &Color),
+        draw_circle_object: fn(&Vec2, f32, &Color),
+        draw_solid_circle_object: fn(&Vec2, f32, &Vec2, &Color),
+        draw_segment_object: fn(&Vec2, &Vec2, &Color),
+        draw_transform_object: fn(&Transform),
+        ) -> *mut CDraw;
+    pub fn CDraw_as_base(slf: *mut CDraw) -> *mut Draw;
+    pub fn CDraw_drop(slf: *mut CDraw);
     
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;

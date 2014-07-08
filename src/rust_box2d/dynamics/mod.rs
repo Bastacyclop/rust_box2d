@@ -14,6 +14,7 @@ pub use self::joints::{
 };
 
 use std::ptr;
+use std::vec;
 use {ffi, Wrapped, clone_from_ptr, settings};
 use math::{Vec2, Transform};
 use dynamics::joints::private::{WrappedJoint, JointDef};
@@ -59,6 +60,11 @@ impl World {
     pub fn set_contact_listener(&mut self, cl: &mut ContactListener) {
         unsafe {
             ffi::World_set_contact_listener(self.mut_ptr(), cl.as_base())
+        }
+    }
+    pub fn set_debug_draw(&mut self, d: &mut Draw) {
+        unsafe {
+            ffi::World_set_debug_draw(self.mut_ptr(), d.as_base())
         }
     }
     pub fn create_body(&mut self, def: &BodyDef) -> Body {
@@ -735,6 +741,7 @@ impl Fixture {
     }
 }
 
+#[packed]
 pub struct ContactImpulse {
     pub normal_impulses: [f32, ..settings::MAX_MANIFOLD_POINTS],
     pub tangent_impulses: [f32, ..settings::MAX_MANIFOLD_POINTS],
@@ -747,6 +754,7 @@ c_enum!(ManifoldType with
     FACE_B_MANIFOLD = 2
 )
 
+#[packed]
 pub struct Manifold {
     pub points: [ManifoldPoint, ..settings::MAX_MANIFOLD_POINTS],
     pub local_normal: Vec2,
@@ -755,6 +763,7 @@ pub struct Manifold {
     pub count: i32
 }
 
+#[packed]
 pub struct ManifoldPoint {
     pub local_point: Vec2,
     pub normal_impulse: f32,
@@ -939,6 +948,103 @@ impl Drop for QueryCallback {
     fn drop(&mut self) {
         unsafe {
             ffi::CQueryCallback_drop(self.mut_ptr())
+        }
+    }
+}
+
+impl Drop for RayCastCallback {
+    fn drop(&mut self) {
+        unsafe  {
+            ffi::CRayCastCallback_drop(self.mut_ptr())
+        }
+    }
+}
+
+#[packed]
+pub struct Color {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32
+}
+
+wrap!(ffi::CDraw into Draw)
+
+unsafe extern fn foreign_draw_polygon(vertices: *const Vec2, count: i32,
+                                      color: *const Color,
+                                      draw_polygon: fn(Vec<Vec2>, &Color)) {
+    assert!(!color.is_null())
+    draw_polygon(vec::raw::from_buf(vertices, count as uint), &*color)
+}
+unsafe extern fn foreign_draw_solid_polygon(vertices: *const Vec2, count: i32,
+                                            color: *const Color,
+                                            draw_solid_polygon: fn(Vec<Vec2>, &Color)) {
+    assert!(!color.is_null())
+    draw_solid_polygon(vec::raw::from_buf(vertices, count as uint), &*color)
+}
+unsafe extern fn foreign_draw_circle(center: *const Vec2, radius: f32,
+                                     color: *const Color,
+                                     draw_circle: fn(&Vec2, f32, &Color)) {
+    assert!(!center.is_null())
+    assert!(!color.is_null())
+    draw_circle(&*center, radius, &*color)
+}
+unsafe extern fn foreign_draw_solid_circle(center: *const Vec2, radius: f32,
+                                           axis: *const Vec2, color: *const Color,
+                                           draw_solid_circle: fn(&Vec2, f32, &Vec2, &Color)) {
+    assert!(!center.is_null())
+    assert!(!axis.is_null())
+    assert!(!color.is_null())
+    draw_solid_circle(&*center, radius, &*axis, &*color)
+}
+unsafe extern fn foreign_draw_segment(p1: *const Vec2, p2: *const Vec2,
+                                      color: *const Color,
+                                      draw_segment: fn(&Vec2, &Vec2, &Color)) {
+    assert!(!p1.is_null())
+    assert!(!p2.is_null())
+    assert!(!color.is_null())
+    draw_segment(&*p1, &*p2, &*color)
+}
+unsafe extern fn foreign_draw_transform(xf: *const Transform,
+                                        draw_transform: fn(&Transform)) {
+    assert!(!xf.is_null())
+    draw_transform(&*xf)
+}
+
+impl Draw {
+    pub fn new(draw_polygon: fn(Vec<Vec2>, &Color),
+               draw_solid_polygon: fn(Vec<Vec2>, &Color),
+               draw_circle: fn(&Vec2, f32, &Color),
+               draw_solid_circle: fn(&Vec2, f32, &Vec2, &Color),
+               draw_segment: fn(&Vec2, &Vec2, &Color),
+               draw_transform: fn(&Transform)
+               ) -> Draw {
+        unsafe {
+            Wrapped::from_ptr(
+                ffi::CDraw_new(foreign_draw_polygon,
+                               foreign_draw_solid_polygon,
+                               foreign_draw_circle,
+                               foreign_draw_solid_circle,
+                               foreign_draw_segment,
+                               foreign_draw_transform,
+                               draw_polygon,
+                               draw_solid_polygon,
+                               draw_circle,
+                               draw_solid_circle,
+                               draw_segment,
+                               draw_transform)
+                )
+        }
+    }
+    unsafe fn as_base(&mut self) -> *mut ffi::Draw {
+        ffi::CDraw_as_base(self.mut_ptr())
+    }
+}
+
+impl Drop for Draw {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::CDraw_drop(self.mut_ptr())
         }
     }
 }

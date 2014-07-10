@@ -4,11 +4,7 @@ name = "rust_box2d"
 version = "0.1.0"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 license = "GPLv3"
-build = [
-"mkdir -p target",
-"g++ -c src/box2d_frontend.cpp -o target/box2d_frontend.o -std=c++11 -Isrc -fPIC -Wall",
-"ar rcs target/libbox2d_frontend.a target/box2d_frontend.o"
-]
+build = "./build_frontend.sh"
 
 [[lib]]
 

@@ -10,12 +10,6 @@ More Safety
 Contacts ?
 UserData ?
 Classes:
-    DestructionListener
-    ContactFilter
-    ContactListener
-    Draw
-    QueryCallback
-    RayCastCallback
     Contact
     Jacobian ?
     JointEdge

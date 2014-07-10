@@ -35,7 +35,6 @@ fn main () {
     let mut body_def = BodyDef::new();
         body_def.body_type = b2::dynamics::DYNAMIC_BODY;
         body_def.position = Vec2 { x: 0., y: 4. };
-        //body_def.gravity_scale = 1.;
     let mut body = world.create_body(&body_def);
 
     assert_eq!(body.body_type(), b2::dynamics::DYNAMIC_BODY);
@@ -53,7 +52,7 @@ fn main () {
         world.step(time_step, velocity_iterations, position_iterations);
         let pos = body.position();
         let angle = body.angle();
-        println!("({}, {}) {}", pos.x, pos.y, angle);
+        println!("({:.03f}, {:.03f}) {:.03f}", pos.x, pos.y, angle);
     }
 
     world.destroy_body(body); // Unecessary here

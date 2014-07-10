@@ -57,7 +57,7 @@ pub enum c_void {
 }
 pub type UserData = *mut c_void;
 
-#[link(name = "c_box2d", kind = "static")]
+#[link(name = "box2d_frontend", kind = "static")]
 extern {    
     pub fn World_new(gravity: *const Vec2) -> *mut World;
     pub fn World_drop(slf: *mut World);

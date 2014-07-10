@@ -15,9 +15,3 @@ Rust_Box2D is under the GPLv3 License :
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>
-
-
-Rust_Box2D is using :
----------------------
-
-- Box2D <http://box2d.org/>

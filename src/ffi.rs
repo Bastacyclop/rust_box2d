@@ -51,6 +51,7 @@ pub struct RopeJoint;
 pub struct WeldJoint;
 pub struct WheelJoint;
 
+#[allow(non_camel_case_types)]
 pub enum c_void {
     __variant1,
     __variant2,
@@ -58,7 +59,7 @@ pub enum c_void {
 pub type UserData = *mut c_void;
 
 #[link(name = "box2d_frontend", kind = "static")]
-extern {    
+extern {
     pub fn World_new(gravity: *const Vec2) -> *mut World;
     pub fn World_drop(slf: *mut World);
     pub fn World_set_destruction_listener(slf: *mut World,

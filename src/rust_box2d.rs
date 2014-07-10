@@ -1,5 +1,3 @@
-#![crate_id = "rust_box2d#2.3.1"]
-#![crate_type = "lib"]
 #![license = "GPLv3"]
 
 #![feature(macro_rules)]
@@ -44,6 +42,9 @@ macro_rules! wrap(
 pub mod dynamics;
 pub mod common;
 pub mod collision;
+
+#[link(name = "Box2D")] extern {}
+#[link(name = "stdc++")] extern {}
 
 trait Wrapped<T> {
     unsafe fn from_ptr(ptr: *mut T) -> Self;

@@ -1,32 +1,29 @@
-typedef void (*SayGoodbyeToJointCB)(b2Joint*, RustObject);
-typedef void (*SayGoodbyeToFixtureCB)(b2Fixture*, RustObject);
+typedef void (*SayGoodbyeToJointCB)(RustObject, b2Joint*);
+typedef void (*SayGoodbyeToFixtureCB)(RustObject, b2Fixture*);
 
 struct CDestructionListener: public b2DestructionListener {
     CDestructionListener() {}
     ~CDestructionListener() override {}
     
     void SayGoodbye(b2Joint* joint) override {
-        say_goodbye_to_joint(joint, say_goodbye_to_joint_object);
+        say_goodbye_to_joint(object, joint);
     }
     void SayGoodbye(b2Fixture* fixture) override {
-        say_goodbye_to_fixture(fixture, say_goodbye_to_fixture_object);
+        say_goodbye_to_fixture(object, fixture);
     }
     
+    RustObject object;
     SayGoodbyeToJointCB say_goodbye_to_joint;
     SayGoodbyeToFixtureCB say_goodbye_to_fixture;
-    RustObject say_goodbye_to_joint_object;
-    RustObject say_goodbye_to_fixture_object;
 };
 
-CDestructionListener* CDestructionListener_new(SayGoodbyeToJointCB sgtj,
-                                               SayGoodbyeToFixtureCB sgtf,
-                                               RustObject sgtj_o,
-                                               RustObject sgtf_o) {
+CDestructionListener* CDestructionListener_new(RustObject o,
+                                               SayGoodbyeToJointCB sgtj,
+                                               SayGoodbyeToFixtureCB sgtf) {
     CDestructionListener* dl = new CDestructionListener();
+    dl->object = o;
     dl->say_goodbye_to_joint = sgtj;
     dl->say_goodbye_to_fixture = sgtf;
-    dl->say_goodbye_to_joint_object = sgtj_o;
-    dl->say_goodbye_to_fixture_object = sgtf_o;
     return dl;
 }
 
@@ -38,24 +35,24 @@ void CDestructionListener_drop(CDestructionListener* self) {
     delete self;
 }
 
-typedef bool (*ShouldCollideCB)(b2Fixture*, b2Fixture*, RustObject);
+typedef bool (*ShouldCollideCB)(RustObject, b2Fixture*, b2Fixture*);
 
 struct CContactFilter: public b2ContactFilter {
     CContactFilter() {}
     ~CContactFilter() override {}
     
     bool ShouldCollide(b2Fixture* fixture_a, b2Fixture* fixture_b) override {
-        return should_collide(fixture_a, fixture_b, should_collide_object);
+        return should_collide(object, fixture_a, fixture_b);
     }
     
+    RustObject object;
     ShouldCollideCB should_collide;
-    RustObject should_collide_object;
 };
 
-CContactFilter* CContactFilter_new(ShouldCollideCB sc, RustObject sc_o) {
+CContactFilter* CContactFilter_new(RustObject o, ShouldCollideCB sc) {
     CContactFilter* cf = new CContactFilter();
+    cf->object = o;
     cf->should_collide = sc;
-    cf->should_collide_object = sc_o;
     return cf;
 }
 
@@ -67,55 +64,46 @@ void CContactFilter_drop(CContactFilter* self) {
     delete self;
 }
 
-typedef void (*BeginContactCB)(b2Contact*, RustObject);
-typedef void (*EndContactCB)(b2Contact*, RustObject);
-typedef void (*PreSolveCB)(b2Contact*, const b2Manifold*, RustObject);
-typedef void (*PostSolveCB)(b2Contact*, const b2ContactImpulse*, RustObject);
+typedef void (*BeginContactCB)(RustObject, b2Contact*);
+typedef void (*EndContactCB)(RustObject, b2Contact*);
+typedef void (*PreSolveCB)(RustObject, b2Contact*, const b2Manifold*);
+typedef void (*PostSolveCB)(RustObject, b2Contact*, const b2ContactImpulse*);
 
 struct CContactListener: public b2ContactListener {
     CContactListener() {}
     ~CContactListener() override {}
     
     void BeginContact(b2Contact* contact) override {
-        begin_contact(contact, begin_contact_object);
+        begin_contact(object, contact);
     }
     void EndContact(b2Contact* contact) override {
-        end_contact(contact, end_contact_object);
+        end_contact(object, contact);
     }
     void PreSolve(b2Contact* contact, const b2Manifold* old_manifold) {
-        pre_solve(contact, old_manifold, pre_solve_object);
+        pre_solve(object, contact, old_manifold);
     }
     void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse) {
-        post_solve(contact, impulse, post_solve_object);
+        post_solve(object, contact, impulse);
     }
     
+    RustObject object;
     BeginContactCB begin_contact;
     EndContactCB end_contact;
     PreSolveCB pre_solve;
     PostSolveCB post_solve;
-    RustObject begin_contact_object;
-    RustObject end_contact_object;
-    RustObject pre_solve_object;
-    RustObject post_solve_object;
 };
 
-CContactListener* CContactListener_new(BeginContactCB bc,
+CContactListener* CContactListener_new(RustObject o,
+                                       BeginContactCB bc,
                                        EndContactCB ec,
                                        PreSolveCB pres,
-                                       PostSolveCB posts,
-                                       RustObject bc_o,
-                                       RustObject ec_o,
-                                       RustObject pres_o,
-                                       RustObject posts_o) {
+                                       PostSolveCB posts) {
     CContactListener* cl = new CContactListener();
+    cl->object = o;
     cl->begin_contact = bc;
     cl->end_contact = ec;
     cl->pre_solve = pres;
     cl->post_solve = posts;
-    cl->begin_contact_object = bc_o;
-    cl->end_contact_object = ec_o;
-    cl->pre_solve_object = pres_o;
-    cl->post_solve_object = posts_o;
     return cl;
 }
 
@@ -127,25 +115,24 @@ void CContactListener_drop(CContactListener* self) {
     delete self;
 }
 
-typedef bool (*ReportFixtureCB)(b2Fixture*, RustObject);
+typedef bool (*QCReportFixtureCB)(RustObject, b2Fixture*);
 
 struct CQueryCallback: public b2QueryCallback {
     CQueryCallback() {}
     ~CQueryCallback() override {}
     
     bool ReportFixture(b2Fixture* fixture) override {
-        return report_fixture(fixture, report_fixture_object);
+        return report_fixture(object, fixture);
     }
     
-    ReportFixtureCB report_fixture;
-    RustObject report_fixture_object;
+    RustObject object;
+    QCReportFixtureCB report_fixture;
 };
 
-CQueryCallback* CQueryCallback_new(ReportFixtureCB rf,
-                                   RustObject rf_o) {
+CQueryCallback* CQueryCallback_new(RustObject o, QCReportFixtureCB rf) {
     CQueryCallback* qc = new CQueryCallback();
+    qc->object = o;
     qc->report_fixture = rf;
-    qc->report_fixture_object = rf_o;
     return qc;
 }
 
@@ -157,7 +144,8 @@ void CQueryCallback_drop(CQueryCallback* self) {
     delete self;
 }
 
-typedef f32 (*HitFixtureCB)(b2Fixture*, const b2Vec2*, const b2Vec2*, f32, RustObject);
+typedef f32 (*RCCReportFixtureCB)(RustObject, b2Fixture*, const b2Vec2*,
+                                  const b2Vec2*, f32);
 
 struct CRayCastCallback: public b2RayCastCallback {
     CRayCastCallback() {}
@@ -167,18 +155,17 @@ struct CRayCastCallback: public b2RayCastCallback {
                       const b2Vec2& point,
                       const b2Vec2& normal,
                       f32 fraction) override {
-        return hit_fixture(fixture, &point, &normal, fraction, hit_fixture_object);
+        return report_fixture(object, fixture, &point, &normal, fraction);
     }
     
-    HitFixtureCB hit_fixture;
-    RustObject hit_fixture_object;
+    RustObject object;
+    RCCReportFixtureCB report_fixture;
 };
 
-CRayCastCallback* CRayCastCallback_new(HitFixtureCB hf,
-                                       RustObject hf_o) {
+CRayCastCallback* CRayCastCallback_new(RustObject o, RCCReportFixtureCB rf) {
     CRayCastCallback* rcc = new CRayCastCallback();
-    rcc->hit_fixture = hf;
-    rcc->hit_fixture_object = hf_o;
+    rcc->object = o;
+    rcc->report_fixture = rf;
     return rcc;
 }
 

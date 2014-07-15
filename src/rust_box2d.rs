@@ -1,20 +1,14 @@
 #![license = "GPLv3"]
 
-#![feature(macro_rules)]
+#![feature(macro_rules, unsafe_destructor)]
 
+extern crate libc;
 pub use common::math;
 pub use common::settings;
+pub use ffi::Any;
 
-mod ffi;
-
-macro_rules! c_enum(
-    ($name:ident with $($element:ident = $value:expr),+) => (
-        pub type $name = i32;
-        $(
-            pub static $element: $name = $value as $name;
-        )+
-    );
-)
+#[link(name = "Box2D")] extern {}
+#[link(name = "stdc++")] extern {}
 
 macro_rules! wrap(
     ($wrapped:ty into $wrap:ident) => (
@@ -39,12 +33,10 @@ macro_rules! wrap(
     );
 )
 
+mod ffi;
 pub mod dynamics;
 pub mod common;
 pub mod collision;
-
-#[link(name = "Box2D")] extern {}
-#[link(name = "stdc++")] extern {}
 
 trait Wrapped<T> {
     unsafe fn from_ptr(ptr: *mut T) -> Self;

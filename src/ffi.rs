@@ -1,5 +1,5 @@
+use libc::c_void;
 use math::{Vec2, Transform};
-use dynamics;
 use dynamics::{
     BodyDef, BodyType, FixtureDef,
     JointDefBase, JointType, DistanceJointDef, FrictionJointDef,
@@ -51,12 +51,7 @@ pub struct RopeJoint;
 pub struct WeldJoint;
 pub struct WheelJoint;
 
-#[allow(non_camel_case_types)]
-pub enum c_void {
-    __variant1,
-    __variant2,
-}
-pub type UserData = *mut c_void;
+pub type Any = *mut c_void;
 
 #[link(name = "box2d_frontend", kind = "static")]
 extern {
@@ -114,77 +109,57 @@ extern {
     pub fn World_dump(slf: *mut World);
     
     pub fn CDestructionListener_new(
-        goodbye_joint: unsafe extern fn(*mut Joint, fn(dynamics::UnknownJoint)),
-        goodbye_fixture: unsafe extern fn(*mut Fixture, fn(dynamics::Fixture)),
-        goodbye_joint_object: fn(dynamics::UnknownJoint),
-        goodbye_fixture_object: fn(dynamics::Fixture)
+        object: Any,
+        goodbye_joint: unsafe extern fn(Any, *mut Joint),
+        goodbye_fixture: unsafe extern fn(Any, *mut Fixture),
         ) -> *mut CDestructionListener;
     pub fn CDestructionListener_as_base(slf: *mut CDestructionListener
                                         ) -> *mut DestructionListener;
     pub fn CDestructionListener_drop(slf: *mut CDestructionListener);
     pub fn CContactFilter_new(
-        should_collide: unsafe extern fn(*mut Fixture, *mut Fixture,
-                                         fn(dynamics::Fixture, dynamics::Fixture
-                                            ) -> bool
-                                         ) -> bool,
-        should_collide_object: fn(dynamics::Fixture, dynamics::Fixture) -> bool
+        object: Any,
+        should_collide: unsafe extern fn(Any, *mut Fixture, *mut Fixture
+                                         ) -> bool
         ) -> *mut CContactFilter;
     pub fn CContactFilter_as_base(slf: *mut CContactFilter
                                   ) -> *mut ContactFilter;
     pub fn CContactFilter_drop(slf: *mut CContactFilter);
     pub fn CContactListener_new(
-        begin_contact: unsafe extern fn(*mut Contact, fn(dynamics::Contact)),
-        end_contact: unsafe extern fn(*mut Contact, fn(dynamics::Contact)),
-        pre_solve: unsafe extern fn(*mut Contact, *const Manifold,
-                                    fn(dynamics::Contact, &Manifold)
-                                    ),
-        post_solve: unsafe extern fn(*mut Contact, *const ContactImpulse,
-                                     fn(dynamics::Contact, &ContactImpulse)
-                                     ),
-        begin_contact_object: fn(dynamics::Contact),
-        end_contact_object: fn(dynamics::Contact),
-        pre_solve_object: fn(dynamics::Contact, &Manifold),
-        post_solve_object: fn(dynamics::Contact, &ContactImpulse)
+        object: Any,
+        begin_contact: unsafe extern fn(Any, *mut Contact),
+        end_contact: unsafe extern fn(Any, *mut Contact),
+        pre_solve: unsafe extern fn(Any, *mut Contact, *const Manifold),
+        post_solve: unsafe extern fn(Any, *mut Contact, *const ContactImpulse),
         ) -> *mut CContactListener;
     pub fn CContactListener_as_base(slf: *mut CContactListener
                                     ) -> *mut ContactListener;
     pub fn CContactListener_drop(slf: *mut CContactListener);
     pub fn CQueryCallback_new(
-        report_fixture: unsafe extern fn(*mut Fixture, fn(dynamics::Fixture) -> bool
-                                         ) -> bool,
-        report_fixture_object: fn(dynamics::Fixture) -> bool
+        object: Any,
+        report_fixture: unsafe extern fn(Any, *mut Fixture) -> bool,
         ) -> *mut CQueryCallback;
     pub fn CQueryCallback_as_base(slf: *mut CQueryCallback
                                   ) -> *mut QueryCallback;
     pub fn CQueryCallback_drop(slf: *mut CQueryCallback);
     pub fn CRayCastCallback_new(
-        hit_fixture: unsafe extern fn(*mut Fixture, *const Vec2, *const Vec2, f32,
-                                      fn(dynamics::Fixture, &Vec2, &Vec2, f32) -> f32
-                                      ) -> f32,
-        hit_fixture_object: fn(dynamics::Fixture, &Vec2, &Vec2, f32) -> f32
+        object: Any,
+        hit_fixture: unsafe extern fn(Any, *mut Fixture, *const Vec2,
+                                      *const Vec2, f32) -> f32,
         ) -> *mut CRayCastCallback;
     pub fn CRayCastCallback_as_base(slf: *mut CRayCastCallback
                                     ) -> *mut RayCastCallback;
     pub fn CRayCastCallback_drop(slf: *mut CRayCastCallback);
     
     pub fn CDraw_new(
-        draw_polygon: unsafe extern fn(*const Vec2, i32, *const Color,
-                                       fn(Vec<Vec2>, &Color)), 
-        draw_solid_polygon: unsafe extern fn(*const Vec2, i32, *const Color,
-                                             fn(Vec<Vec2>, &Color)),
-        draw_circle: unsafe extern fn(*const Vec2, f32, *const Color,
-                                      fn(&Vec2, f32, &Color)),
-        draw_solid_circle: unsafe extern fn(*const Vec2, f32, *const Vec2, *const Color,
-                                            fn(&Vec2, f32, &Vec2, &Color)),
-        draw_segment: unsafe extern fn(*const Vec2, *const Vec2, *const Color,
-                                       fn(&Vec2, &Vec2, &Color)),
-        draw_transform: unsafe extern fn(*const Transform, fn(&Transform)),
-        draw_polygon_object: fn(Vec<Vec2>, &Color),
-        draw_solid_polygon_object: fn(Vec<Vec2>, &Color),
-        draw_circle_object: fn(&Vec2, f32, &Color),
-        draw_solid_circle_object: fn(&Vec2, f32, &Vec2, &Color),
-        draw_segment_object: fn(&Vec2, &Vec2, &Color),
-        draw_transform_object: fn(&Transform),
+        object: Any,
+        draw_polygon: unsafe extern fn(Any, *const Vec2, i32, *const Color),
+        draw_solid_polygon: unsafe extern fn(Any, *const Vec2, i32, *const Color),
+        draw_circle: unsafe extern fn(Any, *const Vec2, f32, *const Color),
+        draw_solid_circle: unsafe extern fn(Any, *const Vec2, f32, *const Vec2,
+                                            *const Color),
+        draw_segment: unsafe extern fn(Any, *const Vec2, *const Vec2,
+                                       *const Color),
+        draw_transform: unsafe extern fn(Any, *const Transform),
         ) -> *mut CDraw;
     pub fn CDraw_as_base(slf: *mut CDraw) -> *mut Draw;
     pub fn CDraw_drop(slf: *mut CDraw);
@@ -258,8 +233,8 @@ extern {
     pub fn Body_get_contact_list_const(slf: *const Body) -> *const ContactEdge;
     pub fn Body_get_next(slf: *mut Body) -> *mut Body;
     pub fn Body_get_next_const(slf: *const Body) -> *const Body;
-    //pub fn Body_get_user_data(slf: *const Body) -> UserData;
-    //pub fn Body_set_user_data(slf: *mut Body, data: UserData);
+    pub fn Body_get_user_data(slf: *const Body) -> Any;
+    pub fn Body_set_user_data(slf: *mut Body, data: Any);
     pub fn Body_get_world(slf: *mut Body) -> *mut World;
     pub fn Body_get_world_const(slf: *const Body) -> *const World;
     pub fn Body_dump(slf: *mut Body);                 
@@ -276,8 +251,8 @@ extern {
     pub fn Fixture_get_body_const(slf: *const Fixture) -> *const Body;
     pub fn Fixture_get_next(slf: *mut Fixture) -> *mut Fixture;
     pub fn Fixture_get_next_const(slf: *const Fixture) -> *const Fixture;
-    //pub fn Fixture_get_user_data(slf: *const Fixture) -> UserData;
-    //pub fn Fixture_set_user_data(slf: *mut Fixture, data: UserData);
+    pub fn Fixture_get_user_data(slf: *const Fixture) -> Any;
+    pub fn Fixture_set_user_data(slf: *mut Fixture, data: Any);
     pub fn Fixture_test_point(slf: *const Fixture, p: *const Vec2) -> bool;
     pub fn Fixture_ray_cast(slf: *const Fixture,
                             output: *mut RayCastOutput,
@@ -371,8 +346,8 @@ extern {
     pub fn Joint_get_reaction_torque_virtual(slf: *const Joint) -> f32;
     pub fn Joint_get_next(slf: *mut Joint) -> *mut Joint;
     pub fn Joint_get_next_const(slf: *const Joint) -> *const Joint;
-    //pub fn Joint_get_user_data(slf: *const Joint) -> UserData;
-    //pub fn Joint_set_user_data(slf: *mut Joint, data: UserData);
+    pub fn Joint_get_user_data(slf: *const Joint) -> Any;
+    pub fn Joint_set_user_data(slf: *mut Joint, data: Any);
     pub fn Joint_is_active(slf: *const Joint) -> bool;
     pub fn Joint_dump_virtual(slf: *mut Joint);
     pub fn Joint_shift_origin_virtual(slf: *mut Joint, origin: *const Vec2);

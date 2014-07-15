@@ -1,8 +1,10 @@
-typedef void (*DrawPolygonCB)(const b2Vec2*, i32, const b2Color*, RustObject);
-typedef void (*DrawCircleCB)(const b2Vec2*, f32, const b2Color*, RustObject);
-typedef void (*DrawSolidCircleCB)(const b2Vec2*, f32, const b2Vec2*, const b2Color*, RustObject);
-typedef void (*DrawSegmentCB)(const b2Vec2*, const b2Vec2*, const b2Color*, RustObject);
-typedef void (*DrawTransformCB)(const b2Transform*, RustObject);
+typedef void (*DrawPolygonCB)(RustObject, const b2Vec2*, i32, const b2Color*);
+typedef void (*DrawCircleCB)(RustObject, const b2Vec2*, f32, const b2Color*);
+typedef void (*DrawSolidCircleCB)(RustObject, const b2Vec2*, f32, const b2Vec2*,
+                                  const b2Color*);
+typedef void (*DrawSegmentCB)(RustObject, const b2Vec2*, const b2Vec2*,
+                              const b2Color*);
+typedef void (*DrawTransformCB)(RustObject, const b2Transform*);
 
 struct CDraw: public b2Draw {
     CDraw(): b2Draw() {}
@@ -10,71 +12,57 @@ struct CDraw: public b2Draw {
     
     void DrawPolygon(const b2Vec2* vertices, i32 count,
                      const b2Color& color) override {
-        draw_polygon(vertices, count, &color, draw_polygon_object);
+        draw_polygon(object, vertices, count, &color);
     }
     
     void DrawSolidPolygon(const b2Vec2* vertices, i32 count,
                           const b2Color& color) override {
-        draw_solid_polygon(vertices, count, &color, draw_solid_polygon_object);                  
+        draw_solid_polygon(object, vertices, count, &color);
     }
     
     void DrawCircle(const b2Vec2& center, f32 radius,
                     const b2Color& color) override {
-        draw_circle(&center, radius, &color, draw_circle_object);            
+        draw_circle(object, &center, radius, &color);
     }
     
     void DrawSolidCircle(const b2Vec2& center, f32 radius,
                          const b2Vec2& axis, const b2Color& color) override {
-        draw_solid_circle(&center, radius, &axis, &color, draw_solid_circle_object);            
+        draw_solid_circle(object, &center, radius, &axis, &color);
     }
     
-    void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) override {
-        draw_segment(&p1, &p2, &color, draw_segment_object);
+    void DrawSegment(const b2Vec2& p1, const b2Vec2& p2,
+                     const b2Color& color) override {
+        draw_segment(object, &p1, &p2, &color);
     }
     
     void DrawTransform(const b2Transform& xf) override {
-        draw_transform(&xf, draw_transform_object);
+        draw_transform(object, &xf);
     }
     
+    RustObject object;
     DrawPolygonCB draw_polygon;
     DrawPolygonCB draw_solid_polygon;
     DrawCircleCB draw_circle;
     DrawSolidCircleCB draw_solid_circle;
     DrawSegmentCB draw_segment;
     DrawTransformCB draw_transform;
-    RustObject draw_polygon_object;
-    RustObject draw_solid_polygon_object;
-    RustObject draw_circle_object;
-    RustObject draw_solid_circle_object;
-    RustObject draw_segment_object;
-    RustObject draw_transform_object;
 };
 
-CDraw* CDraw_new(DrawPolygonCB dp,
+CDraw* CDraw_new(RustObject o,
+                 DrawPolygonCB dp,
                  DrawPolygonCB dsp,
                  DrawCircleCB dc,
                  DrawSolidCircleCB dsc,
                  DrawSegmentCB ds,
-                 DrawTransformCB dt,
-                 RustObject dp_o,
-                 RustObject dsp_o,
-                 RustObject dc_o,
-                 RustObject dsc_o,
-                 RustObject ds_o,
-                 RustObject dt_o) {
+                 DrawTransformCB dt) {
     CDraw* d = new CDraw();
+    d->object = o;
     d->draw_polygon = dp;
     d->draw_solid_polygon = dsp;
     d->draw_circle = dc;
     d->draw_solid_circle = dsc;
     d->draw_segment = ds;
     d->draw_transform = dt;
-    d->draw_polygon_object = dp_o;
-    d->draw_solid_polygon_object = dsp_o;
-    d->draw_circle_object = dc_o;
-    d->draw_solid_circle_object = dsc_o;
-    d->draw_segment_object = ds_o;
-    d->draw_transform_object = dt_o;
     return d;
 }
 

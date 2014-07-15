@@ -31,13 +31,16 @@ pub mod private {
     }
 }
 
-c_enum!(ShapeType with
+#[repr(C)]
+#[allow(non_camel_case_types)]
+#[deriving(PartialEq, Show)]
+pub enum ShapeType {
     CIRCLE_SHAPE = 0,
     EDGE_SHAPE = 1,
     POLYGON_SHAPE = 2,
     CHAIN_SHAPE = 3,
     COUNT_SHAPE = 4
-)
+}
 
 pub struct MassData {
     pub mass: f32,

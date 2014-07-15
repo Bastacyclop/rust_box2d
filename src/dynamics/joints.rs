@@ -69,7 +69,10 @@ pub mod private {
     }
 }
 
-c_enum!(JointType with
+#[repr(C)]
+#[allow(non_camel_case_types)]
+#[deriving(PartialEq, Show)]
+pub enum JointType {
     UNKNOWN_JOINT = 0,
     REVOLUTE_JOINT = 1,
     PRISMATIC_JOINT = 2,
@@ -82,19 +85,22 @@ c_enum!(JointType with
     FRICTION_JOINT = 9,
     ROPE_JOINT = 10,
     MOTOR_JOINT = 11
-)
+}
 
-c_enum!(LimitState with
+#[repr(C)]
+#[allow(non_camel_case_types)]
+#[deriving(PartialEq, Show)]
+pub enum LimitState {
     INACTIVE_LIMIT = 0,
     LOWER_LIMIT = 1,
     UPPER_LIMIT = 2,
     EQUAL_LIMITS = 3
-)
+}
 
 #[allow(dead_code)]
 pub struct JointDefBase {
     pub joint_type: JointType,
-    user_data: ffi::UserData,
+    pub user_data: ffi::Any,
     body_a: *mut ffi::Body,
     body_b: *mut ffi::Body,
     pub collide_connected: bool,
@@ -170,6 +176,12 @@ pub trait Joint: WrappedJoint {
         unsafe {
             ffi::Joint_is_active(self.joint_ptr())
         }
+    }
+    unsafe fn get_user_data(&self) -> ffi::Any {
+        ffi::Joint_get_user_data(self.joint_ptr())
+    }
+    unsafe fn set_user_data(&mut self, data: ffi::Any) {
+        ffi::Joint_set_user_data(self.mut_joint_ptr(), data)
     }
     fn dump(&mut self) {
         unsafe {

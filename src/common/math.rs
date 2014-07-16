@@ -72,6 +72,12 @@ impl Rot {
     pub fn identity() -> Rot {
         Rot { sin: 0., cos: 1. }
     }
+    pub fn x_axis(&self) -> Vec2 {
+        Vec2 { x: self.cos, y: self.sin }
+    }
+    pub fn y_axis(&self) -> Vec2 {
+        Vec2 { x: -self.sin, y: self.cos }
+    }
 }
 
 #[deriving(Clone, PartialEq, Show)]

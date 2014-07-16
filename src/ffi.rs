@@ -1,11 +1,12 @@
 use libc::c_void;
 use math::{Vec2, Transform};
+use common::{Color, DrawFlags};
 use dynamics::{
     BodyDef, BodyType, FixtureDef,
     JointDefBase, JointType, DistanceJointDef, FrictionJointDef,
     MotorJointDef, PrismaticJointDef, PulleyJointDef, RevoluteJointDef,
     WeldJointDef, WheelJointDef,
-    Filter, Profile, Manifold, ContactImpulse, Color, DrawFlags
+    Filter, Profile, Manifold, ContactImpulse
 };
 use dynamics::joints::LimitState;
 use collision::{

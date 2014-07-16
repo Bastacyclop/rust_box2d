@@ -100,7 +100,7 @@ pub enum LimitState {
 #[allow(dead_code)]
 pub struct JointDefBase {
     pub joint_type: JointType,
-    pub user_data: ffi::Any,
+    user_data: ffi::Any,
     body_a: *mut ffi::Body,
     body_b: *mut ffi::Body,
     pub collide_connected: bool,
@@ -115,6 +115,9 @@ impl JointDefBase {
             body_b: ptr::mut_null(),
             collide_connected: false
         }
+    }
+    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
+        self.user_data = data as ffi::Any
     }
 }
 
@@ -177,11 +180,11 @@ pub trait Joint: WrappedJoint {
             ffi::Joint_is_active(self.joint_ptr())
         }
     }
-    unsafe fn get_user_data(&self) -> ffi::Any {
-        ffi::Joint_get_user_data(self.joint_ptr())
+    unsafe fn user_data<T>(&self) -> *mut T {
+        ffi::Joint_get_user_data(self.joint_ptr()) as *mut T
     }
-    unsafe fn set_user_data(&mut self, data: ffi::Any) {
-        ffi::Joint_set_user_data(self.mut_joint_ptr(), data)
+    unsafe fn set_user_data<T>(&mut self, data: *mut T) {
+        ffi::Joint_set_user_data(self.mut_joint_ptr(), data as ffi::Any)
     }
     fn dump(&mut self) {
         unsafe {

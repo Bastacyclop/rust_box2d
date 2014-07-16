@@ -295,7 +295,7 @@ pub struct BodyDef {
     pub fixed_rotation: bool,
     pub bullet: bool,
     pub active: bool,
-    pub user_data: ffi::Any,
+    user_data: ffi::Any,
     pub gravity_scale: f32,
 }
 
@@ -317,6 +317,9 @@ impl BodyDef {
             user_data: ptr::mut_null(),
             gravity_scale: 1.
         }
+    }
+    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
+        self.user_data = data as ffi::Any
     }
 }
 
@@ -577,6 +580,12 @@ impl Body {
             Wrapped::from_ptr(ffi::Body_get_next(self.mut_ptr()))
         }
     }
+    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
+        ffi::Body_set_user_data(self.mut_ptr(), data as ffi::Any)
+    }
+    pub unsafe fn user_data<T>(&self) -> *mut T {
+        ffi::Body_get_user_data(self.ptr()) as *mut T
+    }
     pub fn mut_world(&mut self) -> World {
         unsafe {
             Wrapped::from_ptr(ffi::Body_get_world(self.mut_ptr()))
@@ -610,7 +619,7 @@ impl Filter {
 #[allow(dead_code)]
 pub struct FixtureDef {
     shape: *const ffi::Shape,
-    pub user_data: ffi::Any,
+    user_data: ffi::Any,
     pub friction: f32,
     pub restitution: f32,
     pub density: f32,
@@ -631,6 +640,9 @@ impl FixtureDef {
                 filter: Filter::new()
             }
         }
+    }
+    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
+        self.user_data = data as ffi::Any
     }
 }
 
@@ -740,11 +752,11 @@ impl Fixture {
             clone_from_ptr(ffi::Fixture_get_aabb(self.ptr(), child_index as i32))
         }
     }
-    pub unsafe fn get_user_data(&self) -> ffi::Any {
-        ffi::Fixture_get_user_data(self.ptr())
+    pub unsafe fn user_data<T>(&self) -> *mut T {
+        ffi::Fixture_get_user_data(self.ptr()) as *mut T
     }
-    pub unsafe fn set_user_data(&mut self, data: ffi::Any) {
-        ffi::Fixture_set_user_data(self.mut_ptr(), data)
+    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
+        ffi::Fixture_set_user_data(self.mut_ptr(), data as ffi::Any)
     }
     pub fn dump(&mut self, child_count: uint) {
         unsafe {

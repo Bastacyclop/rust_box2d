@@ -5,7 +5,6 @@
 extern crate libc;
 pub use common::math;
 pub use common::settings;
-pub use ffi::Any;
 
 #[link(name = "Box2D")] extern {}
 #[link(name = "stdc++")] extern {}

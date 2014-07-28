@@ -25,16 +25,15 @@ pub struct Color {
     pub a: f32
 }
 
-#[repr(C)]
-#[allow(non_camel_case_types)]
-#[deriving(PartialEq, Show)]
-pub enum DrawFlags {
-    DRAW_SHAPE = 0x0001,
-    DRAW_JOINT = 0x0002,
-    DRAW_AABB = 0x0004,
-    DRAW_PAIR = 0x0008,
-    DRAW_CENTER_OF_MASS = 0x0010
-}
+bitflags!(
+    flags DrawFlags: u32 {
+    static DRAW_SHAPE = 0x0001,
+    static DRAW_JOINT = 0x0002,
+    static DRAW_AABB = 0x0004,
+    static DRAW_PAIR = 0x0008,
+    static DRAW_CENTER_OF_MASS = 0x0010
+    }
+)
 
 pub trait Draw {
     fn draw_polygon(&mut self, vertices: Vec<Vec2>, color: &Color);
@@ -95,19 +94,19 @@ unsafe extern fn draw_transform(any: ffi::Any, xf: *const Transform) {
     (*draw).draw_transform(&*xf)
 }
 
-pub struct DrawLink<T> {
-    t: T,
+pub struct DrawLink<'l, T> {
+    t: &'l mut T,
     c: *mut ffi::CDraw
 }
 
-impl<T: Draw> DrawLink<T> {
-    pub fn with(t: T) -> DrawLink<T> {
+impl<'l, T: Draw> DrawLink<'l, T> {
+    pub fn with(t: &'l mut T) -> DrawLink<'l, T> {
         let mut link = DrawLink {
             t: t,
             c: ptr::mut_null()
         };
         unsafe {
-            link.c = ffi::CDraw_new(mem::transmute(&mut &mut link.t),
+            link.c = ffi::CDraw_new(mem::transmute(&mut link.t),
                                     draw_polygon,
                                     draw_solid_polygon,
                                     draw_circle,
@@ -139,7 +138,7 @@ impl<T: Draw> DrawLink<T> {
     }
 }    
 
-impl<T> DerivedDraw for DrawLink<T> {
+impl<'l, T> DerivedDraw for DrawLink<'l, T> {
     unsafe fn draw_ptr(&self) -> *const ffi::Draw {
         ffi::CDraw_as_base(self.c) as *const ffi::Draw
     }
@@ -149,7 +148,7 @@ impl<T> DerivedDraw for DrawLink<T> {
 }
 
 #[unsafe_destructor]
-impl<T> Drop for DrawLink<T> {
+impl<'l, T> Drop for DrawLink<'l, T> {
     fn drop(&mut self) {
         unsafe {
             ffi::CDraw_drop(self.c)

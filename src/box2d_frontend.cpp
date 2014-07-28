@@ -12,11 +12,12 @@ typedef float f32;
 typedef double f64;
 typedef i32 RustObject;
 
+#include "common/draw.cpp"
+
 #include "dynamics/body.cpp"
 #include "dynamics/fixture.cpp"
 #include "dynamics/world.cpp"
 #include "dynamics/world_callbacks.cpp"
-#include "dynamics/draw.cpp"
 
 #include "collision/shapes/shape.cpp"
 #include "collision/shapes/chain_shape.cpp"

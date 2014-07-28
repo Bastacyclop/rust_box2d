@@ -58,7 +58,7 @@ unsafe extern fn draw_solid_polygon(any: ffi::Any, vertices: *const Vec2,
     assert!(!color.is_null())
     let draw = mem::transmute::<_, *mut &mut Draw>(any);
     (*draw).draw_solid_polygon(vec::raw::from_buf(vertices, count as uint),
-                              &*color)
+                               &*color)
 }
 unsafe extern fn draw_circle(any: ffi::Any, center: *const Vec2,
                              radius: f32, color: *const Color) {
@@ -94,19 +94,19 @@ unsafe extern fn draw_transform(any: ffi::Any, xf: *const Transform) {
     (*draw).draw_transform(&*xf)
 }
 
-pub struct DrawLink<'l, T> {
-    t: &'l mut T,
+pub struct DrawLink<'l> {
+    t: &'l mut Draw,
     c: *mut ffi::CDraw
 }
 
-impl<'l, T: Draw> DrawLink<'l, T> {
-    pub fn with(t: &'l mut T) -> DrawLink<'l, T> {
+impl<'l> DrawLink<'l> {
+    pub fn with(t: &'l mut Draw) -> DrawLink<'l> {
         let mut link = DrawLink {
             t: t,
             c: ptr::mut_null()
         };
         unsafe {
-            link.c = ffi::CDraw_new(mem::transmute(&mut link.t),
+            link.c = ffi::CDraw_new(mem::transmute::<&mut &mut Draw, _>(&mut link.t),
                                     draw_polygon,
                                     draw_solid_polygon,
                                     draw_circle,
@@ -138,7 +138,7 @@ impl<'l, T: Draw> DrawLink<'l, T> {
     }
 }    
 
-impl<'l, T> DerivedDraw for DrawLink<'l, T> {
+impl<'l> DerivedDraw for DrawLink<'l> {
     unsafe fn draw_ptr(&self) -> *const ffi::Draw {
         ffi::CDraw_as_base(self.c) as *const ffi::Draw
     }
@@ -148,7 +148,7 @@ impl<'l, T> DerivedDraw for DrawLink<'l, T> {
 }
 
 #[unsafe_destructor]
-impl<'l, T> Drop for DrawLink<'l, T> {
+impl<'l> Drop for DrawLink<'l> {
     fn drop(&mut self) {
         unsafe {
             ffi::CDraw_drop(self.c)

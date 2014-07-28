@@ -16,7 +16,7 @@ pub use self::joints::{
 use std::ptr;
 use std::mem;
 use {ffi, Wrapped, clone_from_ptr, settings};
-use common::{Draw, DrawLink};
+use common::DrawLink;
 use common::private::DerivedDraw;
 use math::{Vec2, Transform};
 use dynamics::joints::private::{WrappedJoint, JointDef};
@@ -66,7 +66,7 @@ impl World {
             ffi::World_set_contact_listener(self.mut_ptr(), cll.as_ffi_base())
         }
     }
-    pub fn set_debug_draw<T: Draw>(&mut self, dl: &mut DrawLink<T>) {
+    pub fn set_debug_draw(&mut self, dl: &mut DrawLink) {
         unsafe {
             ffi::World_set_debug_draw(self.mut_ptr(), dl.mut_draw_ptr())
         }

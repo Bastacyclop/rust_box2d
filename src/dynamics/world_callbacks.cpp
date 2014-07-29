@@ -1,5 +1,5 @@
-typedef void (*SayGoodbyeToJointCB)(RustObject, b2Joint*);
-typedef void (*SayGoodbyeToFixtureCB)(RustObject, b2Fixture*);
+typedef void (*SayGoodbyeToJointCB)(RustFatObject, b2Joint*);
+typedef void (*SayGoodbyeToFixtureCB)(RustFatObject, b2Fixture*);
 
 struct CDestructionListener: public b2DestructionListener {
     CDestructionListener() {}
@@ -12,12 +12,12 @@ struct CDestructionListener: public b2DestructionListener {
         say_goodbye_to_fixture(object, fixture);
     }
     
-    RustObject object;
+    RustFatObject object;
     SayGoodbyeToJointCB say_goodbye_to_joint;
     SayGoodbyeToFixtureCB say_goodbye_to_fixture;
 };
 
-CDestructionListener* CDestructionListener_new(RustObject o,
+CDestructionListener* CDestructionListener_new(RustFatObject o,
                                                SayGoodbyeToJointCB sgtj,
                                                SayGoodbyeToFixtureCB sgtf) {
     CDestructionListener* dl = new CDestructionListener();
@@ -35,7 +35,7 @@ void CDestructionListener_drop(CDestructionListener* self) {
     delete self;
 }
 
-typedef bool (*ShouldCollideCB)(RustObject, b2Fixture*, b2Fixture*);
+typedef bool (*ShouldCollideCB)(RustFatObject, b2Fixture*, b2Fixture*);
 
 struct CContactFilter: public b2ContactFilter {
     CContactFilter() {}
@@ -45,11 +45,11 @@ struct CContactFilter: public b2ContactFilter {
         return should_collide(object, fixture_a, fixture_b);
     }
     
-    RustObject object;
+    RustFatObject object;
     ShouldCollideCB should_collide;
 };
 
-CContactFilter* CContactFilter_new(RustObject o, ShouldCollideCB sc) {
+CContactFilter* CContactFilter_new(RustFatObject o, ShouldCollideCB sc) {
     CContactFilter* cf = new CContactFilter();
     cf->object = o;
     cf->should_collide = sc;
@@ -64,10 +64,10 @@ void CContactFilter_drop(CContactFilter* self) {
     delete self;
 }
 
-typedef void (*BeginContactCB)(RustObject, b2Contact*);
-typedef void (*EndContactCB)(RustObject, b2Contact*);
-typedef void (*PreSolveCB)(RustObject, b2Contact*, const b2Manifold*);
-typedef void (*PostSolveCB)(RustObject, b2Contact*, const b2ContactImpulse*);
+typedef void (*BeginContactCB)(RustFatObject, b2Contact*);
+typedef void (*EndContactCB)(RustFatObject, b2Contact*);
+typedef void (*PreSolveCB)(RustFatObject, b2Contact*, const b2Manifold*);
+typedef void (*PostSolveCB)(RustFatObject, b2Contact*, const b2ContactImpulse*);
 
 struct CContactListener: public b2ContactListener {
     CContactListener() {}
@@ -86,14 +86,14 @@ struct CContactListener: public b2ContactListener {
         post_solve(object, contact, impulse);
     }
     
-    RustObject object;
+    RustFatObject object;
     BeginContactCB begin_contact;
     EndContactCB end_contact;
     PreSolveCB pre_solve;
     PostSolveCB post_solve;
 };
 
-CContactListener* CContactListener_new(RustObject o,
+CContactListener* CContactListener_new(RustFatObject o,
                                        BeginContactCB bc,
                                        EndContactCB ec,
                                        PreSolveCB pres,
@@ -115,7 +115,7 @@ void CContactListener_drop(CContactListener* self) {
     delete self;
 }
 
-typedef bool (*QCReportFixtureCB)(RustObject, b2Fixture*);
+typedef bool (*QCReportFixtureCB)(RustFatObject, b2Fixture*);
 
 struct CQueryCallback: public b2QueryCallback {
     CQueryCallback() {}
@@ -125,11 +125,11 @@ struct CQueryCallback: public b2QueryCallback {
         return report_fixture(object, fixture);
     }
     
-    RustObject object;
+    RustFatObject object;
     QCReportFixtureCB report_fixture;
 };
 
-CQueryCallback* CQueryCallback_new(RustObject o, QCReportFixtureCB rf) {
+CQueryCallback* CQueryCallback_new(RustFatObject o, QCReportFixtureCB rf) {
     CQueryCallback* qc = new CQueryCallback();
     qc->object = o;
     qc->report_fixture = rf;
@@ -144,7 +144,7 @@ void CQueryCallback_drop(CQueryCallback* self) {
     delete self;
 }
 
-typedef f32 (*RCCReportFixtureCB)(RustObject, b2Fixture*, const b2Vec2*,
+typedef f32 (*RCCReportFixtureCB)(RustFatObject, b2Fixture*, const b2Vec2*,
                                   const b2Vec2*, f32);
 
 struct CRayCastCallback: public b2RayCastCallback {
@@ -158,11 +158,11 @@ struct CRayCastCallback: public b2RayCastCallback {
         return report_fixture(object, fixture, &point, &normal, fraction);
     }
     
-    RustObject object;
+    RustFatObject object;
     RCCReportFixtureCB report_fixture;
 };
 
-CRayCastCallback* CRayCastCallback_new(RustObject o, RCCReportFixtureCB rf) {
+CRayCastCallback* CRayCastCallback_new(RustFatObject o, RCCReportFixtureCB rf) {
     CRayCastCallback* rcc = new CRayCastCallback();
     rcc->object = o;
     rcc->report_fixture = rf;

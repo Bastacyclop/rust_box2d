@@ -9,25 +9,110 @@ pub use common::settings;
 #[link(name = "Box2D")] extern {}
 #[link(name = "stdc++")] extern {}
 
-macro_rules! wrap(
+macro_rules! wrapped(
     ($wrapped:ty into $wrap:ident) => (
-        pub struct $wrap {
+        pub struct $wrap<'l> {
             ptr: *mut $wrapped
         }
         
-        impl Wrapped<$wrapped> for $wrap {
-            unsafe fn from_ptr(ptr: *mut $wrapped) -> $wrap {
-                assert!(!ptr.is_null())
-                $wrap {
-                    ptr: ptr
-                }   
-            }
+        impl<'l> Wrapped<$wrapped> for $wrap<'l> {
             unsafe fn ptr(&self) -> *const $wrapped {
                 self.ptr as *const $wrapped
             }
+        }
+        
+        impl<'l> WrappedMut<$wrapped> for $wrap<'l> {
+            unsafe fn from_ptr(ptr: *mut $wrapped) -> $wrap<'l> {
+                assert!(!ptr.is_null())
+                $wrap {
+                    ptr: ptr
+                }
+            }
+            
             unsafe fn mut_ptr(&mut self) -> *mut $wrapped {
                 self.ptr
-            }    
+            }
+        }
+    );
+    
+    ($wrapped:ty into $wrap:ident, $const_wrap:ident) => (
+        wrapped!($wrapped into $wrap)
+        const_wrapped!($wrapped into $const_wrap)
+    );
+    
+    ($wrapped:ty into $wrap:ident with base $base:ty
+     << $base_as:path
+     >> $as_base:path) => (
+     
+        wrapped!($wrapped into $wrap)
+        
+        impl<'l> WrappedBase<$base> for $wrap<'l> {
+            unsafe fn base_ptr(&self) -> *const $base {
+                $as_base(self.ptr) as *const $base
+            }
+        }
+        
+        impl<'l> WrappedMutBase<$base> for $wrap<'l> {
+            unsafe fn from_ptr(ptr: *mut $base) -> $wrap<'l> {
+                assert!(!ptr.is_null())
+                $wrap {
+                    ptr: $base_as(ptr)
+                }
+            }
+            
+            unsafe fn mut_base_ptr(&mut self) -> *mut $base {
+                $as_base(self.ptr)
+            }
+        }
+    );
+    
+    ($wrapped:ty into $wrap:ident, $const_wrap:ident
+     with base $base:ty
+     << $base_as:path
+     >> $as_base:path) => (
+     
+        wrapped!($wrapped into $wrap with base $base
+                 << $base_as
+                 >> $as_base
+                 )
+        const_wrapped!($wrapped into $const_wrap)
+                 
+        impl<'l> WrappedBase<$base> for $const_wrap<'l> {
+            unsafe fn base_ptr(&self) -> *const $base {
+                $as_base(self.ptr as *mut $wrapped) as *const $base
+            }
+        }
+        
+        impl<'l> WrappedConstBase<$base> for $const_wrap<'l> {
+            unsafe fn from_ptr(ptr: *const $base) -> $const_wrap<'l> {
+                assert!(!ptr.is_null())
+                $const_wrap {
+                    ptr: $base_as(ptr as *mut $base) as *const $wrapped
+                }
+            }
+        }
+    );
+)
+
+macro_rules! const_wrapped(
+    ($wrapped:ty into $const_wrap:ident) => (
+        pub struct $const_wrap<'l> {
+            ptr: *const $wrapped
+        }
+        
+        impl<'l> Wrapped<$wrapped> for $const_wrap<'l> {
+            unsafe fn ptr(&self) -> *const $wrapped {
+                self.ptr
+            }
+        }
+        
+        impl<'l> WrappedConst<$wrapped> for $const_wrap<'l> {
+            unsafe fn from_ptr(ptr: *const $wrapped) -> $const_wrap<'l> {
+                assert!(!ptr.is_null())
+                $const_wrap {
+                    ptr: ptr
+                }
+            } 
         }
     );
 )
@@ -38,14 +123,27 @@ pub mod common;
 pub mod collision;
 
 trait Wrapped<T> {
-    unsafe fn from_ptr(ptr: *mut T) -> Self;
     unsafe fn ptr(&self) -> *const T;
+}
+
+trait WrappedMut<T>: Wrapped<T> {
+    unsafe fn from_ptr(ptr: *mut T) -> Self;
     unsafe fn mut_ptr(&mut self) -> *mut T;
 }
 
-fn clone_from_ptr<T: Clone>(t: *const T) -> T {
-    unsafe {
-        assert!(!t.is_null())
-        (*t).clone()
-    }
+trait WrappedConst<T>: Wrapped<T> {
+    unsafe fn from_ptr(ptr: *const T) -> Self;
+}
+
+trait WrappedBase<T> {
+    unsafe fn base_ptr(&self) -> *const T;
+}
+
+trait WrappedMutBase<T>: WrappedBase<T> {
+    unsafe fn from_ptr(ptr: *mut T) -> Self;
+    unsafe fn mut_base_ptr(&mut self) -> *mut T;
+}
+
+trait WrappedConstBase<T>: WrappedBase<T> {
+    unsafe fn from_ptr(ptr: *const T) -> Self;
 }

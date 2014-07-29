@@ -25,7 +25,7 @@ fn main () {
         ground_body_def.position = Vec2 { x: 0., y: -10. };
     let mut ground_body = world.create_body(&ground_body_def);
     
-    assert_eq!(ground_body.position(), Vec2 { x: 0., y: -10. });
+    assert_eq!(ground_body.position(), &Vec2 { x: 0., y: -10. });
     assert_eq!(world.body_count(), 1);
     
     let mut ground_box = PolygonShape::new();
@@ -33,12 +33,12 @@ fn main () {
     ground_body.create_fast_fixture(&ground_box, 0.);
 
     let mut body_def = BodyDef::new();
-        body_def.body_type = b2::dynamics::DYNAMIC_BODY;
+        body_def.body_type = b2::dynamics::DynamicBodyType;
         body_def.position = Vec2 { x: 0., y: 4. };
     let mut body = world.create_body(&body_def);
 
-    assert_eq!(body.body_type(), b2::dynamics::DYNAMIC_BODY);
-    assert_eq!(body.position(), Vec2 { x: 0., y: 4. });
+    assert_eq!(body.body_type(), b2::dynamics::DynamicBodyType);
+    assert_eq!(body.position(), &Vec2 { x: 0., y: 4. });
     assert_eq!(world.body_count(), 2);
     
     let mut body_box = PolygonShape::new();

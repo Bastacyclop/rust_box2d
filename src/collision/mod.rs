@@ -1,9 +1,8 @@
 pub use self::shapes::{
     Shape, UnknownShape,
-    PolygonShape, EdgeShape,
-    CircleShape, ChainShape,
+    PolygonShape, EdgeShape,  CircleShape, ChainShape,
     MassData, ShapeType,
-    POLYGON_SHAPE, EDGE_SHAPE, CIRCLE_SHAPE, CHAIN_SHAPE, COUNT_SHAPE
+    PolygonShapeType, EdgeShapeType, CircleShapeType, ChainShapeType, CountShapeType
 };
 
 use math::Vec2;

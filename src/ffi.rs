@@ -53,6 +53,10 @@ pub struct WeldJoint;
 pub struct WheelJoint;
 
 pub type Any = *mut c_void;
+pub struct FatAny {
+    raw1: *mut c_void,
+    raw2: *mut c_void
+}
 
 #[link(name = "box2d_frontend", kind = "static")]
 extern {
@@ -110,41 +114,41 @@ extern {
     pub fn World_dump(slf: *mut World);
     
     pub fn CDestructionListener_new(
-        object: Any,
-        goodbye_joint: unsafe extern fn(Any, *mut Joint),
-        goodbye_fixture: unsafe extern fn(Any, *mut Fixture),
+        object: FatAny,
+        goodbye_joint: unsafe extern fn(FatAny, *mut Joint),
+        goodbye_fixture: unsafe extern fn(FatAny, *mut Fixture),
         ) -> *mut CDestructionListener;
     pub fn CDestructionListener_as_base(slf: *mut CDestructionListener
                                         ) -> *mut DestructionListener;
     pub fn CDestructionListener_drop(slf: *mut CDestructionListener);
     pub fn CContactFilter_new(
-        object: Any,
-        should_collide: unsafe extern fn(Any, *mut Fixture, *mut Fixture
+        object: FatAny,
+        should_collide: unsafe extern fn(FatAny, *mut Fixture, *mut Fixture
                                          ) -> bool
         ) -> *mut CContactFilter;
     pub fn CContactFilter_as_base(slf: *mut CContactFilter
                                   ) -> *mut ContactFilter;
     pub fn CContactFilter_drop(slf: *mut CContactFilter);
     pub fn CContactListener_new(
-        object: Any,
-        begin_contact: unsafe extern fn(Any, *mut Contact),
-        end_contact: unsafe extern fn(Any, *mut Contact),
-        pre_solve: unsafe extern fn(Any, *mut Contact, *const Manifold),
-        post_solve: unsafe extern fn(Any, *mut Contact, *const ContactImpulse),
+        object: FatAny,
+        begin_contact: unsafe extern fn(FatAny, *mut Contact),
+        end_contact: unsafe extern fn(FatAny, *mut Contact),
+        pre_solve: unsafe extern fn(FatAny, *mut Contact, *const Manifold),
+        post_solve: unsafe extern fn(FatAny, *mut Contact, *const ContactImpulse),
         ) -> *mut CContactListener;
     pub fn CContactListener_as_base(slf: *mut CContactListener
                                     ) -> *mut ContactListener;
     pub fn CContactListener_drop(slf: *mut CContactListener);
     pub fn CQueryCallback_new(
-        object: Any,
-        report_fixture: unsafe extern fn(Any, *mut Fixture) -> bool,
+        object: FatAny,
+        report_fixture: unsafe extern fn(FatAny, *mut Fixture) -> bool,
         ) -> *mut CQueryCallback;
     pub fn CQueryCallback_as_base(slf: *mut CQueryCallback
                                   ) -> *mut QueryCallback;
     pub fn CQueryCallback_drop(slf: *mut CQueryCallback);
     pub fn CRayCastCallback_new(
-        object: Any,
-        hit_fixture: unsafe extern fn(Any, *mut Fixture, *const Vec2,
+        object: FatAny,
+        hit_fixture: unsafe extern fn(FatAny, *mut Fixture, *const Vec2,
                                       *const Vec2, f32) -> f32,
         ) -> *mut CRayCastCallback;
     pub fn CRayCastCallback_as_base(slf: *mut CRayCastCallback
@@ -152,15 +156,15 @@ extern {
     pub fn CRayCastCallback_drop(slf: *mut CRayCastCallback);
     
     pub fn CDraw_new(
-        object: Any,
-        draw_polygon: unsafe extern fn(Any, *const Vec2, i32, *const Color),
-        draw_solid_polygon: unsafe extern fn(Any, *const Vec2, i32, *const Color),
-        draw_circle: unsafe extern fn(Any, *const Vec2, f32, *const Color),
-        draw_solid_circle: unsafe extern fn(Any, *const Vec2, f32, *const Vec2,
+        object: FatAny,
+        draw_polygon: unsafe extern fn(FatAny, *const Vec2, i32, *const Color),
+        draw_solid_polygon: unsafe extern fn(FatAny, *const Vec2, i32, *const Color),
+        draw_circle: unsafe extern fn(FatAny, *const Vec2, f32, *const Color),
+        draw_solid_circle: unsafe extern fn(FatAny, *const Vec2, f32, *const Vec2,
                                             *const Color),
-        draw_segment: unsafe extern fn(Any, *const Vec2, *const Vec2,
+        draw_segment: unsafe extern fn(FatAny, *const Vec2, *const Vec2,
                                        *const Color),
-        draw_transform: unsafe extern fn(Any, *const Transform),
+        draw_transform: unsafe extern fn(FatAny, *const Transform),
         ) -> *mut CDraw;
     pub fn CDraw_as_base(slf: *mut CDraw) -> *mut Draw;
     pub fn CDraw_drop(slf: *mut CDraw);

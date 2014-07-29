@@ -1,10 +1,10 @@
-typedef void (*DrawPolygonCB)(RustObject, const b2Vec2*, i32, const b2Color*);
-typedef void (*DrawCircleCB)(RustObject, const b2Vec2*, f32, const b2Color*);
-typedef void (*DrawSolidCircleCB)(RustObject, const b2Vec2*, f32, const b2Vec2*,
+typedef void (*DrawPolygonCB)(RustFatObject, const b2Vec2*, i32, const b2Color*);
+typedef void (*DrawCircleCB)(RustFatObject, const b2Vec2*, f32, const b2Color*);
+typedef void (*DrawSolidCircleCB)(RustFatObject, const b2Vec2*, f32, const b2Vec2*,
                                   const b2Color*);
-typedef void (*DrawSegmentCB)(RustObject, const b2Vec2*, const b2Vec2*,
+typedef void (*DrawSegmentCB)(RustFatObject, const b2Vec2*, const b2Vec2*,
                               const b2Color*);
-typedef void (*DrawTransformCB)(RustObject, const b2Transform*);
+typedef void (*DrawTransformCB)(RustFatObject, const b2Transform*);
 
 struct CDraw: public b2Draw {
     CDraw(): b2Draw() {}
@@ -39,7 +39,7 @@ struct CDraw: public b2Draw {
         draw_transform(object, &xf);
     }
     
-    RustObject object;
+    RustFatObject object;
     DrawPolygonCB draw_polygon;
     DrawPolygonCB draw_solid_polygon;
     DrawCircleCB draw_circle;
@@ -48,7 +48,7 @@ struct CDraw: public b2Draw {
     DrawTransformCB draw_transform;
 };
 
-CDraw* CDraw_new(RustObject o,
+CDraw* CDraw_new(RustFatObject o,
                  DrawPolygonCB dp,
                  DrawPolygonCB dsp,
                  DrawCircleCB dc,

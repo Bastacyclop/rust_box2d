@@ -1,34 +1,34 @@
 pub use self::joints::{
-    UNKNOWN_JOINT, UnknownJoint, JointType, JointDefBase, Joint,
-    DISTANCE_JOINT, DistanceJointDef, DistanceJoint,
-    FRICTION_JOINT, FrictionJointDef, FrictionJoint,
-    GEAR_JOINT, GearJointDef, GearJoint,
-    MOTOR_JOINT, MotorJointDef, MotorJoint,
-    MOUSE_JOINT, MouseJointDef, MouseJoint,
-    PRISMATIC_JOINT, PrismaticJointDef, PrismaticJoint,
-    PULLEY_JOINT, PulleyJointDef, PulleyJoint,
-    REVOLUTE_JOINT, RevoluteJointDef, RevoluteJoint,
-    ROPE_JOINT, RopeJointDef, RopeJoint,
-    WELD_JOINT, WeldJointDef, WeldJoint,
-    WHEEL_JOINT, WheelJointDef, WheelJoint
+    UnknownJointType, UnknownJoint, JointType, JointDefBase, Joint,
+    DistanceJointType, DistanceJointDef, DistanceJoint,
+    FrictionJointType, FrictionJointDef, FrictionJoint,
+    GearJointType, GearJointDef, GearJoint,
+    MotorJointType, MotorJointDef, MotorJoint,
+    MouseJointType, MouseJointDef, MouseJoint,
+    PrismaticJointType, PrismaticJointDef, PrismaticJoint,
+    PulleyJointType, PulleyJointDef, PulleyJoint,
+    RevoluteJointType, RevoluteJointDef, RevoluteJoint,
+    RopeJointType, RopeJointDef, RopeJoint,
+    WeldJointType, WeldJointDef, WeldJoint,
+    WheelJointType, WheelJointDef, WheelJoint
 };
 
 use std::ptr;
 use std::mem;
-use {ffi, Wrapped, clone_from_ptr, settings};
+use {
+    Wrapped, WrappedMut, WrappedConst,
+    WrappedBase, WrappedMutBase, WrappedConstBase,
+    ffi, settings
+};
 use common::DrawLink;
-use common::private::DerivedDraw;
 use math::{Vec2, Transform};
 use dynamics::joints::private::{WrappedJoint, JointDef};
 use collision::{
     RayCastInput, RayCastOutput, AABB,
     Shape, ShapeType, UnknownShape, MassData
 };
-use collision::shapes::private::WrappedShape;
 
 pub mod joints;
-
-wrap!(ffi::World into World)
 
 #[deriving(Clone)]
 pub struct Profile {
@@ -42,66 +42,77 @@ pub struct Profile {
     pub solve_TOI: f32
 }
 
-impl World {
-    pub fn new(gravity: &Vec2) -> World {
+wrapped!(ffi::World into World)
+
+impl<'l> World<'l> {
+    pub fn new(gravity: &Vec2) -> World<'l> {
         unsafe {
-            Wrapped::from_ptr(ffi::World_new(gravity))
+            WrappedMut::from_ptr(ffi::World_new(gravity))
         }
     }
-    pub fn set_destruction_listener<T: DestructionListener>(
-            &mut self, dll: &mut DestructionListenerLink<T>) {
+    
+    pub fn set_destruction_listener(&mut self, dll: &'l mut DestructionListenerLink<'l>) {
         unsafe {
-            ffi::World_set_destruction_listener(self.mut_ptr(), dll.as_ffi_base())
+            ffi::World_set_destruction_listener(self.mut_ptr(),
+                                                ffi::CDestructionListener_as_base(dll.mut_ptr()))
         }
     }
-    pub fn set_contact_filter<T: ContactFilter>(
-            &mut self, cfl: &mut ContactFilterLink<T>) {
+    
+    pub fn set_contact_filter(&mut self, cfl: &'l mut ContactFilterLink<'l>) {
         unsafe {
-            ffi::World_set_contact_filter(self.mut_ptr(), cfl.as_ffi_base())
+            ffi::World_set_contact_filter(self.mut_ptr(),
+                                          ffi::CContactFilter_as_base(cfl.mut_ptr()))
         }
     }
-    pub fn set_contact_listener<T: ContactListener>(
-            &mut self, cll: &mut ContactListenerLink<T>) {
+    
+    pub fn set_contact_listener(&mut self, cll: &'l mut ContactListenerLink<'l>) {
         unsafe {
-            ffi::World_set_contact_listener(self.mut_ptr(), cll.as_ffi_base())
+            ffi::World_set_contact_listener(self.mut_ptr(),
+                                            ffi::CContactListener_as_base(cll.mut_ptr()))
         }
     }
-    pub fn set_debug_draw(&mut self, dl: &mut DrawLink) {
+    
+    pub fn set_debug_draw(&mut self, dl: &'l mut DrawLink<'l>) {
         unsafe {
-            ffi::World_set_debug_draw(self.mut_ptr(), dl.mut_draw_ptr())
+            ffi::World_set_debug_draw(self.mut_ptr(), ffi::CDraw_as_base(dl.mut_ptr()))
         }
     }
-    pub fn create_body(&mut self, def: &BodyDef) -> Body {
+    
+    pub fn create_body(&mut self, def: &BodyDef) -> Body<'l> {
         unsafe {
-            Wrapped::from_ptr(
+            WrappedMut::from_ptr(
                 ffi::World_create_body(self.mut_ptr(), def)
                 )
         }
     }
+    
     pub fn destroy_body(&mut self, body: Body) {
         unsafe {
             let mut body = body;
             ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr())
         }
     }
+    
     pub fn create_joint<J: Joint>(&mut self, def: &JointDef) -> J {
         unsafe {
-            let joint: J = WrappedJoint::from_joint_ptr(
+            let joint: J = WrappedMutBase::from_ptr(
                 ffi::World_create_joint(self.mut_ptr(), def.joint_def_ptr())
                 );
             assert!(
                 joint.joint_type() == WrappedJoint::joint_type(None::<*const J>)
-                || self::UNKNOWN_JOINT == WrappedJoint::joint_type(None::<*const J>)
+                || self::UnknownJointType == WrappedJoint::joint_type(None::<*const J>)
                 )
             joint
         }
     }
+    
     pub fn destroy_joint<J: Joint>(&mut self, joint: J) {
         unsafe {
             let mut joint = joint;
-            ffi::World_destroy_joint(self.mut_ptr(), joint.mut_joint_ptr())
+            ffi::World_destroy_joint(self.mut_ptr(), joint.mut_base_ptr())
         }
     }
+    
     pub fn step(&mut self,
                 time_step: f32,
                 velocity_iterations: i32,
@@ -113,26 +124,27 @@ impl World {
                             position_iterations)
         }
     }
+    
     pub fn clear_forces(&mut self) {
         unsafe {
             ffi::World_clear_forces(self.mut_ptr())
         }
     }
+    
     pub fn draw_debug_data(&mut self) {
         unsafe {
             ffi::World_draw_debug_data(self.mut_ptr())
         }
     }
-    pub fn query_aabb<T: QueryCallback>(&self, qcl: &mut QueryCallbackLink<T>,
-                                        aabb: &AABB) {
+    
+    pub fn query_aabb(&self, qcl: &'l mut QueryCallbackLink<'l>, aabb: &AABB) {
         unsafe {
-            ffi::World_query_aabb(self.ptr(), qcl.as_ffi_base(), aabb)
+            ffi::World_query_aabb(self.ptr(), ffi::CQueryCallback_as_base(qcl.mut_ptr()), aabb)
         }
     }
-    pub fn ray_cast<T: RayCastCallback>(&self, rccl: &mut RayCastCallbackLink<T>,
-                                        p1: &Vec2, p2: &Vec2) {
+    pub fn ray_cast(&self, rccl: &'l mut RayCastCallbackLink<'l>, p1: &Vec2, p2: &Vec2) {
         unsafe {
-            ffi::World_ray_cast(self.ptr(), rccl.as_ffi_base(), p1, p2)
+            ffi::World_ray_cast(self.ptr(), ffi::CRayCastCallback_as_base(rccl.mut_ptr()), p1, p2)
         }
     }
     /*pub fn mut_body_list(&mut self) -> Vec<Body> {
@@ -141,7 +153,7 @@ impl World {
             
             let mut vec = Vec::new();
             while !ptr.is_null() {
-                vec.push(Wrapped::from_ptr(ptr));
+                vec.push(WrappedMut::from_ptr(ptr));
                 ptr = ffi::Body_get_next(ptr);
             }
             vec
@@ -252,11 +264,15 @@ impl World {
             ffi::World_shift_origin(self.mut_ptr(), origin)
         }
     }
-    pub fn profile(&self) -> Profile {
+    
+    pub fn profile<'a>(&'a self) -> &'a Profile {
         unsafe {
-            clone_from_ptr(ffi::World_get_profile(self.ptr()))
+            let profile = ffi::World_get_profile(self.ptr());
+            assert!(!profile.is_null())
+            &*profile
         }
     }
+    
     pub fn dump(&mut self) {
         unsafe {
             ffi::World_dump(self.mut_ptr())
@@ -264,7 +280,8 @@ impl World {
     }
 }
 
-impl Drop for World {
+#[unsafe_destructor]
+impl<'l> Drop for World<'l> {
     fn drop(&mut self) {
         unsafe {
             ffi::World_drop(self.mut_ptr())
@@ -273,12 +290,11 @@ impl Drop for World {
 }
 
 #[repr(C)]
-#[allow(non_camel_case_types)]
 #[deriving(PartialEq, Show)]
 pub enum BodyType {
-    STATIC_BODY = 0,
-    KINEMATIC_BODY = 1,
-    DYNAMIC_BODY = 2
+    StaticBodyType = 0,
+    KinematicBodyType = 1,
+    DynamicBodyType = 2
 }
 
 #[allow(dead_code)]
@@ -302,7 +318,7 @@ pub struct BodyDef {
 impl BodyDef {
     pub fn new() -> BodyDef {
         BodyDef {
-            body_type: STATIC_BODY,
+            body_type: StaticBodyType,
             position: Vec2 { x:0., y:0. },
             angle: 0.,
             linear_velocity: Vec2 { x:0., y:0. },
@@ -323,24 +339,24 @@ impl BodyDef {
     }
 }
 
-wrap!(ffi::Body into Body)
+wrapped!(ffi::Body into Body)
 
-impl Body {
-    pub fn create_fixture(&mut self, def: &FixtureDef) -> Fixture {
+impl<'l> Body<'l> {
+    pub fn create_fixture(&mut self, def: &FixtureDef) -> Fixture<'l> {
         unsafe {
-            Wrapped::from_ptr(ffi::Body_create_fixture(self.mut_ptr(), def))
+            WrappedMut::from_ptr(ffi::Body_create_fixture(self.mut_ptr(), def))
         }
     }
-    pub fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> Fixture {
+    pub fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> Fixture<'l> {
         unsafe {
-            Wrapped::from_ptr(
+            WrappedMut::from_ptr(
                 ffi::Body_create_fast_fixture(self.mut_ptr(),
-                                              shape.shape_ptr(),
+                                              shape.base_ptr(),
                                               density)
                 )
         }
     }
-    pub fn destroy_fixture(&mut self, fixture: Fixture) {
+    pub fn destroy_fixture(&mut self, fixture: Fixture<'l>) {
         unsafe {
             let mut fixture = fixture;
             ffi::Body_destroy_fixture(self.mut_ptr(), fixture.mut_ptr())
@@ -351,41 +367,59 @@ impl Body {
             ffi::Body_set_transform(self.mut_ptr(), pos, angle)
         }
     }
-    pub fn transform(&self) -> Transform {
+    
+    pub fn transform<'a>(&'a self) -> &'a Transform {
         unsafe {
-            clone_from_ptr(ffi::Body_get_transform(self.ptr()))
+            let transform = ffi::Body_get_transform(self.ptr());
+            assert!(!transform.is_null())
+            &*transform
         }
     }
-    pub fn position(&self) -> Vec2 {
+    
+    pub fn position<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            clone_from_ptr(ffi::Body_get_position(self.ptr()))
+            let position = ffi::Body_get_position(self.ptr());
+            assert!(!position.is_null())
+            &*position
         }
     }
+    
     pub fn angle(&self) -> f32 {
         unsafe {
             ffi::Body_get_angle(self.ptr())
         }
     }
-    pub fn world_center(&self) -> Vec2 {
+    
+    pub fn world_center<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            clone_from_ptr(ffi::Body_get_world_center(self.ptr()))
+            let center = ffi::Body_get_world_center(self.ptr());
+            assert!(!center.is_null())
+            &*center
         }
     }
-    pub fn local_center(&self) -> Vec2 {
+    
+    pub fn local_center<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            clone_from_ptr(ffi::Body_get_local_center(self.ptr()))
+            let center = ffi::Body_get_local_center(self.ptr());
+            assert!(!center.is_null())
+            &*center
         }
     }
+    
     pub fn set_linear_velocity(&mut self, v: &Vec2) {
         unsafe {
             ffi::Body_set_linear_velocity(self.mut_ptr(), v)
         }
     }
-    pub fn linear_velocity(&self) -> Vec2 {
+    
+    pub fn linear_velocity<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            clone_from_ptr(ffi::Body_get_linear_velocity(self.ptr()))
+            let velocity = ffi::Body_get_linear_velocity(self.ptr());
+            assert!(!velocity.is_null())
+            &*velocity
         }
     }
+    
     pub fn set_angular_velocity(&mut self, v: f32) {
         unsafe {
             ffi::Body_set_angular_velocity(self.mut_ptr(), v)
@@ -577,7 +611,7 @@ impl Body {
     }*/
     pub fn mut_next(&mut self) -> Body {
         unsafe {
-            Wrapped::from_ptr(ffi::Body_get_next(self.mut_ptr()))
+            WrappedMut::from_ptr(ffi::Body_get_next(self.mut_ptr()))
         }
     }
     pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
@@ -588,7 +622,7 @@ impl Body {
     }
     pub fn mut_world(&mut self) -> World {
         unsafe {
-            Wrapped::from_ptr(ffi::Body_get_world(self.mut_ptr()))
+            WrappedMut::from_ptr(ffi::Body_get_world(self.mut_ptr()))
         }
     }
     pub fn dump(&mut self) {
@@ -631,7 +665,7 @@ impl FixtureDef {
     pub fn new(shape: &Shape) -> FixtureDef {
         unsafe {
             FixtureDef {
-                shape: shape.shape_ptr(),
+                shape: shape.base_ptr(),
                 user_data: ptr::mut_null(),
                 friction: 0.2,
                 restitution: 0.,
@@ -646,17 +680,17 @@ impl FixtureDef {
     }
 }
 
-wrap!(ffi::Fixture into Fixture)
+wrapped!(ffi::Fixture into Fixture)
 
-impl Fixture {
+impl<'l> Fixture<'l> {
     pub fn shape_type(&self) -> ShapeType {
         unsafe {
             ffi::Fixture_get_type(self.ptr())
         }
     }
-    pub fn shape(&mut self) -> UnknownShape {
+    pub fn shape(&mut self) -> UnknownShape<'l> {
         unsafe {
-            WrappedShape::from_shape_ptr(
+            WrappedMutBase::from_ptr(
                 ffi::Fixture_get_shape(self.mut_ptr())
                 )
         }
@@ -676,24 +710,28 @@ impl Fixture {
             ffi::Fixture_set_filter_data(self.mut_ptr(), filter)
         }
     }
-    pub fn filter_data(&self) -> Filter {
+    
+    pub fn filter_data<'a>(&'a self) -> &'a Filter {
         unsafe {
-            clone_from_ptr(ffi::Fixture_get_filter_data(self.ptr()))
+            let data = ffi::Fixture_get_filter_data(self.ptr());
+            assert!(!data.is_null())
+            &*data
         }
     }
+    
     pub fn refilter(&mut self) {
         unsafe {
             ffi::Fixture_refilter(self.mut_ptr())
         }
     }
-    pub fn mut_body(&mut self) -> Body {
+    pub fn mut_body(&mut self) -> Body<'l> {
         unsafe {
-            Wrapped::from_ptr(ffi::Fixture_get_body(self.mut_ptr()))
+            WrappedMut::from_ptr(ffi::Fixture_get_body(self.mut_ptr()))
         }
     }
-    pub fn mut_next(&mut self) -> Fixture {
+    pub fn mut_next(&mut self) -> Fixture<'l> {
         unsafe {
-            Wrapped::from_ptr(ffi::Fixture_get_next(self.mut_ptr()))
+            WrappedMut::from_ptr(ffi::Fixture_get_next(self.mut_ptr()))
         }
     }
     pub fn test_point(&self, point: &Vec2) -> bool {
@@ -747,11 +785,15 @@ impl Fixture {
             ffi::Fixture_set_restitution(self.mut_ptr(), restitution)
         }
     }
-    pub fn aabb(&self, child_index: uint) -> AABB {
+    
+    pub fn aabb<'a>(&'a self, child_index: uint) -> &'a AABB {
         unsafe {
-            clone_from_ptr(ffi::Fixture_get_aabb(self.ptr(), child_index as i32))
+            let aabb = ffi::Fixture_get_aabb(self.ptr(), child_index as i32);
+            assert!(!aabb.is_null())
+            &*aabb
         }
     }
+    
     pub unsafe fn user_data<T>(&self) -> *mut T {
         ffi::Fixture_get_user_data(self.ptr()) as *mut T
     }
@@ -772,12 +814,11 @@ pub struct ContactImpulse {
 }
 
 #[repr(C)]
-#[allow(non_camel_case_types)]
 #[deriving(PartialEq, Show)]
 pub enum ManifoldType {
-    CIRCLES_MANIFOLD = 0,
-    FACE_A_MANIFOLD = 1,
-    FACE_B_MANIFOLD = 2
+    CirclesManifoldType = 0,
+    FaceAManifoldType = 1,
+    FaceBManifoldType = 2
 }
 
 pub struct Manifold {
@@ -795,7 +836,7 @@ pub struct ManifoldPoint {
     pub id: u32
 }
 
-wrap!(ffi::Contact into Contact)
+wrapped!(ffi::Contact into Contact)
 
 /*impl Contact {
 
@@ -826,223 +867,161 @@ pub trait RayCastCallback {
                       fraction: f32) -> f32;
 }
 
-unsafe extern fn goodbye_joint(any: ffi::Any, joint: *mut ffi::Joint) {
-    assert!(!any.is_null())
-    let listener = mem::transmute::<_, *mut &mut DestructionListener>(any);
-    (*listener).goodbye_joint(WrappedJoint::from_joint_ptr(joint))
+unsafe extern fn goodbye_joint(any: ffi::FatAny, joint: *mut ffi::Joint) {
+    let listener = mem::transmute::<_, &mut DestructionListener>(any);
+    listener.goodbye_joint(WrappedMutBase::from_ptr(joint))
 }
-unsafe extern fn goodbye_fixture(any: ffi::Any, fixture: *mut ffi::Fixture) {
-    assert!(!any.is_null())
-    let listener = mem::transmute::<_, *mut &mut DestructionListener>(any);
-    (*listener).goodbye_fixture(Wrapped::from_ptr(fixture))
+unsafe extern fn goodbye_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture) {
+    let listener = mem::transmute::<_, &mut DestructionListener>(any);
+    listener.goodbye_fixture(WrappedMut::from_ptr(fixture))
 }
 
-unsafe extern fn should_collide(any: ffi::Any, fixture_a: *mut ffi::Fixture,
+unsafe extern fn should_collide(any: ffi::FatAny, fixture_a: *mut ffi::Fixture,
                                 fixture_b: *mut ffi::Fixture) -> bool {
-    assert!(!any.is_null())
-    let filter = mem::transmute::<_, *mut &mut ContactFilter>(any);
-    (*filter).should_collide(Wrapped::from_ptr(fixture_a),
-                          Wrapped::from_ptr(fixture_b))
+    let filter = mem::transmute::<_, &mut ContactFilter>(any);
+    filter.should_collide(WrappedMut::from_ptr(fixture_a),
+                          WrappedMut::from_ptr(fixture_b))
 }
 
-unsafe extern fn begin_contact(any: ffi::Any, contact: *mut ffi::Contact) {
-    assert!(!any.is_null())
-    let listener = mem::transmute::<_, *mut &mut ContactListener>(any);
-    (*listener).begin_contact(Wrapped::from_ptr(contact))
+unsafe extern fn begin_contact(any: ffi::FatAny, contact: *mut ffi::Contact) {
+    let listener = mem::transmute::<_, &mut ContactListener>(any);
+    listener.begin_contact(WrappedMut::from_ptr(contact))
 }
-unsafe extern fn end_contact(any: ffi::Any, contact: *mut ffi::Contact) {
-    assert!(!any.is_null())
-    let listener = mem::transmute::<_, *mut &mut ContactListener>(any);
-    (*listener).end_contact(Wrapped::from_ptr(contact))
+unsafe extern fn end_contact(any: ffi::FatAny, contact: *mut ffi::Contact) {
+    let listener = mem::transmute::<_, &mut ContactListener>(any);
+    listener.end_contact(WrappedMut::from_ptr(contact))
 }
-unsafe extern fn pre_solve(any: ffi::Any, contact: *mut ffi::Contact,
+unsafe extern fn pre_solve(any: ffi::FatAny, contact: *mut ffi::Contact,
                            old_manifold: *const Manifold) {
-    assert!(!any.is_null())
     assert!(!old_manifold.is_null())
-    let listener = mem::transmute::<_, *mut &mut ContactListener>(any);
-    (*listener).pre_solve(Wrapped::from_ptr(contact), &*old_manifold)
+    let listener = mem::transmute::<_, &mut ContactListener>(any);
+    listener.pre_solve(WrappedMut::from_ptr(contact), &*old_manifold)
 }
-unsafe extern fn post_solve(any: ffi::Any, contact: *mut ffi::Contact,
+unsafe extern fn post_solve(any: ffi::FatAny, contact: *mut ffi::Contact,
                             impulse: *const ContactImpulse) {
-    assert!(!any.is_null())
     assert!(!impulse.is_null())
-    let listener = mem::transmute::<_, *mut &mut ContactListener>(any);
-    (*listener).post_solve(Wrapped::from_ptr(contact), &*impulse)
+    let listener = mem::transmute::<_, &mut ContactListener>(any);
+    listener.post_solve(WrappedMut::from_ptr(contact), &*impulse)
 }
 
-unsafe extern fn qc_report_fixture(any: ffi::Any, fixture: *mut ffi::Fixture
+unsafe extern fn qc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                                    ) -> bool {
-    assert!(!any.is_null())
-    let callback = mem::transmute::<_, *mut &mut QueryCallback>(any);
-    (*callback).report_fixture(Wrapped::from_ptr(fixture))
+    let callback = mem::transmute::<_, &mut QueryCallback>(any);
+    callback.report_fixture(WrappedMut::from_ptr(fixture))
 }
 
-unsafe extern fn rcc_report_fixture(any: ffi::Any, fixture: *mut ffi::Fixture,
+unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture,
                                     point: *const Vec2, normal: *const Vec2,
                                     fraction: f32) -> f32 {
-    assert!(!any.is_null())
     assert!(!point.is_null())
     assert!(!normal.is_null())
-    let callback = mem::transmute::<_, *mut &mut RayCastCallback>(any);
-    (*callback).report_fixture(Wrapped::from_ptr(fixture), &*point, &*normal,
+    let callback = mem::transmute::<_, &mut RayCastCallback>(any);
+    callback.report_fixture(WrappedMut::from_ptr(fixture), &*point, &*normal,
                             fraction)
 }
 
-pub struct DestructionListenerLink<T> {
-    t: T,
-    c: *mut ffi::CDestructionListener
-}
+wrapped!(ffi::CDestructionListener into DestructionListenerLink)
+wrapped!(ffi::CContactFilter into ContactFilterLink)
+wrapped!(ffi::CContactListener into ContactListenerLink)
+wrapped!(ffi::CQueryCallback into QueryCallbackLink)
+wrapped!(ffi::CRayCastCallback into RayCastCallbackLink)
 
-pub struct ContactFilterLink<T> {
-    t: T,
-    c: *mut ffi::CContactFilter
-}
-
-pub struct ContactListenerLink<T> {
-    t: T,
-    c: *mut ffi::CContactListener
-}
-
-pub struct QueryCallbackLink<T> {
-    t: T,
-    c: *mut ffi::CQueryCallback
-}
-
-pub struct RayCastCallbackLink<T> {
-    t: T,
-    c: *mut ffi::CRayCastCallback
-}
-
-impl<T: DestructionListener> DestructionListenerLink<T> {
-    pub fn with(t: T) -> DestructionListenerLink<T> {
+impl<'l> DestructionListenerLink<'l> {
+    pub fn with(t: &'l mut DestructionListener) -> DestructionListenerLink<'l> {
         unsafe {
-            let mut link = DestructionListenerLink {
-                t: t,
-                c: ptr::mut_null()
-            };
-            link.c = ffi::CDestructionListener_new(mem::transmute(&mut &mut link.t),
-                                                   goodbye_joint,
-                                                   goodbye_fixture);
-            link
+            WrappedMut::from_ptr(
+                ffi::CDestructionListener_new(mem::transmute(t),
+                                              goodbye_joint,
+                                              goodbye_fixture
+                                              ))
         }
     }
-    unsafe fn as_ffi_base(&mut self) -> *mut ffi::DestructionListener {
-        ffi::CDestructionListener_as_base(self.c)
-    }
 }
 
-impl<T: ContactFilter> ContactFilterLink<T> {
-    pub fn with(t: T) -> ContactFilterLink<T> {
+impl<'l> ContactFilterLink<'l> {
+    pub fn with(t: &'l mut ContactFilter) -> ContactFilterLink<'l> {
         unsafe {
-            let mut link = ContactFilterLink {
-                t: t,
-                c: ptr::mut_null()
-            };
-            link.c = ffi::CContactFilter_new(mem::transmute(&mut &mut link.t),
-                                             should_collide);
-            link
+            WrappedMut::from_ptr(
+                ffi::CContactFilter_new(mem::transmute(t),
+                                        should_collide))
         }
     }
-    unsafe fn as_ffi_base(&mut self) -> *mut ffi::ContactFilter {
-        ffi::CContactFilter_as_base(self.c)
-    }
 }
 
-impl<T: ContactListener> ContactListenerLink<T> {
-    pub fn with(t: T) -> ContactListenerLink<T> {
+impl<'l> ContactListenerLink<'l> {
+    pub fn with(t: &'l mut ContactListener) -> ContactListenerLink<'l> {
         unsafe {
-            let mut link = ContactListenerLink {
-                t: t,
-                c: ptr::mut_null()
-            };
-            link.c = ffi::CContactListener_new(mem::transmute(&mut &mut link.t),
-                                               begin_contact,
-                                               end_contact,
-                                               pre_solve,
-                                               post_solve);
-            link
+            WrappedMut::from_ptr(
+                ffi::CContactListener_new(mem::transmute(t),
+                                          begin_contact,
+                                          end_contact,
+                                          pre_solve,
+                                          post_solve))
         }          
     }
-    unsafe fn as_ffi_base(&mut self) -> *mut ffi::ContactListener {
-        ffi::CContactListener_as_base(self.c)
+}
+
+impl<'l> QueryCallbackLink<'l> {
+    pub fn with(t: &'l mut QueryCallback) -> QueryCallbackLink<'l> {
+        unsafe {
+            WrappedMut::from_ptr(
+                ffi::CQueryCallback_new(mem::transmute(t),
+                                        qc_report_fixture))
+        }
     }
 }
 
-impl<T: QueryCallback> QueryCallbackLink<T> {
-    pub fn with(t: T) -> QueryCallbackLink<T> {
+impl<'l> RayCastCallbackLink<'l> {
+    pub fn with(t: &'l mut RayCastCallback) -> RayCastCallbackLink<'l> {
         unsafe {
-            let mut link = QueryCallbackLink {
-                t: t,
-                c: ptr::mut_null()
-            };
-            link.c = ffi::CQueryCallback_new(mem::transmute(&mut (&mut link.t as &mut QueryCallback)),
-                                             qc_report_fixture);
-            link
+            WrappedMut::from_ptr(
+                ffi::CRayCastCallback_new(mem::transmute(t),
+                                          rcc_report_fixture))
         }
-    }
-    unsafe fn as_ffi_base(&mut self) -> *mut ffi::QueryCallback {
-        ffi::CQueryCallback_as_base(self.c)
-    }
-}
-
-impl<T: RayCastCallback> RayCastCallbackLink<T> {
-    pub fn with(t: T) -> RayCastCallbackLink<T> {
-        unsafe {
-            let mut link = RayCastCallbackLink {
-                t: t,
-                c: ptr::mut_null()
-            };
-            link.c = ffi::CRayCastCallback_new(mem::transmute(&mut &mut link.t),
-                                               rcc_report_fixture);
-            link
-        }
-    }
-    unsafe fn as_ffi_base(&mut self) -> *mut ffi::RayCastCallback {
-        ffi::CRayCastCallback_as_base(self.c)
     }
 }
 
 #[unsafe_destructor]
-impl<T> Drop for DestructionListenerLink<T> {
+impl<'l> Drop for DestructionListenerLink<'l> {
     fn drop(&mut self) {
         unsafe {
-            ffi::CDestructionListener_drop(self.c)
+            ffi::CDestructionListener_drop(self.mut_ptr())
         }
     }
 }
 
 #[unsafe_destructor]
-impl<T> Drop for ContactFilterLink<T> {
+impl<'l> Drop for ContactFilterLink<'l> {
     fn drop(&mut self) {
         unsafe {
-            ffi::CContactFilter_drop(self.c)
+            ffi::CContactFilter_drop(self.mut_ptr())
         }
     }
 }
 
 #[unsafe_destructor]
-impl<T> Drop for ContactListenerLink<T> {
+impl<'l> Drop for ContactListenerLink<'l> {
     fn drop(&mut self) {
         unsafe {
-            ffi::CContactListener_drop(self.c)
+            ffi::CContactListener_drop(self.mut_ptr())
         }
     }
 }
 
 #[unsafe_destructor]
-impl<T> Drop for QueryCallbackLink<T> {
+impl<'l> Drop for QueryCallbackLink<'l> {
     fn drop(&mut self) {
         unsafe {
-            ffi::CQueryCallback_drop(self.c)
+            ffi::CQueryCallback_drop(self.mut_ptr())
         }
     }
 }
 
 #[unsafe_destructor]
-impl<T> Drop for RayCastCallbackLink<T> {
+impl<'l> Drop for RayCastCallbackLink<'l> {
     fn drop(&mut self) {
         unsafe  {
-            ffi::CRayCastCallback_drop(self.c)
+            ffi::CRayCastCallback_drop(self.mut_ptr())
         }
     }
 }

@@ -35,21 +35,21 @@ macro_rules! wrapped(
         }
     );
     
-    ($wrapped:ty into $wrap:ident) => (
-        pub struct $wrap<'l> {
+    ($wrapped:ty into mut $mut_wrap:ident) => (
+        pub struct $mut_wrap<'l> {
             ptr: *mut $wrapped
         }
         
-        impl<'l> Wrapped<$wrapped> for $wrap<'l> {
+        impl<'l> Wrapped<$wrapped> for $mut_wrap<'l> {
             unsafe fn ptr(&self) -> *const $wrapped {
                 self.ptr as *const $wrapped
             }
         }
         
-        impl<'l> WrappedMut<$wrapped> for $wrap<'l> {
-            unsafe fn from_ptr(ptr: *mut $wrapped) -> $wrap<'l> {
+        impl<'l> WrappedMut<$wrapped> for $mut_wrap<'l> {
+            unsafe fn from_ptr(ptr: *mut $wrapped) -> $mut_wrap<'l> {
                 assert!(!ptr.is_null())
-                $wrap {
+                $mut_wrap {
                     ptr: ptr
                 }
             }
@@ -60,9 +60,30 @@ macro_rules! wrapped(
         }
     );
     
-    ($wrapped:ty into $wrap:ident, $const_wrap:ident) => (
-        wrapped!($wrapped into $wrap)
-        const_wrapped!($wrapped into $const_wrap)
+    ($wrapped:ty into const $const_wrap:ident) => (
+        pub struct $const_wrap<'l> {
+            ptr: *const $wrapped
+        }
+        
+        impl<'l> Wrapped<$wrapped> for $const_wrap<'l> {
+            unsafe fn ptr(&self) -> *const $wrapped {
+                self.ptr
+            }
+        }
+        
+        impl<'l> WrappedConst<$wrapped> for $const_wrap<'l> {
+            unsafe fn from_ptr(ptr: *const $wrapped) -> $const_wrap<'l> {
+                assert!(!ptr.is_null())
+                $const_wrap {
+                    ptr: ptr
+                }
+            } 
+        }
+    );
+    
+    ($wrapped:ty into $mut_wrap:ident, $const_wrap:ident) => (
+        wrapped!($wrapped into mut $mut_wrap)
+        wrapped!($wrapped into const $const_wrap)
     );
         
     ($wrapped:ty owned into $wrap:ident with base $base:ty
@@ -91,22 +112,22 @@ macro_rules! wrapped(
         }
     );
     
-    ($wrapped:ty into $wrap:ident with base $base:ty
+    ($wrapped:ty into mut $mut_wrap:ident with base $base:ty
      << $base_as:path
      >> $as_base:path) => (
      
-        wrapped!($wrapped into $wrap)
+        wrapped!($wrapped into mut $mut_wrap)
         
-        impl<'l> WrappedBase<$base> for $wrap<'l> {
+        impl<'l> WrappedBase<$base> for $mut_wrap<'l> {
             unsafe fn base_ptr(&self) -> *const $base {
                 $as_base(self.ptr) as *const $base
             }
         }
         
-        impl<'l> WrappedMutBase<$base> for $wrap<'l> {
-            unsafe fn from_ptr(ptr: *mut $base) -> $wrap<'l> {
+        impl<'l> WrappedMutBase<$base> for $mut_wrap<'l> {
+            unsafe fn from_ptr(ptr: *mut $base) -> $mut_wrap<'l> {
                 assert!(!ptr.is_null())
-                $wrap {
+                $mut_wrap {
                     ptr: $base_as(ptr)
                 }
             }
@@ -116,17 +137,13 @@ macro_rules! wrapped(
             }
         }
     );
-    
-    ($wrapped:ty into $wrap:ident, $const_wrap:ident
+        
+    ($wrapped:ty into const $const_wrap:ident
      with base $base:ty
      << $base_as:path
      >> $as_base:path) => (
      
-        wrapped!($wrapped into $wrap with base $base
-                 << $base_as
-                 >> $as_base
-                 )
-        const_wrapped!($wrapped into $const_wrap)
+        wrapped!($wrapped into const $const_wrap)
                  
         impl<'l> WrappedBase<$base> for $const_wrap<'l> {
             unsafe fn base_ptr(&self) -> *const $base {
@@ -143,49 +160,20 @@ macro_rules! wrapped(
             }
         }
     );
-)
-
-macro_rules! const_wrapped(
-    ($wrapped:ty owned into $const_wrap:ident) => (
-        pub struct $const_wrap {
-            ptr: *const $wrapped
-        }
         
-        impl Wrapped<$wrapped> for $const_wrap {
-            unsafe fn ptr(&self) -> *const $wrapped {
-                self.ptr
-            }
-        }
-        
-        impl WrappedConst<$wrapped> for $const_wrap {
-            unsafe fn from_ptr(ptr: *const $wrapped) -> $const_wrap {
-                assert!(!ptr.is_null())
-                $const_wrap {
-                    ptr: ptr
-                }
-            } 
-        }
-    );
-    
-    ($wrapped:ty into $const_wrap:ident) => (
-        pub struct $const_wrap<'l> {
-            ptr: *const $wrapped
-        }
-        
-        impl<'l> Wrapped<$wrapped> for $const_wrap<'l> {
-            unsafe fn ptr(&self) -> *const $wrapped {
-                self.ptr
-            }
-        }
-        
-        impl<'l> WrappedConst<$wrapped> for $const_wrap<'l> {
-            unsafe fn from_ptr(ptr: *const $wrapped) -> $const_wrap<'l> {
-                assert!(!ptr.is_null())
-                $const_wrap {
-                    ptr: ptr
-                }
-            } 
-        }
+    ($wrapped:ty into $mut_wrap:ident, $const_wrap:ident
+     with base $base:ty
+     << $base_as:path
+     >> $as_base:path) => (
+     
+        wrapped!($wrapped into mut $mut_wrap with base $base
+                 << $base_as
+                 >> $as_base
+                 )
+        wrapped!($wrapped into const $const_wrap with base $base
+                 << $base_as
+                 >> $as_base
+                 )
     );
 )
 

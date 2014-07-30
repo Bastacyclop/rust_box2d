@@ -1,16 +1,17 @@
 pub use self::joints::{
-    UnknownJointType, UnknownJoint, JointType, JointDefBase, Joint,
-    DistanceJointType, DistanceJointDef, DistanceJoint,
-    FrictionJointType, FrictionJointDef, FrictionJoint,
-    GearJointType, GearJointDef, GearJoint,
-    MotorJointType, MotorJointDef, MotorJoint,
-    MouseJointType, MouseJointDef, MouseJoint,
-    PrismaticJointType, PrismaticJointDef, PrismaticJoint,
-    PulleyJointType, PulleyJointDef, PulleyJoint,
-    RevoluteJointType, RevoluteJointDef, RevoluteJoint,
-    RopeJointType, RopeJointDef, RopeJoint,
-    WeldJointType, WeldJointDef, WeldJoint,
-    WheelJointType, WheelJointDef, WheelJoint
+    JointType, JointDefBase, MutJoint, ConstJoint,
+    UnknownJointType, UnknownJointMutRef, UnknownJointRef,
+    DistanceJointType, DistanceJointDef, DistanceJointMutRef, FrictionJointRef,
+    FrictionJointType, FrictionJointDef, FrictionJointMutRef, FrictionJointRef,
+    GearJointType, GearJointDef, GearJointMutRef, GearJointRef,
+    MotorJointType, MotorJointDef, MotorJointMutRef, MotorJointRef,
+    MouseJointType, MouseJointDef, MouseJointMutRef, MouseJointRef,
+    PrismaticJointType, PrismaticJointDef, PrismaticJointMutRef, PrismaticJointRef,
+    PulleyJointType, PulleyJointDef, PulleyJointMutRef, PulleyJointRef,
+    RevoluteJointType, RevoluteJointDef, RevoluteJointMutRef, RevoluteJointRef,
+    RopeJointType, RopeJointDef, RopeJointMutRef, RopeJointRef,
+    WeldJointType, WeldJointDef, WeldJointMutRef, WeldJointRef,
+    WheelJointType, WheelJointDef, WheelJointMutRef, WheelJointRef
 };
 
 use std::ptr;
@@ -72,7 +73,7 @@ impl World {
         }
     }
     
-    pub fn create_body(&mut self, def: &BodyDef) -> Body {
+    pub fn create_body(&mut self, def: &BodyDef) -> BodyMutRef{
         unsafe {
             WrappedMut::from_ptr(
                 ffi::World_create_body(self.mut_ptr(), def)
@@ -80,14 +81,13 @@ impl World {
         }
     }
     
-    pub fn destroy_body(&mut self, body: Body) {
+    pub fn destroy_body(&mut self, mut body: BodyMutRef) {
         unsafe {
-            let mut body = body;
             ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr())
         }
     }
     
-    pub fn create_joint<J: Joint>(&mut self, def: &JointDef) -> J {
+    pub fn create_joint<J: MutJoint+ConstJoint>(&mut self, def: &JointDef) -> J {
         unsafe {
             let joint: J = WrappedMutBase::from_ptr(
                 ffi::World_create_joint(self.mut_ptr(), def.joint_def_ptr())
@@ -100,9 +100,8 @@ impl World {
         }
     }
     
-    pub fn destroy_joint<J: Joint>(&mut self, joint: J) {
+    pub fn destroy_joint<J: MutJoint>(&mut self, mut joint: J) {
         unsafe {
-            let mut joint = joint;
             ffi::World_destroy_joint(self.mut_ptr(), joint.mut_base_ptr())
         }
     }
@@ -336,15 +335,15 @@ impl BodyDef {
     }
 }
 
-wrapped!(ffi::Body into Body)
+wrapped!(ffi::Body into BodyMutRef, BodyConstRef)
 
-impl<'l> Body<'l> {
-    pub fn create_fixture(&mut self, def: &FixtureDef) -> Fixture<'l> {
+impl<'l> BodyMutRef<'l>{
+    pub fn create_fixture(&mut self, def: &FixtureDef) -> FixtureMutRef<'l>{
         unsafe {
             WrappedMut::from_ptr(ffi::Body_create_fixture(self.mut_ptr(), def))
         }
     }
-    pub fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> Fixture<'l> {
+    pub fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> FixtureMutRef<'l>{
         unsafe {
             WrappedMut::from_ptr(
                 ffi::Body_create_fast_fixture(self.mut_ptr(),
@@ -353,9 +352,8 @@ impl<'l> Body<'l> {
                 )
         }
     }
-    pub fn destroy_fixture(&mut self, fixture: Fixture<'l>) {
+    pub fn destroy_fixture(&mut self, mut fixture: FixtureMutRef<'l>) {
         unsafe {
-            let mut fixture = fixture;
             ffi::Body_destroy_fixture(self.mut_ptr(), fixture.mut_ptr())
         }
     }
@@ -606,7 +604,7 @@ impl<'l> Body<'l> {
         
         }
     }*/
-    pub fn mut_next(&mut self) -> Body {
+    pub fn mut_next(&mut self) -> BodyMutRef{
         unsafe {
             WrappedMut::from_ptr(ffi::Body_get_next(self.mut_ptr()))
         }
@@ -677,9 +675,9 @@ impl FixtureDef {
     }
 }
 
-wrapped!(ffi::Fixture into Fixture)
+wrapped!(ffi::Fixture into FixtureMutRef, FixtureConstRef)
 
-impl<'l> Fixture<'l> {
+impl<'l> FixtureMutRef<'l>{
     pub fn shape_type(&self) -> ShapeType {
         unsafe {
             ffi::Fixture_get_type(self.ptr())
@@ -721,12 +719,12 @@ impl<'l> Fixture<'l> {
             ffi::Fixture_refilter(self.mut_ptr())
         }
     }
-    pub fn mut_body(&mut self) -> Body<'l> {
+    pub fn mut_body(&mut self) -> BodyMutRef<'l>{
         unsafe {
             WrappedMut::from_ptr(ffi::Fixture_get_body(self.mut_ptr()))
         }
     }
-    pub fn mut_next(&mut self) -> Fixture<'l> {
+    pub fn mut_next(&mut self) -> FixtureMutRef<'l>{
         unsafe {
             WrappedMut::from_ptr(ffi::Fixture_get_next(self.mut_ptr()))
         }
@@ -833,34 +831,30 @@ pub struct ManifoldPoint {
     pub id: u32
 }
 
-wrapped!(ffi::Contact into Contact)
-
-/*impl Contact {
-
-}*/
+wrapped!(ffi::Contact into ContactMutRef, ContactConstRef)
 
 pub trait DestructionListener {
-    fn goodbye_joint(&mut self, joint: UnknownJoint);
-    fn goodbye_fixture(&mut self, fixture: Fixture);
+    fn goodbye_joint(&mut self, joint: UnknownJointMutRef);
+    fn goodbye_fixture(&mut self, fixture: FixtureMutRef);
 }
 
 pub trait ContactFilter {
-    fn should_collide(&mut self, fixture_a: Fixture, fixture_b: Fixture) -> bool;
+    fn should_collide(&mut self, fixture_a: FixtureMutRef, fixture_b: FixtureMutRef) -> bool;
 }
 
 pub trait ContactListener {
-    fn begin_contact(&mut self, contact: Contact);
-    fn end_contact(&mut self, contact: Contact);
-    fn pre_solve(&mut self, contact: Contact, manifold: &Manifold);
-    fn post_solve(&mut self, contact: Contact, impulse: &ContactImpulse);
+    fn begin_contact(&mut self, contact: ContactMutRef);
+    fn end_contact(&mut self, contact: ContactMutRef);
+    fn pre_solve(&mut self, contact: ContactMutRef, manifold: &Manifold);
+    fn post_solve(&mut self, contact: ContactMutRef, impulse: &ContactImpulse);
 }
 
 pub trait QueryCallback {
-    fn report_fixture(&mut self, fixture: Fixture) -> bool;
+    fn report_fixture(&mut self, fixture: FixtureMutRef) -> bool;
 }
 
 pub trait RayCastCallback {
-    fn report_fixture(&mut self, fixture: Fixture, p: &Vec2, normal: &Vec2,
+    fn report_fixture(&mut self, fixture: FixtureMutRef, p: &Vec2, normal: &Vec2,
                       fraction: f32) -> f32;
 }
 
@@ -917,14 +911,14 @@ unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                             fraction)
 }
 
-wrapped!(ffi::CDestructionListener into DestructionListenerLink)
-wrapped!(ffi::CContactFilter into ContactFilterLink)
-wrapped!(ffi::CContactListener into ContactListenerLink)
-wrapped!(ffi::CQueryCallback into QueryCallbackLink)
-wrapped!(ffi::CRayCastCallback into RayCastCallbackLink)
+wrapped!(ffi::CDestructionListener owned into DestructionListenerLink)
+wrapped!(ffi::CContactFilter owned into ContactFilterLink)
+wrapped!(ffi::CContactListener owned into ContactListenerLink)
+wrapped!(ffi::CQueryCallback owned into QueryCallbackLink)
+wrapped!(ffi::CRayCastCallback owned into RayCastCallbackLink)
 
-impl<'l> DestructionListenerLink<'l> {
-    pub fn with(t: &'l mut DestructionListener) -> DestructionListenerLink<'l> {
+impl DestructionListenerLink {
+    pub fn with(t: &mut DestructionListener) -> DestructionListenerLink {
         unsafe {
             WrappedMut::from_ptr(
                 ffi::CDestructionListener_new(mem::transmute(t),
@@ -935,8 +929,8 @@ impl<'l> DestructionListenerLink<'l> {
     }
 }
 
-impl<'l> ContactFilterLink<'l> {
-    pub fn with(t: &'l mut ContactFilter) -> ContactFilterLink<'l> {
+impl ContactFilterLink {
+    pub fn with(t: &mut ContactFilter) -> ContactFilterLink {
         unsafe {
             WrappedMut::from_ptr(
                 ffi::CContactFilter_new(mem::transmute(t),
@@ -945,8 +939,8 @@ impl<'l> ContactFilterLink<'l> {
     }
 }
 
-impl<'l> ContactListenerLink<'l> {
-    pub fn with(t: &'l mut ContactListener) -> ContactListenerLink<'l> {
+impl ContactListenerLink {
+    pub fn with(t: &mut ContactListener) -> ContactListenerLink {
         unsafe {
             WrappedMut::from_ptr(
                 ffi::CContactListener_new(mem::transmute(t),
@@ -958,8 +952,8 @@ impl<'l> ContactListenerLink<'l> {
     }
 }
 
-impl<'l> QueryCallbackLink<'l> {
-    pub fn with(t: &'l mut QueryCallback) -> QueryCallbackLink<'l> {
+impl QueryCallbackLink {
+    pub fn with(t: &mut QueryCallback) -> QueryCallbackLink {
         unsafe {
             WrappedMut::from_ptr(
                 ffi::CQueryCallback_new(mem::transmute(t),
@@ -968,8 +962,8 @@ impl<'l> QueryCallbackLink<'l> {
     }
 }
 
-impl<'l> RayCastCallbackLink<'l> {
-    pub fn with(t: &'l mut RayCastCallback) -> RayCastCallbackLink<'l> {
+impl RayCastCallbackLink {
+    pub fn with(t: &mut RayCastCallback) -> RayCastCallbackLink {
         unsafe {
             WrappedMut::from_ptr(
                 ffi::CRayCastCallback_new(mem::transmute(t),
@@ -978,8 +972,7 @@ impl<'l> RayCastCallbackLink<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for DestructionListenerLink<'l> {
+impl Drop for DestructionListenerLink {
     fn drop(&mut self) {
         unsafe {
             ffi::CDestructionListener_drop(self.mut_ptr())
@@ -987,8 +980,7 @@ impl<'l> Drop for DestructionListenerLink<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for ContactFilterLink<'l> {
+impl Drop for ContactFilterLink {
     fn drop(&mut self) {
         unsafe {
             ffi::CContactFilter_drop(self.mut_ptr())
@@ -996,8 +988,7 @@ impl<'l> Drop for ContactFilterLink<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for ContactListenerLink<'l> {
+impl Drop for ContactListenerLink {
     fn drop(&mut self) {
         unsafe {
             ffi::CContactListener_drop(self.mut_ptr())
@@ -1005,8 +996,7 @@ impl<'l> Drop for ContactListenerLink<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for QueryCallbackLink<'l> {
+impl Drop for QueryCallbackLink {
     fn drop(&mut self) {
         unsafe {
             ffi::CQueryCallback_drop(self.mut_ptr())
@@ -1014,8 +1004,7 @@ impl<'l> Drop for QueryCallbackLink<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for RayCastCallbackLink<'l> {
+impl Drop for RayCastCallbackLink {
     fn drop(&mut self) {
         unsafe  {
             ffi::CRayCastCallback_drop(self.mut_ptr())

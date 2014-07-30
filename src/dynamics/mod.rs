@@ -42,37 +42,37 @@ pub struct Profile {
     pub solve_TOI: f32
 }
 
-wrapped!(ffi::World into World)
+wrapped!(ffi::World owned into World)
 
-impl<'l> World<'l> {
-    pub fn new(gravity: &Vec2) -> World<'l> {
+impl World {
+    pub fn new(gravity: &Vec2) -> World {
         unsafe {
             WrappedMut::from_ptr(ffi::World_new(gravity))
         }
     }
     
-    pub fn set_destruction_listener(&mut self, dll: &'l mut DestructionListenerLink<'l>) {
+    pub fn set_destruction_listener(&mut self, dll: &mut DestructionListenerLink) {
         unsafe {
             ffi::World_set_destruction_listener(self.mut_ptr(),
                                                 ffi::CDestructionListener_as_base(dll.mut_ptr()))
         }
     }
     
-    pub fn set_contact_filter(&mut self, cfl: &'l mut ContactFilterLink<'l>) {
+    pub fn set_contact_filter(&mut self, cfl: &mut ContactFilterLink) {
         unsafe {
             ffi::World_set_contact_filter(self.mut_ptr(),
                                           ffi::CContactFilter_as_base(cfl.mut_ptr()))
         }
     }
     
-    pub fn set_contact_listener(&mut self, cll: &'l mut ContactListenerLink<'l>) {
+    pub fn set_contact_listener(&mut self, cll: &mut ContactListenerLink) {
         unsafe {
             ffi::World_set_contact_listener(self.mut_ptr(),
                                             ffi::CContactListener_as_base(cll.mut_ptr()))
         }
     }
     
-    pub fn create_body(&mut self, def: &BodyDef) -> Body<'l> {
+    pub fn create_body(&mut self, def: &BodyDef) -> Body {
         unsafe {
             WrappedMut::from_ptr(
                 ffi::World_create_body(self.mut_ptr(), def)
@@ -135,12 +135,12 @@ impl<'l> World<'l> {
         }
     }
     
-    pub fn query_aabb(&self, qcl: &'l mut QueryCallbackLink<'l>, aabb: &AABB) {
+    pub fn query_aabb(&self, qcl: &mut QueryCallbackLink, aabb: &AABB) {
         unsafe {
             ffi::World_query_aabb(self.ptr(), ffi::CQueryCallback_as_base(qcl.mut_ptr()), aabb)
         }
     }
-    pub fn ray_cast(&self, rccl: &'l mut RayCastCallbackLink<'l>, p1: &Vec2, p2: &Vec2) {
+    pub fn ray_cast(&self, rccl: &mut RayCastCallbackLink, p1: &Vec2, p2: &Vec2) {
         unsafe {
             ffi::World_ray_cast(self.ptr(), ffi::CRayCastCallback_as_base(rccl.mut_ptr()), p1, p2)
         }
@@ -278,8 +278,7 @@ impl<'l> World<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for World<'l> {
+impl Drop for World {
     fn drop(&mut self) {
         unsafe {
             ffi::World_drop(self.mut_ptr())
@@ -686,7 +685,7 @@ impl<'l> Fixture<'l> {
             ffi::Fixture_get_type(self.ptr())
         }
     }
-    pub fn shape(&mut self) -> UnknownShape<'l> {
+    pub fn shape(&mut self) -> UnknownShape {
         unsafe {
             WrappedMutBase::from_ptr(
                 ffi::Fixture_get_shape(self.mut_ptr())

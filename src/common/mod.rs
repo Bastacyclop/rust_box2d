@@ -94,9 +94,7 @@ impl<'l> DrawLink<'l> {
     }
     
     pub unsafe fn set_object(&mut self, object: ffi::FatAny) {
-        unsafe {
-            ffi::DrawLink_set_object(self.mut_ptr(), object)
-        }
+        ffi::DrawLink_set_object(self.mut_ptr(), object)
     }
     
     pub fn set_flags(&mut self, flags: DrawFlags) {

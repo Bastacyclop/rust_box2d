@@ -3,15 +3,15 @@ use math::{Vec2, Transform};
 use collision::{RayCastInput, RayCastOutput, AABB};
 
 macro_rules! wrapped_shape(
-    ($wrapped:ty into $wrap:ident
+    ($wrapped:ty owned into $wrap:ident
      << $base_as:path
      >> $as_base:path) => (
      
-        wrapped!($wrapped into $wrap with base ffi::Shape
+        wrapped!($wrapped owned into $wrap with base ffi::Shape
                  << $base_as
                  >> $as_base)
                  
-        impl<'l> Shape for $wrap<'l> {}
+        impl Shape for $wrap {}
     );
 )
 
@@ -25,6 +25,7 @@ pub enum ShapeType {
     CountShapeType = 4
 }
 
+#[repr(C)]
 pub struct MassData {
     pub mass: f32,
     pub center: Vec2,
@@ -97,15 +98,15 @@ pub trait Shape: WrappedMutBase<ffi::Shape> {
     }
 }
 
-pub enum UnknownShape<'l> {
+pub enum UnknownShape {
     Unknown,
-    Circle(CircleShape<'l>),
-    Edge(EdgeShape<'l>),
-    Polygon(PolygonShape<'l>),
-    Chain(ChainShape<'l>),
+    Circle(CircleShape),
+    Edge(EdgeShape),
+    Polygon(PolygonShape),
+    Chain(ChainShape),
 }
 
-impl<'l> WrappedBase<ffi::Shape> for UnknownShape<'l> {
+impl WrappedBase<ffi::Shape> for UnknownShape {
     unsafe fn base_ptr(&self) -> *const ffi::Shape {
         match self {
             &Circle(ref x) => x.base_ptr(),
@@ -117,8 +118,8 @@ impl<'l> WrappedBase<ffi::Shape> for UnknownShape<'l> {
     }
 }
 
-impl<'l> WrappedMutBase<ffi::Shape> for UnknownShape<'l> {
-    unsafe fn from_ptr(ptr: *mut ffi::Shape) -> UnknownShape<'l> {
+impl WrappedMutBase<ffi::Shape> for UnknownShape {
+    unsafe fn from_ptr(ptr: *mut ffi::Shape) -> UnknownShape {
         assert!(!ptr.is_null())
         let shape_type = ffi::Shape_get_type(ptr as *const ffi::Shape);
         match shape_type {
@@ -149,27 +150,27 @@ impl<'l> WrappedMutBase<ffi::Shape> for UnknownShape<'l> {
     }
 }
 
-impl<'l> Shape for UnknownShape<'l> {}
+impl Shape for UnknownShape {}
 
-wrapped_shape!(ffi::ChainShape into ChainShape
+wrapped_shape!(ffi::ChainShape owned into ChainShape
                << ffi::Shape_as_chain_shape
                >> ffi::ChainShape_as_shape
                )
-wrapped_shape!(ffi::CircleShape into CircleShape
+wrapped_shape!(ffi::CircleShape owned into CircleShape
                << ffi::Shape_as_circle_shape
                >> ffi::CircleShape_as_shape
                )
-wrapped_shape!(ffi::EdgeShape into EdgeShape
+wrapped_shape!(ffi::EdgeShape owned into EdgeShape
                << ffi::Shape_as_edge_shape
                >> ffi::EdgeShape_as_shape
                )
-wrapped_shape!(ffi::PolygonShape into PolygonShape
+wrapped_shape!(ffi::PolygonShape owned into PolygonShape
                << ffi::Shape_as_polygon_shape
                >> ffi::PolygonShape_as_shape
                )
 
-impl<'l> ChainShape<'l> {
-    pub fn new() -> ChainShape<'l> {
+impl ChainShape {
+    pub fn new() -> ChainShape {
         unsafe {
             WrappedMut::from_ptr(ffi::ChainShape_new())
         }
@@ -211,7 +212,7 @@ impl<'l> ChainShape<'l> {
         }
     }
     
-    pub fn child_edge(&self, index: i32) -> EdgeShape<'l> {
+    pub fn child_edge(&self, index: i32) -> EdgeShape {
         unsafe {
             let edge = ffi::EdgeShape_new();
             ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
@@ -220,8 +221,8 @@ impl<'l> ChainShape<'l> {
     }
 }
 
-impl<'l> CircleShape<'l> {
-    pub fn new() -> CircleShape<'l> {
+impl CircleShape {
+    pub fn new() -> CircleShape {
         unsafe {
             WrappedMut::from_ptr(ffi::CircleShape_new())
         }
@@ -256,8 +257,8 @@ impl<'l> CircleShape<'l> {
     }
 }
 
-impl<'l> EdgeShape<'l> {
-    pub fn new() -> EdgeShape<'l> {
+impl EdgeShape {
+    pub fn new() -> EdgeShape {
         unsafe {
             WrappedMut::from_ptr(ffi::EdgeShape_new())
         }
@@ -270,8 +271,8 @@ impl<'l> EdgeShape<'l> {
     }
 }
 
-impl<'l> PolygonShape<'l> {
-    pub fn new() -> PolygonShape<'l> {
+impl PolygonShape {
+    pub fn new() -> PolygonShape {
         unsafe {
             WrappedMut::from_ptr(ffi::PolygonShape_new())
         }
@@ -321,9 +322,7 @@ impl<'l> PolygonShape<'l> {
     }
 }
 
-
-#[unsafe_destructor]
-impl<'l> Drop for ChainShape<'l> {
+impl Drop for ChainShape {
     fn drop(&mut self) {
         unsafe {
             ffi::ChainShape_drop(self.mut_ptr())
@@ -331,8 +330,7 @@ impl<'l> Drop for ChainShape<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for CircleShape<'l> {
+impl Drop for CircleShape {
     fn drop(&mut self) {
         unsafe {
             ffi::CircleShape_drop(self.mut_ptr())
@@ -340,8 +338,7 @@ impl<'l> Drop for CircleShape<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for EdgeShape<'l> {
+impl Drop for EdgeShape {
     fn drop(&mut self) {
         unsafe {
             ffi::EdgeShape_drop(self.mut_ptr())
@@ -349,8 +346,7 @@ impl<'l> Drop for EdgeShape<'l> {
     }
 }
 
-#[unsafe_destructor]
-impl<'l> Drop for PolygonShape<'l> {
+impl Drop for PolygonShape {
     fn drop(&mut self) {
         unsafe {
             ffi::PolygonShape_drop(self.mut_ptr())

@@ -6,9 +6,9 @@ typedef void (*DrawSegmentCB)(RustFatObject, const b2Vec2*, const b2Vec2*,
                               const b2Color*);
 typedef void (*DrawTransformCB)(RustFatObject, const b2Transform*);
 
-struct CDraw: public b2Draw {
-    CDraw(): b2Draw() {}
-    ~CDraw() override {}
+struct DrawLink: public b2Draw {
+    DrawLink(): b2Draw() {}
+    ~DrawLink() override {}
     
     void DrawPolygon(const b2Vec2* vertices, i32 count,
                      const b2Color& color) override {
@@ -48,14 +48,14 @@ struct CDraw: public b2Draw {
     DrawTransformCB draw_transform;
 };
 
-CDraw* CDraw_new(RustFatObject o,
+DrawLink* DrawLink_new(RustFatObject o,
                  DrawPolygonCB dp,
                  DrawPolygonCB dsp,
                  DrawCircleCB dc,
                  DrawSolidCircleCB dsc,
                  DrawSegmentCB ds,
                  DrawTransformCB dt) {
-    CDraw* d = new CDraw();
+    DrawLink* d = new DrawLink();
     d->object = o;
     d->draw_polygon = dp;
     d->draw_solid_polygon = dsp;
@@ -66,26 +66,31 @@ CDraw* CDraw_new(RustFatObject o,
     return d;
 }
 
-b2Draw* CDraw_as_base(CDraw* self) {
+b2Draw* DrawLink_as_base(DrawLink* self) {
     return static_cast<b2Draw*>(self);
 }
 
-void CDraw_drop(CDraw* self) {
+void DrawLink_drop(DrawLink* self) {
     delete self;
 }
 
-void CDraw_set_flags(CDraw* self, u32 flags) {
+void DrawLink_set_object(DrawLink* self, RustFatObject o) {
+    self->object = o;
+}
+
+void DrawLink_set_flags(DrawLink* self, u32 flags) {
     self->SetFlags(flags);
 }
 
-u32 CDraw_get_flags(const CDraw* self) {
+u32 DrawLink_get_flags(const DrawLink* self) {
     return self->GetFlags();
 }
 
-void CDraw_append_flags(CDraw* self, u32 flags) {
+void DrawLink_append_flags(DrawLink* self, u32 flags) {
     self->AppendFlags(flags);
 }
 
-void CDraw_clear_flags(CDraw* self, u32 flags) {
+void DrawLink_clear_flags(DrawLink* self, u32 flags) {
     self->ClearFlags(flags);
 }
+

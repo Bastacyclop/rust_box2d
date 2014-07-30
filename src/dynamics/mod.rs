@@ -20,7 +20,7 @@ use {
     WrappedBase, WrappedMutBase, WrappedConstBase,
     ffi, settings
 };
-use common::DrawLink;
+use common::{Draw, DrawLink};
 use math::{Vec2, Transform};
 use dynamics::joints::private::{WrappedJoint, JointDef};
 use collision::{
@@ -69,12 +69,6 @@ impl<'l> World<'l> {
         unsafe {
             ffi::World_set_contact_listener(self.mut_ptr(),
                                             ffi::CContactListener_as_base(cll.mut_ptr()))
-        }
-    }
-    
-    pub fn set_debug_draw(&mut self, dl: &'l mut DrawLink<'l>) {
-        unsafe {
-            ffi::World_set_debug_draw(self.mut_ptr(), ffi::CDraw_as_base(dl.mut_ptr()))
         }
     }
     
@@ -131,9 +125,13 @@ impl<'l> World<'l> {
         }
     }
     
-    pub fn draw_debug_data(&mut self) {
+    pub fn draw_debug_data(&mut self, dl: &mut DrawLink, d: &mut Draw) {
         unsafe {
-            ffi::World_draw_debug_data(self.mut_ptr())
+            dl.set_object(mem::transmute(d));
+            ffi::World_set_debug_draw(self.mut_ptr(), ffi::DrawLink_as_base(dl.mut_ptr()));
+            ffi::World_draw_debug_data(self.mut_ptr());
+            ffi::World_set_debug_draw(self.mut_ptr(), ptr::mut_null());
+            dl.set_object(ffi::FatAny::null())
         }
     }
     

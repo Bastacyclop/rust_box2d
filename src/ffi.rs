@@ -1,4 +1,5 @@
 use libc::c_void;
+use std::ptr;
 use math::{Vec2, Transform};
 use common::{Color, DrawFlags};
 use dynamics::{
@@ -24,7 +25,7 @@ pub struct CQueryCallback;
 pub struct RayCastCallback;
 pub struct CRayCastCallback;
 pub struct Draw;
-pub struct CDraw;
+pub struct DrawLink;
 
 pub struct Contact;
 pub struct ContactManager;
@@ -56,6 +57,15 @@ pub type Any = *mut c_void;
 pub struct FatAny {
     raw1: *mut c_void,
     raw2: *mut c_void
+}
+
+impl FatAny {
+    pub fn null() -> FatAny {
+        FatAny {
+            raw1: ptr::mut_null(),
+            raw2: ptr::mut_null()
+        }
+    }
 }
 
 #[link(name = "box2d_frontend", kind = "static")]
@@ -155,7 +165,7 @@ extern {
                                     ) -> *mut RayCastCallback;
     pub fn CRayCastCallback_drop(slf: *mut CRayCastCallback);
     
-    pub fn CDraw_new(
+    pub fn DrawLink_new(
         object: FatAny,
         draw_polygon: unsafe extern fn(FatAny, *const Vec2, i32, *const Color),
         draw_solid_polygon: unsafe extern fn(FatAny, *const Vec2, i32, *const Color),
@@ -165,13 +175,14 @@ extern {
         draw_segment: unsafe extern fn(FatAny, *const Vec2, *const Vec2,
                                        *const Color),
         draw_transform: unsafe extern fn(FatAny, *const Transform),
-        ) -> *mut CDraw;
-    pub fn CDraw_as_base(slf: *mut CDraw) -> *mut Draw;
-    pub fn CDraw_drop(slf: *mut CDraw);
-    pub fn CDraw_set_flags(slf: *mut CDraw, flags: DrawFlags);
-    pub fn CDraw_get_flags(slf: *const CDraw) -> DrawFlags;
-    pub fn CDraw_append_flags(slf: *mut CDraw, flags: DrawFlags);
-    pub fn CDraw_clear_flags(slf: *mut CDraw, flags: DrawFlags);
+        ) -> *mut DrawLink;
+    pub fn DrawLink_as_base(slf: *mut DrawLink) -> *mut Draw;
+    pub fn DrawLink_drop(slf: *mut DrawLink);
+    pub fn DrawLink_set_object(slf: *mut DrawLink, object: FatAny);
+    pub fn DrawLink_set_flags(slf: *mut DrawLink, flags: DrawFlags);
+    pub fn DrawLink_get_flags(slf: *const DrawLink) -> DrawFlags;
+    pub fn DrawLink_append_flags(slf: *mut DrawLink, flags: DrawFlags);
+    pub fn DrawLink_clear_flags(slf: *mut DrawLink, flags: DrawFlags);
     
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;

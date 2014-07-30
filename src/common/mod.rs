@@ -76,44 +76,50 @@ unsafe extern fn draw_transform(any: ffi::FatAny, xf: *const Transform) {
     draw.draw_transform(&*xf)
 }
 
-wrapped!(ffi::CDraw into DrawLink)
+wrapped!(ffi::DrawLink into DrawLink)
 
 impl<'l> DrawLink<'l> {
-    pub fn with(t: &'l mut Draw) -> DrawLink<'l> {
+    pub fn new() -> DrawLink<'l> {
         unsafe {
             WrappedMut::from_ptr(
-                ffi::CDraw_new(mem::transmute(t),
-                               draw_polygon,
-                               draw_solid_polygon,
-                               draw_circle,
-                               draw_solid_circle,
-                               draw_segment,
-                               draw_transform)
+                ffi::DrawLink_new(ffi::FatAny::null(),
+                                  draw_polygon,
+                                  draw_solid_polygon,
+                                  draw_circle,
+                                  draw_solid_circle,
+                                  draw_segment,
+                                  draw_transform)
             )
+        }
+    }
+    
+    pub unsafe fn set_object(&mut self, object: ffi::FatAny) {
+        unsafe {
+            ffi::DrawLink_set_object(self.mut_ptr(), object)
         }
     }
     
     pub fn set_flags(&mut self, flags: DrawFlags) {
         unsafe {
-            ffi::CDraw_set_flags(self.mut_ptr(), flags)
+            ffi::DrawLink_set_flags(self.mut_ptr(), flags)
         }
     }
     
     pub fn flags(&self) -> DrawFlags {
         unsafe {
-            ffi::CDraw_get_flags(self.ptr())
+            ffi::DrawLink_get_flags(self.ptr())
         }
     }
     
-    pub fn add_flags(&mut self, flags: DrawFlags) {
+    pub fn insert_flags(&mut self, flags: DrawFlags) {
         unsafe {
-            ffi::CDraw_append_flags(self.mut_ptr(), flags)
+            ffi::DrawLink_append_flags(self.mut_ptr(), flags)
         }
     }
     
     pub fn remove_flags(&mut self, flags: DrawFlags) {
         unsafe {
-            ffi::CDraw_clear_flags(self.mut_ptr(), flags)
+            ffi::DrawLink_clear_flags(self.mut_ptr(), flags)
         }
     }
 }    
@@ -122,7 +128,7 @@ impl<'l> DrawLink<'l> {
 impl<'l> Drop for DrawLink<'l> {
     fn drop(&mut self) {
         unsafe {
-            ffi::CDraw_drop(self.mut_ptr())
+            ffi::DrawLink_drop(self.mut_ptr())
         }
     }
 }

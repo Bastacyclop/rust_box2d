@@ -1,5 +1,6 @@
 use std::num::Zero;
 
+#[repr(C)]
 #[deriving(Clone, PartialEq, Show)]
 pub struct Vec2 {
     pub x: f32,
@@ -62,6 +63,7 @@ impl Neg<Vec2> for Vec2 {
     }
 }
 
+#[repr(C)]
 #[deriving(Clone, PartialEq, Show)]
 pub struct Rot {
     pub sin: f32,
@@ -80,6 +82,7 @@ impl Rot {
     }
 }
 
+#[repr(C)]
 #[deriving(Clone, PartialEq, Show)]
 pub struct Transform {
     pub pos: Vec2,

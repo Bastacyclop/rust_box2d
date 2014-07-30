@@ -6,6 +6,7 @@ use math::{Vec2, Transform};
 pub mod math;
 pub mod settings;
 
+#[repr(C)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -39,6 +40,7 @@ unsafe extern fn draw_polygon(any: ffi::FatAny, vertices: *const Vec2,
     let draw = mem::transmute::<_, &mut Draw>(any);
     draw.draw_polygon(vec::raw::from_buf(vertices, count as uint), &*color)
 }
+
 unsafe extern fn draw_solid_polygon(any: ffi::FatAny, vertices: *const Vec2,
                                     count: i32, color: *const Color) {
     assert!(!color.is_null())
@@ -46,6 +48,7 @@ unsafe extern fn draw_solid_polygon(any: ffi::FatAny, vertices: *const Vec2,
     draw.draw_solid_polygon(vec::raw::from_buf(vertices, count as uint),
                                &*color)
 }
+
 unsafe extern fn draw_circle(any: ffi::FatAny, center: *const Vec2,
                              radius: f32, color: *const Color) {
     assert!(!center.is_null())
@@ -53,6 +56,7 @@ unsafe extern fn draw_circle(any: ffi::FatAny, center: *const Vec2,
     let draw = mem::transmute::<_, &mut Draw>(any);
     draw.draw_circle(&*center, radius, &*color)
 }
+
 unsafe extern fn draw_solid_circle(any: ffi::FatAny, center: *const Vec2,
                                    radius: f32, axis: *const Vec2,
                                    color: *const Color) {
@@ -62,6 +66,7 @@ unsafe extern fn draw_solid_circle(any: ffi::FatAny, center: *const Vec2,
     let draw = mem::transmute::<_, &mut Draw>(any);
     draw.draw_solid_circle(&*center, radius, &*axis, &*color)
 }
+
 unsafe extern fn draw_segment(any: ffi::FatAny, p1: *const Vec2,
                               p2: *const Vec2, color: *const Color) {
     assert!(!p1.is_null())
@@ -70,16 +75,17 @@ unsafe extern fn draw_segment(any: ffi::FatAny, p1: *const Vec2,
     let draw = mem::transmute::<_, &mut Draw>(any);
     draw.draw_segment(&*p1, &*p2, &*color)
 }
+
 unsafe extern fn draw_transform(any: ffi::FatAny, xf: *const Transform) {
     assert!(!xf.is_null())
     let draw = mem::transmute::<_, &mut Draw>(any);
     draw.draw_transform(&*xf)
 }
 
-wrapped!(ffi::DrawLink into DrawLink)
+wrapped!(ffi::DrawLink owned into DrawLink)
 
-impl<'l> DrawLink<'l> {
-    pub fn new() -> DrawLink<'l> {
+impl DrawLink {
+    pub fn new() -> DrawLink {
         unsafe {
             WrappedMut::from_ptr(
                 ffi::DrawLink_new(ffi::FatAny::null(),
@@ -122,8 +128,7 @@ impl<'l> DrawLink<'l> {
     }
 }    
 
-#[unsafe_destructor]
-impl<'l> Drop for DrawLink<'l> {
+impl Drop for DrawLink {
     fn drop(&mut self) {
         unsafe {
             ffi::DrawLink_drop(self.mut_ptr())

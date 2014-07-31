@@ -54,6 +54,7 @@ pub struct WeldJoint;
 pub struct WheelJoint;
 
 pub type Any = *mut c_void;
+#[repr(C)]
 pub struct FatAny {
     raw1: *mut c_void,
     raw2: *mut c_void
@@ -399,8 +400,8 @@ extern {
     
     pub fn GearJoint_as_joint(slf: *mut GearJoint) -> *mut Joint;
     pub fn Joint_as_gear_joint(slf: *mut Joint) -> *mut GearJoint;
-    pub fn GearJoint_get_joint_1(slf: *mut GearJoint) -> *const Joint;
-    pub fn GearJoint_get_joint_2(slf: *mut GearJoint) -> *const Joint;
+    pub fn GearJoint_get_joint_1(slf: *mut GearJoint) -> *mut Joint;
+    pub fn GearJoint_get_joint_2(slf: *mut GearJoint) -> *mut Joint;
     pub fn GearJoint_set_ratio(slf: *mut GearJoint, ratio: f32);
     pub fn GearJoint_get_ratio(slf: *const GearJoint) -> f32;
     

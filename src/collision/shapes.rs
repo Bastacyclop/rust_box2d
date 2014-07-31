@@ -42,6 +42,7 @@ impl MassData {
     }
 }
 
+#[allow(visible_private_types)]
 pub trait Shape: WrappedMutBase<ffi::Shape> {
     /*fn clone(&self, alloc: &mut ffi::BlockAllocator) -> Self {
         WrappedShape::from_shape_ptr(

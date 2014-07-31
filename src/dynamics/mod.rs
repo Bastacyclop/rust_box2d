@@ -31,6 +31,7 @@ use collision::{
 
 pub mod joints;
 
+#[repr(C)]
 #[deriving(Clone)]
 pub struct Profile {
     pub step: f32,
@@ -87,7 +88,7 @@ impl World {
         }
     }
     
-    pub fn create_joint<J: MutJoint+ConstJoint>(&mut self, def: &JointDef) -> J {
+    pub fn create_joint<J: MutJoint>(&mut self, def: &JointDef) -> J {
         unsafe {
             let joint: J = WrappedMutBase::from_ptr(
                 ffi::World_create_joint(self.mut_ptr(), def.joint_def_ptr())
@@ -293,6 +294,7 @@ pub enum BodyType {
     DynamicBodyType = 2
 }
 
+#[repr(C)]
 #[allow(dead_code)]
 pub struct BodyDef {
     pub body_type: BodyType,
@@ -627,6 +629,7 @@ impl<'l> BodyMutRef<'l>{
     }
 }
 
+#[repr(C)]
 #[allow(dead_code)]
 #[deriving(Clone)]
 pub struct Filter {
@@ -645,6 +648,7 @@ impl Filter {
     }
 }
 
+#[repr(C)]
 #[allow(dead_code)]
 pub struct FixtureDef {
     shape: *const ffi::Shape,
@@ -802,6 +806,7 @@ impl<'l> FixtureMutRef<'l>{
     }
 }
 
+#[repr(C)]
 pub struct ContactImpulse {
     pub normal_impulses: [f32, ..settings::MAX_MANIFOLD_POINTS],
     pub tangent_impulses: [f32, ..settings::MAX_MANIFOLD_POINTS],
@@ -816,6 +821,7 @@ pub enum ManifoldType {
     FaceBManifoldType = 2
 }
 
+#[repr(C)]
 pub struct Manifold {
     pub points: [ManifoldPoint, ..settings::MAX_MANIFOLD_POINTS],
     pub local_normal: Vec2,
@@ -824,6 +830,7 @@ pub struct Manifold {
     pub count: i32
 }
 
+#[repr(C)]
 pub struct ManifoldPoint {
     pub local_point: Vec2,
     pub normal_impulse: f32,

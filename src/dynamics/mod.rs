@@ -17,11 +17,12 @@ pub use self::joints::{
 use std::ptr;
 use std::mem;
 use {
+    ffi, settings,
     Wrapped, WrappedMut, WrappedConst,
-    WrappedBase, WrappedMutBase, WrappedConstBase,
-    ffi, settings
+    WrappedBase, WrappedMutBase, WrappedConstBase
 };
-use common::{Draw, DrawLink};
+use common::{Draw, DrawFlags};
+use common::private::DrawLink;
 use math::{Vec2, Transform};
 use dynamics::joints::private::{WrappedJoint, JointDef};
 use collision::{
@@ -44,7 +45,35 @@ pub struct Profile {
     pub solve_TOI: f32
 }
 
-wrapped!(ffi::World owned into World)
+pub struct World {
+    ptr: *mut ffi::World,
+    draw_link: DrawLink,
+    destruction_listener_link: DestructionListenerLink,
+    contact_filter_link: ContactFilterLink,
+    contact_listener_link: ContactListenerLink
+}
+
+impl Wrapped<ffi::World> for World {
+    fn ptr(&self) -> *const ffi::World {
+        self.ptr as *const ffi::World
+    }
+}
+
+impl WrappedMut<ffi::World> for World {
+    fn from_ptr(ptr: *mut ffi::World) -> World {
+        World {
+            ptr: ptr,
+            draw_link: DrawLink::new(),
+            destruction_listener_link: DestructionListenerLink::new(),
+            contact_filter_link: ContactFilterLink::new(),
+            contact_listener_link: ContactListenerLink::new()
+        }
+    }
+    
+    fn mut_ptr(&mut self) -> *mut ffi::World {
+        self.ptr
+    }
+}
 
 impl World {
     pub fn new(gravity: &Vec2) -> World {
@@ -53,32 +82,36 @@ impl World {
         }
     }
     
-    pub fn set_destruction_listener(&mut self, dll: &mut DestructionListenerLink) {
+    pub fn set_destruction_listener(&mut self, destruction_listener: &mut DestructionListener) {
         unsafe {
+            self.destruction_listener_link.set_object(mem::transmute(destruction_listener));
             ffi::World_set_destruction_listener(self.mut_ptr(),
-                                                ffi::CDestructionListener_as_base(dll.mut_ptr()))
+                ffi::DestructionListenerLink_as_base(self.destruction_listener_link.mut_ptr())
+                );
         }
     }
     
-    pub fn set_contact_filter(&mut self, cfl: &mut ContactFilterLink) {
+    pub fn set_contact_filter(&mut self, contact_filter: &mut ContactFilter) {
         unsafe {
+            self.contact_filter_link.set_object(mem::transmute(contact_filter));
             ffi::World_set_contact_filter(self.mut_ptr(),
-                                          ffi::CContactFilter_as_base(cfl.mut_ptr()))
+                ffi::ContactFilterLink_as_base(self.contact_filter_link.mut_ptr())
+                );
         }
     }
     
-    pub fn set_contact_listener(&mut self, cll: &mut ContactListenerLink) {
+    pub fn set_contact_listener(&mut self, contact_listener: &mut ContactListener) {
         unsafe {
+            self.contact_listener_link.set_object(mem::transmute(contact_listener));
             ffi::World_set_contact_listener(self.mut_ptr(),
-                                            ffi::CContactListener_as_base(cll.mut_ptr()))
+                ffi::ContactListenerLink_as_base(self.contact_listener_link.mut_ptr())
+                );
         }
     }
     
-    pub fn create_body(&mut self, def: &BodyDef) -> BodyMutRef{
+    pub fn create_body(&mut self, def: &BodyDef) -> BodyMutRef {
         unsafe {
-            WrappedMut::from_ptr(
-                ffi::World_create_body(self.mut_ptr(), def)
-                )
+            WrappedMut::from_ptr(ffi::World_create_body(self.mut_ptr(), def))
         }
     }
     
@@ -125,27 +158,41 @@ impl World {
         }
     }
     
-    pub fn draw_debug_data(&mut self, dl: &mut DrawLink, d: &mut Draw) {
+    pub fn draw_debug_data(&mut self, draw: &mut Draw, draw_flags: DrawFlags) {
         unsafe {
-            dl.set_object(mem::transmute(d));
-            ffi::World_set_debug_draw(self.mut_ptr(), ffi::DrawLink_as_base(dl.mut_ptr()));
+            self.draw_link.set_object(mem::transmute(draw));
+            self.draw_link.set_flags(draw_flags);
+            ffi::World_set_debug_draw(self.mut_ptr(),
+                                      ffi::DrawLink_as_base(self.draw_link.mut_ptr()));
             ffi::World_draw_debug_data(self.mut_ptr());
             ffi::World_set_debug_draw(self.mut_ptr(), ptr::mut_null());
-            dl.set_object(ffi::FatAny::null())
+            self.draw_link.set_object(ffi::FatAny::null());
         }
     }
     
-    pub fn query_aabb(&self, qcl: &mut QueryCallbackLink, aabb: &AABB) {
+    pub fn query_aabb(&self, query_callback: &mut QueryCallback, aabb: &AABB) {
         unsafe {
-            ffi::World_query_aabb(self.ptr(), ffi::CQueryCallback_as_base(qcl.mut_ptr()), aabb)
+            let mut query_callback_link = QueryCallbackLink::new();
+            query_callback_link.set_object(mem::transmute(query_callback));
+            ffi::World_query_aabb(self.ptr(),
+                ffi::QueryCallbackLink_as_base(query_callback_link.mut_ptr()),
+                aabb
+                );
         }
     }
-    pub fn ray_cast(&self, rccl: &mut RayCastCallbackLink, p1: &Vec2, p2: &Vec2) {
+    
+    pub fn ray_cast(&self, ray_cast_callback: &mut RayCastCallback, p1: &Vec2, p2: &Vec2) {
         unsafe {
-            ffi::World_ray_cast(self.ptr(), ffi::CRayCastCallback_as_base(rccl.mut_ptr()), p1, p2)
+            let mut ray_cast_callback_link = RayCastCallbackLink::new();
+            ray_cast_callback_link.set_object(mem::transmute(ray_cast_callback));
+            ffi::World_ray_cast(self.ptr(),
+                ffi::RayCastCallbackLink_as_base(ray_cast_callback_link.mut_ptr()),
+                p1, p2
+                );
         }
     }
-    /*pub fn mut_body_list(&mut self) -> Vec<Body> {
+    
+    pub fn mut_body_list<'a>(&'a mut self) -> Vec<BodyMutRef<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_body_list(self.mut_ptr());
             
@@ -156,107 +203,193 @@ impl World {
             }
             vec
         }
-    }*/
+    }
+    
+    pub fn body_list<'a>(&'a mut self) -> Vec<BodyRef<'a>> {
+        unsafe {
+            let mut ptr = ffi::World_get_body_list_const(self.ptr());
+            
+            let mut vec = Vec::new();
+            while !ptr.is_null() {
+                vec.push(WrappedConst::from_ptr(ptr));
+                ptr = ffi::Body_get_next_const(ptr);
+            }
+            vec
+        }
+    }
+    
+    pub fn mut_joint_list<'a>(&'a mut self) -> Vec<UnknownJointMutRef<'a>> {
+        unsafe {
+            let mut ptr = ffi::World_get_joint_list(self.mut_ptr());
+            
+            let mut vec = Vec::new();
+            while !ptr.is_null() {
+                vec.push(WrappedMutBase::from_ptr(ptr));
+                ptr = ffi::Joint_get_next(ptr);
+            }
+            vec
+        }
+    }
+    
+    pub fn joint_list<'a>(&'a mut self) -> Vec<UnknownJointRef<'a>> {
+        unsafe {
+            let mut ptr = ffi::World_get_joint_list_const(self.ptr());
+            
+            let mut vec = Vec::new();
+            while !ptr.is_null() {
+                vec.push(WrappedConstBase::from_ptr(ptr));
+                ptr = ffi::Joint_get_next_const(ptr);
+            }
+            vec
+        }
+    }
+    /*
+    pub fn mut_contact_list<'a>(&'a mut self) -> Vec<ContactMutRef<'a>> {
+        unsafe {
+            let mut ptr = ffi::World_get_contact_list(self.mut_ptr());
+            
+            let mut vec = Vec::new();
+            while !ptr.is_null() {
+                vec.push(WrappedMut::from_ptr(ptr));
+                ptr = ffi::Body_get_next(ptr);
+            }
+            vec
+        }
+    }
+    
+    pub fn contact_list<'a>(&'a mut self) -> Vec<ContactRef<'a>> {
+        unsafe {
+            let mut ptr = ffi::World_get_contact_list_const(self.ptr());
+            
+            let mut vec = Vec::new();
+            while !ptr.is_null() {
+                vec.push(WrappedConst::from_ptr(ptr));
+                ptr = ffi::Body_get_next_const(ptr);
+            }
+            vec
+        }
+    }
+    */
     pub fn set_sleeping_allowed(&mut self, flag: bool) {
         unsafe {
             ffi::World_set_allow_sleeping(self.mut_ptr(), flag)
         }
     }
+    
     pub fn is_sleeping_allowed(&self) -> bool {
         unsafe {
             ffi::World_get_allow_sleeping(self.ptr())
         }
     }
+    
     pub fn set_warm_starting(&mut self, flag: bool) {
         unsafe {
             ffi::World_set_warm_starting(self.mut_ptr(), flag)
         }
     }
+    
     pub fn is_warm_starting(&self) -> bool {
         unsafe {
             ffi::World_get_warm_starting(self.ptr())
         }
     }
+    
     pub fn set_continuous_physics(&mut self, flag: bool) {
         unsafe {
             ffi::World_set_continuous_physics(self.mut_ptr(), flag)
         }
     }
+    
     pub fn is_continuous_physics(&self) -> bool {
         unsafe {
             ffi::World_get_continuous_physics(self.ptr())
         }
     }
+    
     pub fn set_sub_stepping(&mut self, flag: bool) {
         unsafe {
             ffi::World_set_sub_stepping(self.mut_ptr(), flag)
         }
     }
+    
     pub fn is_sub_stepping(&self) -> bool {
         unsafe {
             ffi::World_get_sub_stepping(self.ptr())
         }
     }
+    
     pub fn proxy_count(&self) -> uint {
         unsafe {
             ffi::World_get_proxy_count(self.ptr()) as uint
         }
     }
+    
     pub fn body_count(&self) -> uint {
         unsafe {
             ffi::World_get_body_count(self.ptr()) as uint
         }
     }
+    
     pub fn joint_count(&self) -> uint {
         unsafe {
             ffi::World_get_joint_count(self.ptr()) as uint
         }
     }
+    
     pub fn contact_count(&self) -> uint {
         unsafe {
             ffi::World_get_contact_count(self.ptr()) as uint
         }
     }
+    
     pub fn tree_height(&self) -> i32 {
         unsafe {
             ffi::World_get_tree_height(self.ptr())
         }
     }
+    
     pub fn tree_balance(&self) -> i32 {
         unsafe {
             ffi::World_get_tree_balance(self.ptr())
         }
     }
+    
     pub fn tree_quality(&self) -> f32 {
         unsafe {
             ffi::World_get_tree_quality(self.ptr())
         }
     }
+    
     pub fn set_gravity(&mut self, gravity: &Vec2) {
         unsafe {
             ffi::World_set_gravity(self.mut_ptr(), gravity)
         }
     }
+    
     pub fn gravity(&self) -> Vec2 {
         unsafe {
             ffi::World_get_gravity(self.ptr())
         }
     }
+    
     pub fn is_locked(&self) -> bool {
         unsafe {
             ffi::World_is_locked(self.ptr())
         }
     }
+    
     pub fn set_auto_clearing_forces(&mut self, flag: bool) {
         unsafe {
             ffi::World_set_auto_clear_forces(self.mut_ptr(), flag)
         }
     }
+    
     pub fn is_auto_clearing_forces(&self) -> bool {
         unsafe {
             ffi::World_get_auto_clear_forces(self.ptr())
         }
     }
+    
     pub fn shift_origin(&mut self, origin: &Vec2) {
         unsafe {
             ffi::World_shift_origin(self.mut_ptr(), origin)
@@ -332,40 +465,17 @@ impl BodyDef {
             gravity_scale: 1.
         }
     }
+    
     pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
         self.user_data = data as ffi::Any
     }
 }
 
-wrapped!(ffi::Body into BodyMutRef, BodyConstRef)
+wrapped!(ffi::Body into BodyMutRef, BodyRef)
 
-impl<'l> BodyMutRef<'l>{
-    pub fn create_fixture(&mut self, def: &FixtureDef) -> FixtureMutRef<'l>{
-        unsafe {
-            WrappedMut::from_ptr(ffi::Body_create_fixture(self.mut_ptr(), def))
-        }
-    }
-    pub fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> FixtureMutRef<'l>{
-        unsafe {
-            WrappedMut::from_ptr(
-                ffi::Body_create_fast_fixture(self.mut_ptr(),
-                                              shape.base_ptr(),
-                                              density)
-                )
-        }
-    }
-    pub fn destroy_fixture(&mut self, mut fixture: FixtureMutRef<'l>) {
-        unsafe {
-            ffi::Body_destroy_fixture(self.mut_ptr(), fixture.mut_ptr())
-        }
-    }
-    pub fn set_transform(&mut self, pos: &Vec2, angle: f32) {
-        unsafe {
-            ffi::Body_set_transform(self.mut_ptr(), pos, angle)
-        }
-    }
-    
-    pub fn transform<'a>(&'a self) -> &'a Transform {
+#[allow(visible_private_types)]
+pub trait ConstBody: Wrapped<ffi::Body> {
+    fn transform<'a>(&'a self) -> &'a Transform {
         unsafe {
             let transform = ffi::Body_get_transform(self.ptr());
             assert!(!transform.is_null())
@@ -373,7 +483,7 @@ impl<'l> BodyMutRef<'l>{
         }
     }
     
-    pub fn position<'a>(&'a self) -> &'a Vec2 {
+    fn position<'a>(&'a self) -> &'a Vec2 {
         unsafe {
             let position = ffi::Body_get_position(self.ptr());
             assert!(!position.is_null())
@@ -381,13 +491,13 @@ impl<'l> BodyMutRef<'l>{
         }
     }
     
-    pub fn angle(&self) -> f32 {
+    fn angle(&self) -> f32 {
         unsafe {
             ffi::Body_get_angle(self.ptr())
         }
     }
     
-    pub fn world_center<'a>(&'a self) -> &'a Vec2 {
+    fn world_center<'a>(&'a self) -> &'a Vec2 {
         unsafe {
             let center = ffi::Body_get_world_center(self.ptr());
             assert!(!center.is_null())
@@ -395,7 +505,7 @@ impl<'l> BodyMutRef<'l>{
         }
     }
     
-    pub fn local_center<'a>(&'a self) -> &'a Vec2 {
+    fn local_center<'a>(&'a self) -> &'a Vec2 {
         unsafe {
             let center = ffi::Body_get_local_center(self.ptr());
             assert!(!center.is_null())
@@ -403,13 +513,7 @@ impl<'l> BodyMutRef<'l>{
         }
     }
     
-    pub fn set_linear_velocity(&mut self, v: &Vec2) {
-        unsafe {
-            ffi::Body_set_linear_velocity(self.mut_ptr(), v)
-        }
-    }
-    
-    pub fn linear_velocity<'a>(&'a self) -> &'a Vec2 {
+    fn linear_velocity<'a>(&'a self) -> &'a Vec2 {
         unsafe {
             let velocity = ffi::Body_get_linear_velocity(self.ptr());
             assert!(!velocity.is_null())
@@ -417,217 +521,321 @@ impl<'l> BodyMutRef<'l>{
         }
     }
     
-    pub fn set_angular_velocity(&mut self, v: f32) {
-        unsafe {
-            ffi::Body_set_angular_velocity(self.mut_ptr(), v)
-        }
-    }
-    pub fn angular_velocity(&self) -> f32 {
+    fn angular_velocity(&self) -> f32 {
         unsafe {
             ffi::Body_get_angular_velocity(self.ptr())
         }
     }
-    pub fn apply_force(&mut self, force: &Vec2, point: &Vec2, wake: bool) {
-        unsafe {
-            ffi::Body_apply_force(self.mut_ptr(), force, point, wake)
-        }
-    }
-    pub fn apply_force_to_center(&mut self, force: &Vec2, wake: bool) {
-        unsafe {
-            ffi::Body_apply_force_to_center(self.mut_ptr(), force, wake)
-        }
-    }
-    pub fn apply_torque(&mut self, torque: f32, wake: bool) {
-        unsafe {
-            ffi::Body_apply_torque(self.mut_ptr(), torque, wake)
-        }
-    }
-    pub fn apply_linear_impulse(&mut self, impulse: &Vec2,
-                                point: &Vec2, wake: bool) {
-        unsafe {
-            ffi::Body_apply_linear_impulse(self.mut_ptr(), impulse,
-                                           point, wake)
-        }
-    }
-    pub fn apply_angular_impulse(&mut self, impulse: f32, wake: bool) {
-        unsafe {
-            ffi::Body_apply_angular_impulse(self.mut_ptr(), impulse, wake)
-        }
-    }
-    pub fn mass(&self) -> f32 {
+    
+    fn mass(&self) -> f32 {
         unsafe {
             ffi::Body_get_mass(self.ptr())
         }
     }
-    pub fn inertia(&self) -> f32 {
+    
+    fn inertia(&self) -> f32 {
         unsafe {
             ffi::Body_get_inertia(self.ptr())
         }
     }
-    pub fn mass_data(&self) -> MassData {
+    
+    fn mass_data(&self) -> MassData {
         unsafe {
             let mut data = MassData::new();
             ffi::Body_get_mass_data(self.ptr(), &mut data);
             data
         }
     }
-    pub fn set_mass_data(&mut self, data: &MassData) {
-        unsafe {
-            ffi::Body_set_mass_data(self.mut_ptr(), data)
-        }
-    }
-    pub fn reset_mass_data(&mut self) {
-        unsafe {
-            ffi::Body_reset_mass_data(self.mut_ptr())
-        }
-    }
-    pub fn world_point(&self, local: &Vec2) -> Vec2 {
+    
+    fn world_point(&self, local: &Vec2) -> Vec2 {
         unsafe {
             ffi::Body_get_world_point(self.ptr(), local)
         }
     }
-    pub fn world_vector(&self, local: &Vec2) -> Vec2 {
+    
+    fn world_vector(&self, local: &Vec2) -> Vec2 {
         unsafe {
             ffi::Body_get_world_vector(self.ptr(), local)
         }
     }
-    pub fn local_point(&self, world: &Vec2) -> Vec2 {
+    
+    fn local_point(&self, world: &Vec2) -> Vec2 {
         unsafe {
             ffi::Body_get_local_point(self.ptr(), world)
         }
     }
-    pub fn local_vector(&self, world: &Vec2) -> Vec2 {
+    
+    fn local_vector(&self, world: &Vec2) -> Vec2 {
         unsafe {
             ffi::Body_get_local_vector(self.ptr(), world)
         }
     }
-    pub fn linear_velocity_from_world_point(&self, world: &Vec2) -> Vec2 {
+    
+    fn linear_velocity_from_world_point(&self, world: &Vec2) -> Vec2 {
         unsafe {
             ffi::Body_get_linear_velocity_from_world_point(self.ptr(), world)
         }
     }
-    pub fn linear_velocity_from_local_point(&self, local: &Vec2) -> Vec2 {
+    
+    fn linear_velocity_from_local_point(&self, local: &Vec2) -> Vec2 {
         unsafe {
             ffi::Body_get_linear_velocity_from_local_point(self.ptr(), local)
         }
     }
-    pub fn linear_damping(&self) -> f32 {
+    
+    fn linear_damping(&self) -> f32 {
         unsafe {
             ffi::Body_get_linear_damping(self.ptr())
         }
     }
-    pub fn set_linear_damping(&mut self, damping: f32) {
-        unsafe {
-            ffi::Body_set_linear_damping(self.mut_ptr(), damping)
-        }
-    }
-    pub fn angular_damping(&self) -> f32 {
+    
+    fn angular_damping(&self) -> f32 {
         unsafe {
             ffi::Body_get_angular_damping(self.ptr())
         }
     }
-    pub fn set_angular_damping(&mut self, damping: f32) {
-        unsafe {
-            ffi::Body_set_angular_damping(self.mut_ptr(), damping)
-        }
-    }
-    pub fn gravity_scale(&self) -> f32 {
+    
+    fn gravity_scale(&self) -> f32 {
         unsafe {
             ffi::Body_get_gravity_scale(self.ptr())
         }
     }
-    pub fn set_gravity_scale(&mut self, scale: f32) {
-        unsafe {
-            ffi::Body_set_gravity_scale(self.mut_ptr(), scale)
-        }
-    }
-    pub fn set_body_type(&mut self, typ: BodyType) {
-        unsafe {
-            ffi::Body_set_type(self.mut_ptr(), typ)
-        }
-    }
-    pub fn body_type(&self) -> BodyType {
+    
+    fn body_type(&self) -> BodyType {
         unsafe {
             ffi::Body_get_type(self.ptr())
         }
     }
-    pub fn set_bullet(&mut self, flag: bool) {
-        unsafe {
-            ffi::Body_set_bullet(self.mut_ptr(), flag)
-        }
-    }
-    pub fn is_bullet(&self) -> bool {
+    
+    fn is_bullet(&self) -> bool {
         unsafe {
             ffi::Body_is_bullet(self.ptr())
         }
     }
-    pub fn set_sleeping_allowed(&mut self, flag: bool) {
-        unsafe {
-            ffi::Body_set_sleeping_allowed(self.mut_ptr(), flag)
-        }
-    }
-    pub fn is_sleeping_allowed(&self) -> bool {
+    
+    fn is_sleeping_allowed(&self) -> bool {
         unsafe {
             ffi::Body_is_sleeping_allowed(self.ptr())
         }
     }
-    pub fn set_awake(&mut self, flag: bool) {
-        unsafe {
-            ffi::Body_set_awake(self.mut_ptr(), flag)
-        }
-    }
-    pub fn is_awake(&self) -> bool {
+    
+    fn is_awake(&self) -> bool {
         unsafe {
             ffi::Body_is_awake(self.ptr())
         }
     }
-    pub fn set_active(&mut self, flag: bool) {
-        unsafe {
-            ffi::Body_set_active(self.mut_ptr(), flag)
-        }
-    }
-    pub fn is_active(&self) -> bool {
+    
+    fn is_active(&self) -> bool {
         unsafe {
             ffi::Body_is_active(self.ptr())
         }
     }
-    pub fn set_rotation_fixed(&mut self, flag: bool) {
-        unsafe {
-            ffi::Body_set_fixed_rotation(self.mut_ptr(), flag)
-        }
-    }
-    pub fn is_rotation_fixed(&self) -> bool {
+    
+    fn is_rotation_fixed(&self) -> bool {
         unsafe {
             ffi::Body_is_fixed_rotation(self.ptr())
         }
     }
-    /*pub fn mut_fixture_list(&mut self) -> Vec<Fixture> {
+    
+    fn fixture_list<'a>(&'a self) -> Vec<FixtureRef<'a>> {
         unsafe {
-        
+            let mut ptr = ffi::Body_get_fixture_list_const(self.ptr());
+            
+            let mut vec = Vec::new();
+            while !ptr.is_null() {
+                vec.push(WrappedConst::from_ptr(ptr));
+                ptr = ffi::Fixture_get_next_const(ptr);
+            }
+            vec
         }
-    }*/
-    pub fn mut_next(&mut self) -> BodyMutRef{
+    }
+    
+    fn next<'a>(&'a self) -> BodyRef<'a> {
+        unsafe {
+            WrappedConst::from_ptr(ffi::Body_get_next_const(self.ptr()))
+        }
+    }
+    
+    unsafe fn user_data<T>(&self) -> *mut T {
+        ffi::Body_get_user_data(self.ptr()) as *mut T
+    }
+}
+
+#[allow(visible_private_types)]
+pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
+    fn create_fixture(&mut self, def: &FixtureDef) -> FixtureMutRef {
+        unsafe {
+            WrappedMut::from_ptr(ffi::Body_create_fixture(self.mut_ptr(), def))
+        }
+    }
+    
+    fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> FixtureMutRef {
+        unsafe {
+            WrappedMut::from_ptr(ffi::Body_create_fast_fixture(self.mut_ptr(),
+                                 shape.base_ptr(), density))
+        }
+    }
+    
+    fn destroy_fixture(&mut self, mut fixture: FixtureMutRef) {
+        unsafe {
+            ffi::Body_destroy_fixture(self.mut_ptr(), fixture.mut_ptr())
+        }
+    }
+    
+    fn set_transform(&mut self, pos: &Vec2, angle: f32) {
+        unsafe {
+            ffi::Body_set_transform(self.mut_ptr(), pos, angle)
+        }
+    }
+    
+    fn set_linear_velocity(&mut self, v: &Vec2) {
+        unsafe {
+            ffi::Body_set_linear_velocity(self.mut_ptr(), v)
+        }
+    }
+    
+    fn set_angular_velocity(&mut self, v: f32) {
+        unsafe {
+            ffi::Body_set_angular_velocity(self.mut_ptr(), v)
+        }
+    }
+    
+    fn apply_force(&mut self, force: &Vec2, point: &Vec2, wake: bool) {
+        unsafe {
+            ffi::Body_apply_force(self.mut_ptr(), force, point, wake)
+        }
+    }
+    
+    fn apply_force_to_center(&mut self, force: &Vec2, wake: bool) {
+        unsafe {
+            ffi::Body_apply_force_to_center(self.mut_ptr(), force, wake)
+        }
+    }
+    
+    fn apply_torque(&mut self, torque: f32, wake: bool) {
+        unsafe {
+            ffi::Body_apply_torque(self.mut_ptr(), torque, wake)
+        }
+    }
+    
+    fn apply_linear_impulse(&mut self, impulse: &Vec2, point: &Vec2, wake: bool) {
+        unsafe {
+            ffi::Body_apply_linear_impulse(self.mut_ptr(), impulse,
+                                           point, wake)
+        }
+    }
+    
+    fn apply_angular_impulse(&mut self, impulse: f32, wake: bool) {
+        unsafe {
+            ffi::Body_apply_angular_impulse(self.mut_ptr(), impulse, wake)
+        }
+    }
+    
+    fn set_mass_data(&mut self, data: &MassData) {
+        unsafe {
+            ffi::Body_set_mass_data(self.mut_ptr(), data)
+        }
+    }
+    
+    fn reset_mass_data(&mut self) {
+        unsafe {
+            ffi::Body_reset_mass_data(self.mut_ptr())
+        }
+    }
+    
+    fn set_linear_damping(&mut self, damping: f32) {
+        unsafe {
+            ffi::Body_set_linear_damping(self.mut_ptr(), damping)
+        }
+    }
+    
+    fn set_angular_damping(&mut self, damping: f32) {
+        unsafe {
+            ffi::Body_set_angular_damping(self.mut_ptr(), damping)
+        }
+    }
+    
+    fn set_gravity_scale(&mut self, scale: f32) {
+        unsafe {
+            ffi::Body_set_gravity_scale(self.mut_ptr(), scale)
+        }
+    }
+    
+    fn set_body_type(&mut self, typ: BodyType) {
+        unsafe {
+            ffi::Body_set_type(self.mut_ptr(), typ)
+        }
+    }
+    
+    fn set_bullet(&mut self, flag: bool) {
+        unsafe {
+            ffi::Body_set_bullet(self.mut_ptr(), flag)
+        }
+    }
+    
+    fn set_sleeping_allowed(&mut self, flag: bool) {
+        unsafe {
+            ffi::Body_set_sleeping_allowed(self.mut_ptr(), flag)
+        }
+    }
+    
+    fn set_awake(&mut self, flag: bool) {
+        unsafe {
+            ffi::Body_set_awake(self.mut_ptr(), flag)
+        }
+    }
+    
+    fn set_active(&mut self, flag: bool) {
+        unsafe {
+            ffi::Body_set_active(self.mut_ptr(), flag)
+        }
+    }
+    
+    fn set_rotation_fixed(&mut self, flag: bool) {
+        unsafe {
+            ffi::Body_set_fixed_rotation(self.mut_ptr(), flag)
+        }
+    }
+    
+    fn mut_fixture_list<'a>(&'a mut self) -> Vec<FixtureMutRef<'a>> {
+        unsafe {
+            let mut ptr = ffi::Body_get_fixture_list(self.mut_ptr());
+            
+            let mut vec = Vec::new();
+            while !ptr.is_null() {
+                vec.push(WrappedMut::from_ptr(ptr));
+                ptr = ffi::Fixture_get_next(ptr);
+            }
+            vec
+        }
+    }
+    
+    fn mut_next<'a>(&'a mut self) -> BodyMutRef<'a> {
         unsafe {
             WrappedMut::from_ptr(ffi::Body_get_next(self.mut_ptr()))
         }
     }
-    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
+    
+    unsafe fn set_user_data<T>(&mut self, data: *mut T) {
         ffi::Body_set_user_data(self.mut_ptr(), data as ffi::Any)
     }
-    pub unsafe fn user_data<T>(&self) -> *mut T {
-        ffi::Body_get_user_data(self.ptr()) as *mut T
-    }
+    /*
     pub fn mut_world(&mut self) -> World {
         unsafe {
             WrappedMut::from_ptr(ffi::Body_get_world(self.mut_ptr()))
         }
     }
-    pub fn dump(&mut self) {
+    */
+    fn dump(&mut self) {
         unsafe {
             ffi::Body_dump(self.mut_ptr())
         }
     }
 }
+
+impl<'l> ConstBody for BodyMutRef<'l> {}
+impl<'l> MutBody for BodyMutRef<'l> {}
+impl<'l> ConstBody for BodyRef<'l> {}
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -674,43 +882,29 @@ impl FixtureDef {
             }
         }
     }
+    
     pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
         self.user_data = data as ffi::Any
     }
 }
 
-wrapped!(ffi::Fixture into FixtureMutRef, FixtureConstRef)
+wrapped!(ffi::Fixture into FixtureMutRef, FixtureRef)
 
-impl<'l> FixtureMutRef<'l>{
-    pub fn shape_type(&self) -> ShapeType {
+#[allow(visible_private_types)]
+pub trait ConstFixture: Wrapped<ffi::Fixture> {
+    fn shape_type(&self) -> ShapeType {
         unsafe {
             ffi::Fixture_get_type(self.ptr())
         }
     }
-    pub fn shape(&mut self) -> UnknownShape {
-        unsafe {
-            WrappedMutBase::from_ptr(
-                ffi::Fixture_get_shape(self.mut_ptr())
-                )
-        }
-    }
-    pub fn set_sensor(&mut self, flag: bool) {
-        unsafe {
-            ffi::Fixture_set_sensor(self.mut_ptr(), flag)
-        }
-    }
-    pub fn is_sensor(&self) -> bool {
+    
+    fn is_sensor(&self) -> bool {
         unsafe {
             ffi::Fixture_is_sensor(self.ptr())
         }
     }
-    pub fn set_filter_data(&mut self, filter: &Filter) {
-        unsafe {
-            ffi::Fixture_set_filter_data(self.mut_ptr(), filter)
-        }
-    }
     
-    pub fn filter_data<'a>(&'a self) -> &'a Filter {
+    fn filter_data<'a>(&'a self) -> &'a Filter {
         unsafe {
             let data = ffi::Fixture_get_filter_data(self.ptr());
             assert!(!data.is_null())
@@ -718,27 +912,19 @@ impl<'l> FixtureMutRef<'l>{
         }
     }
     
-    pub fn refilter(&mut self) {
+    fn next<'a>(&'a self) -> FixtureRef<'a>{
         unsafe {
-            ffi::Fixture_refilter(self.mut_ptr())
+            WrappedConst::from_ptr(ffi::Fixture_get_next_const(self.ptr()))
         }
     }
-    pub fn mut_body(&mut self) -> BodyMutRef<'l>{
-        unsafe {
-            WrappedMut::from_ptr(ffi::Fixture_get_body(self.mut_ptr()))
-        }
-    }
-    pub fn mut_next(&mut self) -> FixtureMutRef<'l>{
-        unsafe {
-            WrappedMut::from_ptr(ffi::Fixture_get_next(self.mut_ptr()))
-        }
-    }
-    pub fn test_point(&self, point: &Vec2) -> bool {
+    
+    fn test_point(&self, point: &Vec2) -> bool {
         unsafe {
             ffi::Fixture_test_point(self.ptr(), point)
         }
     }
-    pub fn ray_cast(&self, input: &RayCastInput, child_index: uint
+    
+    fn ray_cast(&self, input: &RayCastInput, child_index: uint
                     ) -> RayCastOutput {
         unsafe {
             let mut output = RayCastOutput::new();
@@ -747,45 +933,34 @@ impl<'l> FixtureMutRef<'l>{
             output
         }
     }
-    pub fn mass_data(&self) -> MassData {
+    
+    fn mass_data(&self) -> MassData {
         unsafe {
             let mut data = MassData::new();
             ffi::Fixture_get_mass_data(self.ptr(), &mut data);
             data
         }
     }
-    pub fn set_density(&mut self, density: f32) {
-        unsafe {
-            ffi::Fixture_set_density(self.mut_ptr(), density)
-        }
-    }
-    pub fn density(&self) -> f32 {
+    
+    fn density(&self) -> f32 {
         unsafe {
             ffi::Fixture_get_density(self.ptr())
         }
     }
-    pub fn friction(&self) -> f32 {
+    
+    fn friction(&self) -> f32 {
         unsafe {
             ffi::Fixture_get_friction(self.ptr())
         }
     }
-    pub fn set_friction(&mut self, friction: f32) {
-        unsafe {
-            ffi::Fixture_set_friction(self.mut_ptr(), friction)
-        }
-    }
-    pub fn restitution(&self) -> f32 {
+    
+    fn restitution(&self) -> f32 {
         unsafe {
             ffi::Fixture_get_restitution(self.ptr())
         }
     }
-    pub fn set_restitution(&mut self, restitution: f32) {
-        unsafe {
-            ffi::Fixture_set_restitution(self.mut_ptr(), restitution)
-        }
-    }
     
-    pub fn aabb<'a>(&'a self, child_index: uint) -> &'a AABB {
+    fn aabb<'a>(&'a self, child_index: uint) -> &'a AABB {
         unsafe {
             let aabb = ffi::Fixture_get_aabb(self.ptr(), child_index as i32);
             assert!(!aabb.is_null())
@@ -793,18 +968,82 @@ impl<'l> FixtureMutRef<'l>{
         }
     }
     
-    pub unsafe fn user_data<T>(&self) -> *mut T {
+    unsafe fn user_data<T>(&self) -> *mut T {
         ffi::Fixture_get_user_data(self.ptr()) as *mut T
     }
-    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
+}
+
+#[allow(visible_private_types)]
+pub trait MutFixture: ConstFixture+WrappedMut<ffi::Fixture> {
+    /// __Warning__: Is the shape cloned ?
+    fn shape(&mut self) -> UnknownShape {
+        unsafe {
+            WrappedMutBase::from_ptr(ffi::Fixture_get_shape(self.mut_ptr()))
+        }
+    }
+    
+    fn set_sensor(&mut self, flag: bool) {
+        unsafe {
+            ffi::Fixture_set_sensor(self.mut_ptr(), flag)
+        }
+    }
+    
+    fn set_filter_data(&mut self, filter: &Filter) {
+        unsafe {
+            ffi::Fixture_set_filter_data(self.mut_ptr(), filter)
+        }
+    }
+    
+    fn refilter(&mut self) {
+        unsafe {
+            ffi::Fixture_refilter(self.mut_ptr())
+        }
+    }
+    /*
+    fn mut_body(&mut self) -> BodyMutRef<'l>{
+        unsafe {
+            WrappedMut::from_ptr(ffi::Fixture_get_body(self.mut_ptr()))
+        }
+    }
+    */
+    fn mut_next<'a>(&'a mut self) -> FixtureMutRef<'a>{
+        unsafe {
+            WrappedMut::from_ptr(ffi::Fixture_get_next(self.mut_ptr()))
+        }
+    }
+    
+    fn set_density(&mut self, density: f32) {
+        unsafe {
+            ffi::Fixture_set_density(self.mut_ptr(), density)
+        }
+    }
+    
+    fn set_friction(&mut self, friction: f32) {
+        unsafe {
+            ffi::Fixture_set_friction(self.mut_ptr(), friction)
+        }
+    }
+    
+    fn set_restitution(&mut self, restitution: f32) {
+        unsafe {
+            ffi::Fixture_set_restitution(self.mut_ptr(), restitution)
+        }
+    }
+    
+    unsafe fn set_user_data<T>(&mut self, data: *mut T) {
         ffi::Fixture_set_user_data(self.mut_ptr(), data as ffi::Any)
     }
-    pub fn dump(&mut self, child_count: uint) {
+    
+    fn dump(&mut self, child_count: uint) {
         unsafe {
             ffi::Fixture_dump(self.mut_ptr(), child_count as i32)
         }
     }
 }
+
+impl<'l> ConstFixture for FixtureMutRef<'l> {}
+impl<'l> MutFixture for FixtureMutRef<'l> {}
+impl<'l> ConstFixture for FixtureRef<'l> {}
 
 #[repr(C)]
 pub struct ContactImpulse {
@@ -838,7 +1077,21 @@ pub struct ManifoldPoint {
     pub id: u32
 }
 
-wrapped!(ffi::Contact into ContactMutRef, ContactConstRef)
+wrapped!(ffi::Contact into ContactMutRef, ContactRef)
+
+#[allow(visible_private_types)]
+pub trait ConstContact: Wrapped<ffi::Contact> {
+
+}
+
+#[allow(visible_private_types)]
+pub trait MutContact: ConstContact+WrappedMut<ffi::Contact> {
+
+}
+
+impl<'l> ConstContact for ContactMutRef<'l> {}
+impl<'l> MutContact for ContactMutRef<'l> {}
+impl<'l> ConstContact for ContactRef<'l> {}
 
 pub trait DestructionListener {
     fn goodbye_joint(&mut self, joint: UnknownJointMutRef);
@@ -918,71 +1171,85 @@ unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                             fraction)
 }
 
-wrapped!(ffi::CDestructionListener owned into DestructionListenerLink)
-wrapped!(ffi::CContactFilter owned into ContactFilterLink)
-wrapped!(ffi::CContactListener owned into ContactListenerLink)
-wrapped!(ffi::CQueryCallback owned into QueryCallbackLink)
-wrapped!(ffi::CRayCastCallback owned into RayCastCallbackLink)
+wrapped!(ffi::DestructionListenerLink owned into DestructionListenerLink)
+wrapped!(ffi::ContactFilterLink owned into ContactFilterLink)
+wrapped!(ffi::ContactListenerLink owned into ContactListenerLink)
+wrapped!(ffi::QueryCallbackLink owned into QueryCallbackLink)
+wrapped!(ffi::RayCastCallbackLink owned into RayCastCallbackLink)
 
 impl DestructionListenerLink {
-    pub fn with(t: &mut DestructionListener) -> DestructionListenerLink {
+    fn new() -> DestructionListenerLink {
         unsafe {
-            WrappedMut::from_ptr(
-                ffi::CDestructionListener_new(mem::transmute(t),
-                                              goodbye_joint,
-                                              goodbye_fixture
-                                              ))
+            WrappedMut::from_ptr(ffi::DestructionListenerLink_new(ffi::FatAny::null(),
+                                                                  goodbye_joint,
+                                                                  goodbye_fixture))
         }
+    }
+    
+    unsafe fn set_object(&mut self, object: ffi::FatAny) {
+        ffi::DestructionListenerLink_set_object(self.mut_ptr(), object);
     }
 }
 
 impl ContactFilterLink {
-    pub fn with(t: &mut ContactFilter) -> ContactFilterLink {
+    fn new() -> ContactFilterLink {
         unsafe {
-            WrappedMut::from_ptr(
-                ffi::CContactFilter_new(mem::transmute(t),
-                                        should_collide))
+            WrappedMut::from_ptr(ffi::ContactFilterLink_new(ffi::FatAny::null(),
+                                                            should_collide))
         }
+    }
+    
+    unsafe fn set_object(&mut self, object: ffi::FatAny) {
+        ffi::ContactFilterLink_set_object(self.mut_ptr(), object);
     }
 }
 
 impl ContactListenerLink {
-    pub fn with(t: &mut ContactListener) -> ContactListenerLink {
+    fn new() -> ContactListenerLink {
         unsafe {
-            WrappedMut::from_ptr(
-                ffi::CContactListener_new(mem::transmute(t),
-                                          begin_contact,
-                                          end_contact,
-                                          pre_solve,
-                                          post_solve))
-        }          
+            WrappedMut::from_ptr(ffi::ContactListenerLink_new(ffi::FatAny::null(),
+                                                              begin_contact,
+                                                              end_contact,
+                                                              pre_solve,
+                                                              post_solve))
+        }
+    }
+    
+    unsafe fn set_object(&mut self, object: ffi::FatAny) {
+        ffi::ContactListenerLink_set_object(self.mut_ptr(), object);
     }
 }
 
 impl QueryCallbackLink {
-    pub fn with(t: &mut QueryCallback) -> QueryCallbackLink {
+    fn new() -> QueryCallbackLink {
         unsafe {
-            WrappedMut::from_ptr(
-                ffi::CQueryCallback_new(mem::transmute(t),
-                                        qc_report_fixture))
+            WrappedMut::from_ptr(ffi::QueryCallbackLink_new(ffi::FatAny::null(),
+                                                            qc_report_fixture))
         }
+    }
+    
+    unsafe fn set_object(&mut self, object: ffi::FatAny) {
+        ffi::QueryCallbackLink_set_object(self.mut_ptr(), object);
     }
 }
 
 impl RayCastCallbackLink {
-    pub fn with(t: &mut RayCastCallback) -> RayCastCallbackLink {
+    fn new() -> RayCastCallbackLink {
         unsafe {
-            WrappedMut::from_ptr(
-                ffi::CRayCastCallback_new(mem::transmute(t),
-                                          rcc_report_fixture))
+            WrappedMut::from_ptr(ffi::RayCastCallbackLink_new(ffi::FatAny::null(),
+                                                              rcc_report_fixture))
         }
+    }
+    
+    unsafe fn set_object(&mut self, object: ffi::FatAny) {
+        ffi::RayCastCallbackLink_set_object(self.mut_ptr(), object);
     }
 }
 
 impl Drop for DestructionListenerLink {
     fn drop(&mut self) {
         unsafe {
-            ffi::CDestructionListener_drop(self.mut_ptr())
+            ffi::DestructionListenerLink_drop(self.mut_ptr())
         }
     }
 }
@@ -990,7 +1257,7 @@ impl Drop for DestructionListenerLink {
 impl Drop for ContactFilterLink {
     fn drop(&mut self) {
         unsafe {
-            ffi::CContactFilter_drop(self.mut_ptr())
+            ffi::ContactFilterLink_drop(self.mut_ptr())
         }
     }
 }
@@ -998,7 +1265,7 @@ impl Drop for ContactFilterLink {
 impl Drop for ContactListenerLink {
     fn drop(&mut self) {
         unsafe {
-            ffi::CContactListener_drop(self.mut_ptr())
+            ffi::ContactListenerLink_drop(self.mut_ptr())
         }
     }
 }
@@ -1006,7 +1273,7 @@ impl Drop for ContactListenerLink {
 impl Drop for QueryCallbackLink {
     fn drop(&mut self) {
         unsafe {
-            ffi::CQueryCallback_drop(self.mut_ptr())
+            ffi::QueryCallbackLink_drop(self.mut_ptr())
         }
     }
 }
@@ -1014,7 +1281,7 @@ impl Drop for QueryCallbackLink {
 impl Drop for RayCastCallbackLink {
     fn drop(&mut self) {
         unsafe  {
-            ffi::CRayCastCallback_drop(self.mut_ptr())
+            ffi::RayCastCallbackLink_drop(self.mut_ptr())
         }
     }
 }

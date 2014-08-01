@@ -15,15 +15,15 @@ use collision::{
 };
 
 pub struct DestructionListener;
-pub struct CDestructionListener;
+pub struct DestructionListenerLink;
 pub struct ContactFilter;
-pub struct CContactFilter;
+pub struct ContactFilterLink;
 pub struct ContactListener;
-pub struct CContactListener;
+pub struct ContactListenerLink;
 pub struct QueryCallback;
-pub struct CQueryCallback;
+pub struct QueryCallbackLink;
 pub struct RayCastCallback;
-pub struct CRayCastCallback;
+pub struct RayCastCallbackLink;
 pub struct Draw;
 pub struct DrawLink;
 
@@ -124,47 +124,56 @@ extern {
     pub fn World_get_profile(slf: *const World) -> *const Profile;
     pub fn World_dump(slf: *mut World);
     
-    pub fn CDestructionListener_new(
+    pub fn DestructionListenerLink_new(
         object: FatAny,
         goodbye_joint: unsafe extern fn(FatAny, *mut Joint),
         goodbye_fixture: unsafe extern fn(FatAny, *mut Fixture),
-        ) -> *mut CDestructionListener;
-    pub fn CDestructionListener_as_base(slf: *mut CDestructionListener
+        ) -> *mut DestructionListenerLink;
+    pub fn DestructionListenerLink_set_object(slf: *mut DestructionListenerLink,
+                                              object: FatAny);
+    pub fn DestructionListenerLink_as_base(slf: *mut DestructionListenerLink
                                         ) -> *mut DestructionListener;
-    pub fn CDestructionListener_drop(slf: *mut CDestructionListener);
-    pub fn CContactFilter_new(
+    pub fn DestructionListenerLink_drop(slf: *mut DestructionListenerLink);
+    pub fn ContactFilterLink_new(
         object: FatAny,
-        should_collide: unsafe extern fn(FatAny, *mut Fixture, *mut Fixture
-                                         ) -> bool
-        ) -> *mut CContactFilter;
-    pub fn CContactFilter_as_base(slf: *mut CContactFilter
+        should_collide: unsafe extern fn(FatAny, *mut Fixture, *mut Fixture) -> bool
+        ) -> *mut ContactFilterLink;
+    pub fn ContactFilterLink_set_object(slf: *mut ContactFilterLink,
+                                        object: FatAny);
+    pub fn ContactFilterLink_as_base(slf: *mut ContactFilterLink
                                   ) -> *mut ContactFilter;
-    pub fn CContactFilter_drop(slf: *mut CContactFilter);
-    pub fn CContactListener_new(
+    pub fn ContactFilterLink_drop(slf: *mut ContactFilterLink);
+    pub fn ContactListenerLink_new(
         object: FatAny,
         begin_contact: unsafe extern fn(FatAny, *mut Contact),
         end_contact: unsafe extern fn(FatAny, *mut Contact),
         pre_solve: unsafe extern fn(FatAny, *mut Contact, *const Manifold),
         post_solve: unsafe extern fn(FatAny, *mut Contact, *const ContactImpulse),
-        ) -> *mut CContactListener;
-    pub fn CContactListener_as_base(slf: *mut CContactListener
+        ) -> *mut ContactListenerLink;
+    pub fn ContactListenerLink_set_object(slf: *mut ContactListenerLink,
+                                          object: FatAny);
+    pub fn ContactListenerLink_as_base(slf: *mut ContactListenerLink
                                     ) -> *mut ContactListener;
-    pub fn CContactListener_drop(slf: *mut CContactListener);
-    pub fn CQueryCallback_new(
+    pub fn ContactListenerLink_drop(slf: *mut ContactListenerLink);
+    pub fn QueryCallbackLink_new(
         object: FatAny,
         report_fixture: unsafe extern fn(FatAny, *mut Fixture) -> bool,
-        ) -> *mut CQueryCallback;
-    pub fn CQueryCallback_as_base(slf: *mut CQueryCallback
+        ) -> *mut QueryCallbackLink;
+    pub fn QueryCallbackLink_set_object(slf: *mut QueryCallbackLink,
+                                        object: FatAny);
+    pub fn QueryCallbackLink_as_base(slf: *mut QueryCallbackLink
                                   ) -> *mut QueryCallback;
-    pub fn CQueryCallback_drop(slf: *mut CQueryCallback);
-    pub fn CRayCastCallback_new(
+    pub fn QueryCallbackLink_drop(slf: *mut QueryCallbackLink);
+    pub fn RayCastCallbackLink_new(
         object: FatAny,
         hit_fixture: unsafe extern fn(FatAny, *mut Fixture, *const Vec2,
                                       *const Vec2, f32) -> f32,
-        ) -> *mut CRayCastCallback;
-    pub fn CRayCastCallback_as_base(slf: *mut CRayCastCallback
+        ) -> *mut RayCastCallbackLink;
+    pub fn RayCastCallbackLink_set_object(slf: *mut RayCastCallbackLink,
+                                          object: FatAny);
+    pub fn RayCastCallbackLink_as_base(slf: *mut RayCastCallbackLink
                                     ) -> *mut RayCastCallback;
-    pub fn CRayCastCallback_drop(slf: *mut CRayCastCallback);
+    pub fn RayCastCallbackLink_drop(slf: *mut RayCastCallbackLink);
     
     pub fn DrawLink_new(
         object: FatAny,
@@ -285,7 +294,7 @@ extern {
     pub fn Fixture_get_aabb(slf: *const Fixture, child_id: i32) -> *const AABB;
     pub fn Fixture_dump(slf: *mut Fixture, body_id: i32);
     
-    pub fn Shape_drop_virtual(slf: *mut Shape);
+    //pub fn Shape_drop_virtual(slf: *mut Shape);
     //pub fn Shape_clone_virtual(slf: *const Shape,
     //                           alloc: *mut BlockAllocator) -> *mut Shape;
     pub fn Shape_get_type(slf: *const Shape) -> ShapeType;

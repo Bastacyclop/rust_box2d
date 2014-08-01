@@ -501,8 +501,8 @@ joint_def!(WheelJointDef
 )
 
 impl DistanceJointDef {    
-    pub fn new(body_a: BodyMutRef,
-               body_b: BodyMutRef,
+    pub fn new(mut body_a: BodyMutRef,
+               mut body_b: BodyMutRef,
                anchor_a: &Vec2,
                anchor_b: &Vec2) -> DistanceJointDef {
         unsafe {
@@ -525,8 +525,8 @@ impl DistanceJointDef {
 }
 
 impl FrictionJointDef {
-    pub fn new(body_a: BodyMutRef,
-               body_b: BodyMutRef,
+    pub fn new(mut body_a: BodyMutRef,
+               mut body_b: BodyMutRef,
                anchor: &Vec2) -> FrictionJointDef {
         unsafe {
             let mut joint =
@@ -547,8 +547,8 @@ impl FrictionJointDef {
 }
 
 impl GearJointDef {
-    pub fn new(joint_a: &mut MutJoint,
-               joint_b: &mut MutJoint) -> GearJointDef {
+    pub fn new<J: MutJoint>(mut joint_a: J,
+                            mut joint_b: J) -> GearJointDef {
         unsafe {
             GearJointDef {
                 base: JointDefBase::new(GearJointType),
@@ -561,8 +561,8 @@ impl GearJointDef {
 }
 
 impl MotorJointDef {
-    pub fn new(body_a: BodyMutRef,
-               body_b: BodyMutRef) -> MotorJointDef {
+    pub fn new(mut body_a: BodyMutRef,
+               mut body_b: BodyMutRef) -> MotorJointDef {
         unsafe {
             let mut joint = 
                 MotorJointDef {
@@ -594,8 +594,8 @@ impl MouseJointDef {
 }
 
 impl PrismaticJointDef {
-    pub fn new(body_a: BodyMutRef,
-               body_b: BodyMutRef,
+    pub fn new(mut body_a: BodyMutRef,
+               mut body_b: BodyMutRef,
                anchor: &Vec2,
                axis: &Vec2) -> PrismaticJointDef {
         unsafe {
@@ -623,8 +623,8 @@ impl PrismaticJointDef {
 }
 
 impl PulleyJointDef {
-    pub fn new(body_a: BodyMutRef,
-               body_b: BodyMutRef,
+    pub fn new(mut body_a: BodyMutRef,
+               mut body_b: BodyMutRef,
                ground_anchor_a: &Vec2,
                ground_anchor_b: &Vec2,
                anchor_a: &Vec2,
@@ -656,8 +656,8 @@ impl PulleyJointDef {
 }
 
 impl RevoluteJointDef {
-    pub fn new(body_a: BodyMutRef,
-               body_b: BodyMutRef,
+    pub fn new(mut body_a: BodyMutRef,
+               mut body_b: BodyMutRef,
                anchor: &Vec2) -> RevoluteJointDef {
         unsafe {
             let mut joint =
@@ -694,8 +694,8 @@ impl RopeJointDef {
 }
 
 impl WeldJointDef {
-    pub fn new(body_a: BodyMutRef,
-               body_b: BodyMutRef,
+    pub fn new(mut body_a: BodyMutRef,
+               mut body_b: BodyMutRef,
                anchor: &Vec2) -> WeldJointDef {
         unsafe {
             let mut joint =
@@ -717,8 +717,8 @@ impl WeldJointDef {
 }
 
 impl WheelJointDef {
-    pub fn new(body_a: BodyMutRef,
-               body_b: BodyMutRef,
+    pub fn new(mut body_a: BodyMutRef,
+               mut body_b: BodyMutRef,
                anchor: &Vec2,
                axis: &Vec2) -> WheelJointDef {
         unsafe {

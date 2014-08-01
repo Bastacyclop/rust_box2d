@@ -43,13 +43,7 @@ impl MassData {
 }
 
 #[allow(visible_private_types)]
-pub trait Shape: WrappedMutBase<ffi::Shape> {
-    /*fn clone(&self, alloc: &mut ffi::BlockAllocator) -> Self {
-        WrappedShape::from_shape_ptr(
-            ffi::Shape_clone_virtual(self.shape_ptr(), alloc)
-            )
-    }*/
-        
+pub trait Shape: WrappedMutBase<ffi::Shape> {        
     fn shape_type(&self) -> ShapeType {
         unsafe {
             ffi::Shape_get_type(self.base_ptr())

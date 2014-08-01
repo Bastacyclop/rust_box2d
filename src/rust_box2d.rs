@@ -1,8 +1,13 @@
 #![license = "GPLv3"]
 
-#![feature(macro_rules, unsafe_destructor)]
+#![feature(macro_rules, globs, unsafe_destructor)]
 
 extern crate libc;
+/*pub use common::*;
+pub use common::math::*;
+pub use common::settings::*;
+pub use collision::*;
+pub use dynamics::*;*/
 pub use common::math;
 pub use common::settings;
 

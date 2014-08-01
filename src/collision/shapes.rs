@@ -63,8 +63,8 @@ pub trait Shape: WrappedMutBase<ffi::Shape> {
         }
     }
     
-    fn ray_cast(&self, input: &RayCastInput,
-                transform: &Transform, child_index: uint) -> RayCastOutput {
+    fn ray_cast(&self, input: &RayCastInput, transform: &Transform,
+                child_index: uint) -> RayCastOutput {
         unsafe {
             let mut output = RayCastOutput::new();
             ffi::Shape_ray_cast_virtual(self.base_ptr(),
@@ -207,6 +207,7 @@ impl ChainShape {
         }
     }
     
+    /// __WARNING__: is the shape cloned ?
     pub fn child_edge(&self, index: i32) -> EdgeShape {
         unsafe {
             let edge = ffi::EdgeShape_new();

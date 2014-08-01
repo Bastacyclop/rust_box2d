@@ -6,7 +6,7 @@ use {
 };
 use math::Vec2;
 use dynamics::{BodyMutRef};
-use self::private::{JointDef, WrappedJoint};
+use self::private::WrappedJoint;
 
 macro_rules! wrapped_joint(
     ($wrapped:ty into $wrap:ident, $const_wrap:ident ($typ:ident)
@@ -46,32 +46,29 @@ macro_rules! joint_def(
             )+
         }
         
-        impl JointDef for $name {
+        impl WrappedBase<JointDefBase> for $name {
+            unsafe fn base_ptr(&self) -> *const JointDefBase {
+                self as *const $name as *const JointDefBase
+            }
+        }
+        
+        impl WrappedMutBase<JointDefBase> for $name {
             unsafe fn from_ptr(ptr: *mut JointDefBase) -> $name {
                 *(ptr as *mut $name)
             }
             
-            unsafe fn joint_def_ptr(&self) -> *const JointDefBase {
-                self as *const $name as *const JointDefBase
-            }
-            
-            unsafe fn mut_joint_def_ptr(&mut self) -> *mut JointDefBase {
+            unsafe fn mut_base_ptr(&mut self) -> *mut JointDefBase {
                 self as *mut $name as *mut JointDefBase
             }
         }
+        
+        impl JointDef for $name {}
     );
 )
 
 #[allow(visible_private_types)]
 pub mod private {
-    use super::JointDefBase;
     use super::JointType;
-    
-    pub trait JointDef {
-        unsafe fn from_ptr(ptr: *mut JointDefBase) -> Self;
-        unsafe fn joint_def_ptr(&self) -> *const JointDefBase;
-        unsafe fn mut_joint_def_ptr(&mut self) -> *mut JointDefBase;
-    }
 
     pub trait WrappedJoint {
         fn joint_type(_: Option<*const Self>) -> JointType;
@@ -101,8 +98,10 @@ pub enum LimitState {
     InactiveLimitState = 0,
     LowerLimitState = 1,
     UpperLimitState = 2,
-    EqualLimitStateS = 3
+    EqualLimitState = 3
 }
+
+pub trait JointDef: WrappedMutBase<JointDefBase> {}
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -152,7 +151,7 @@ pub trait ConstJoint: WrappedJoint+WrappedBase<ffi::Joint> {
     
     fn reaction_force(&self) -> Vec2 {
         unsafe {
-            ffi::Joint_get_reaction_force_virtual(self.base_ptr()).clone()
+            ffi::Joint_get_reaction_force_virtual(self.base_ptr())
         }
     }
     
@@ -501,8 +500,8 @@ joint_def!(WheelJointDef
 )
 
 impl DistanceJointDef {    
-    pub fn new(mut body_a: BodyMutRef,
-               mut body_b: BodyMutRef,
+    pub fn new(body_a: &mut BodyMutRef,
+               body_b: &mut BodyMutRef,
                anchor_a: &Vec2,
                anchor_b: &Vec2) -> DistanceJointDef {
         unsafe {
@@ -525,8 +524,8 @@ impl DistanceJointDef {
 }
 
 impl FrictionJointDef {
-    pub fn new(mut body_a: BodyMutRef,
-               mut body_b: BodyMutRef,
+    pub fn new(body_a: &mut BodyMutRef,
+               body_b: &mut BodyMutRef,
                anchor: &Vec2) -> FrictionJointDef {
         unsafe {
             let mut joint =
@@ -547,8 +546,8 @@ impl FrictionJointDef {
 }
 
 impl GearJointDef {
-    pub fn new<J: MutJoint>(mut joint_a: J,
-                            mut joint_b: J) -> GearJointDef {
+    pub fn new(joint_a: &mut MutJoint,
+               joint_b: &mut MutJoint) -> GearJointDef {
         unsafe {
             GearJointDef {
                 base: JointDefBase::new(GearJointType),
@@ -561,8 +560,8 @@ impl GearJointDef {
 }
 
 impl MotorJointDef {
-    pub fn new(mut body_a: BodyMutRef,
-               mut body_b: BodyMutRef) -> MotorJointDef {
+    pub fn new(body_a: &mut BodyMutRef,
+               body_b: &mut BodyMutRef) -> MotorJointDef {
         unsafe {
             let mut joint = 
                 MotorJointDef {
@@ -594,8 +593,8 @@ impl MouseJointDef {
 }
 
 impl PrismaticJointDef {
-    pub fn new(mut body_a: BodyMutRef,
-               mut body_b: BodyMutRef,
+    pub fn new(body_a: &mut BodyMutRef,
+               body_b: &mut BodyMutRef,
                anchor: &Vec2,
                axis: &Vec2) -> PrismaticJointDef {
         unsafe {
@@ -623,8 +622,8 @@ impl PrismaticJointDef {
 }
 
 impl PulleyJointDef {
-    pub fn new(mut body_a: BodyMutRef,
-               mut body_b: BodyMutRef,
+    pub fn new(body_a: &mut BodyMutRef,
+               body_b: &mut BodyMutRef,
                ground_anchor_a: &Vec2,
                ground_anchor_b: &Vec2,
                anchor_a: &Vec2,
@@ -656,8 +655,8 @@ impl PulleyJointDef {
 }
 
 impl RevoluteJointDef {
-    pub fn new(mut body_a: BodyMutRef,
-               mut body_b: BodyMutRef,
+    pub fn new(body_a: &mut BodyMutRef,
+               body_b: &mut BodyMutRef,
                anchor: &Vec2) -> RevoluteJointDef {
         unsafe {
             let mut joint =
@@ -694,8 +693,8 @@ impl RopeJointDef {
 }
 
 impl WeldJointDef {
-    pub fn new(mut body_a: BodyMutRef,
-               mut body_b: BodyMutRef,
+    pub fn new(body_a: &mut BodyMutRef,
+               body_b: &mut BodyMutRef,
                anchor: &Vec2) -> WeldJointDef {
         unsafe {
             let mut joint =
@@ -717,8 +716,8 @@ impl WeldJointDef {
 }
 
 impl WheelJointDef {
-    pub fn new(mut body_a: BodyMutRef,
-               mut body_b: BodyMutRef,
+    pub fn new(body_a: &mut BodyMutRef,
+               body_b: &mut BodyMutRef,
                anchor: &Vec2,
                axis: &Vec2) -> WheelJointDef {
         unsafe {

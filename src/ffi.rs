@@ -54,6 +54,7 @@ pub struct WeldJoint;
 pub struct WheelJoint;
 
 pub type Any = *mut c_void;
+
 #[repr(C)]
 pub struct FatAny {
     raw1: *mut c_void,

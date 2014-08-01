@@ -31,11 +31,11 @@ Or build it from source:
 ## Todo
 
 - Documentation
-- More Safety
-- Unit system ?
+- Remove `assert!(!x.is_null())` when `x` comes from a C++ reference ?
+- Improve `...Ref`s, rename them to `...Ptr`s ?
+- Use an explicit unit system ?
 - World/Local ?
-- Contacts ?
-- UserData ?
+- Contacts
 - Jacobian ?
 - JointEdge
 - ContactEdge

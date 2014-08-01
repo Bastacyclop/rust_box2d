@@ -1,5 +1,5 @@
 pub use self::joints::{
-    JointType, JointDefBase, MutJoint, ConstJoint,
+    JointType, JointDef, JointDefBase, MutJoint, ConstJoint,
     UnknownJointType, UnknownJointMutRef, UnknownJointRef,
     DistanceJointType, DistanceJointDef, DistanceJointMutRef, FrictionJointRef,
     FrictionJointType, FrictionJointDef, FrictionJointMutRef, FrictionJointRef,
@@ -24,7 +24,7 @@ use {
 use common::{Draw, DrawFlags};
 use common::private::DrawLink;
 use math::{Vec2, Transform};
-use dynamics::joints::private::{WrappedJoint, JointDef};
+use dynamics::joints::private::WrappedJoint;
 use collision::{
     RayCastInput, RayCastOutput, AABB,
     Shape, ShapeType, UnknownShape, MassData
@@ -124,7 +124,7 @@ impl World {
     pub fn create_joint<J: MutJoint>(&mut self, def: &JointDef) -> J {
         unsafe {
             let joint: J = WrappedMutBase::from_ptr(
-                ffi::World_create_joint(self.mut_ptr(), def.joint_def_ptr())
+                ffi::World_create_joint(self.mut_ptr(), def.base_ptr())
                 );
             assert!(
                 joint.joint_type() == WrappedJoint::joint_type(None::<*const J>)

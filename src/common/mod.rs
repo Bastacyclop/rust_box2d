@@ -4,6 +4,7 @@ pub mod math;
 pub mod settings;
 
 #[repr(C)]
+#[deriving(Clone, PartialEq, Show)]
 pub struct Color {
     pub r: f32,
     pub g: f32,

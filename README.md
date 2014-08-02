@@ -2,6 +2,19 @@
 
 Box2D for Rust.
 
+# Using Rust_Box2D
+
+You won't find a lot of information about Box2D here, look at [the official website](http://box2d.org/)
+instead. If you know how to use Box2D, you should know how to use this binding.
+They are differences however, so you should look at the examples and the documentation before using something.
+
+__Rust_Box2D is not thread-safe__.
+__Take care of the `...Ptr` objects__, they're like common pointers for now:
+
+- You might keep a `BodyMutPtr` pointing to a destroyed body.
+- You might use two `BodyMutPtr` pointing to the same body at the same time.
+- ...
+
 # Installation
 
 Simply add a dependency in your Cargo.toml:
@@ -31,12 +44,12 @@ Or build it from source:
 ## Todo
 
 - Documentation
+- More safety
+- CircleShape is not usable
 - Remove `assert!(!x.is_null())` when `x` comes from a C++ reference ?
-- Improve `...Ref`s, rename them to `...Ptr`s ?
 - Use an explicit unit system ?
-- World/Local ?
+- explicit World/Local ?
 - Contacts
-- Jacobian ?
 - JointEdge
 - ContactEdge
 

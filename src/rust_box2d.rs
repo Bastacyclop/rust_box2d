@@ -1,13 +1,9 @@
 #![license = "GPLv3"]
 
-#![feature(macro_rules, globs, unsafe_destructor)]
+#![feature(macro_rules, globs)]
 
 extern crate libc;
-/*pub use common::*;
-pub use common::math::*;
-pub use common::settings::*;
-pub use collision::*;
-pub use dynamics::*;*/
+
 pub use common::math;
 pub use common::settings;
 
@@ -181,6 +177,16 @@ macro_rules! wrapped(
                  )
     );
 )
+
+pub mod b2 {
+    pub use super::*;
+    pub use super::common::*;
+    pub use super::dynamics::*;
+    pub use super::dynamics::{ConstBody, MutBody};
+    pub use super::collision::*;
+    pub use super::math::*;
+    pub use super::settings::*;
+}
 
 mod ffi;
 pub mod dynamics;

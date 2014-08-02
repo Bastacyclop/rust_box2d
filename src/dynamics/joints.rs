@@ -1,15 +1,13 @@
 use std::ptr;
 use {
-    Wrapped, WrappedMut, WrappedConst,
-    WrappedBase, WrappedMutBase, WrappedConstBase,
-    ffi
+    ffi, Wrapped, WrappedMut, WrappedConst,
+    WrappedBase, WrappedMutBase, WrappedConstBase
 };
 use math::Vec2;
-use dynamics::{BodyMutRef};
-use self::private::WrappedJoint;
+use dynamics::{BodyMutPtr};
 
 macro_rules! wrapped_joint(
-    ($wrapped:ty into $wrap:ident, $const_wrap:ident ($typ:ident)
+    ($wrapped:ty into $wrap:ident, $const_wrap:ident ($joint_type:ident)
      << $base_as:path
      >> $as_base:path) => (
      
@@ -18,17 +16,17 @@ macro_rules! wrapped_joint(
                  << $base_as
                  >> $as_base)
         
-        impl<'l> WrappedJoint for $wrap<'l> {
-            fn joint_type(_: Option<*const $wrap>) -> JointType {
-                $typ
+        impl<'l> RequiredJointType for $wrap<'l> {
+            fn get(_: Option<*const $wrap>) -> JointType {
+                $joint_type
             }
         }               
         impl<'l> ConstJoint for $wrap<'l> {}
         impl<'l> MutJoint for $wrap<'l> {}
         
-        impl<'l> WrappedJoint for $const_wrap<'l> {
-            fn joint_type(_: Option<*const $const_wrap>) -> JointType {
-                $typ
+        impl<'l> RequiredJointType for $const_wrap<'l> {
+            fn get(_: Option<*const $const_wrap>) -> JointType {
+                $joint_type
             }
         }
         impl<'l> ConstJoint for $const_wrap<'l> {}
@@ -66,13 +64,8 @@ macro_rules! joint_def(
     );
 )
 
-#[allow(visible_private_types)]
-pub mod private {
-    use super::JointType;
-
-    pub trait WrappedJoint {
-        fn joint_type(_: Option<*const Self>) -> JointType;
-    }
+trait RequiredJointType {
+    fn get(_: Option<*const Self>) -> JointType;
 }
 
 #[repr(C)]
@@ -92,6 +85,12 @@ pub enum JointType {
     MotorJointType = 11
 }
 
+impl JointType {
+    pub fn of<J: RequiredJointType>() -> JointType {
+        RequiredJointType::get(None::<*const J>)
+    }
+}
+
 #[repr(C)]
 #[deriving(PartialEq, Show)]
 pub enum LimitState {
@@ -101,7 +100,13 @@ pub enum LimitState {
     EqualLimitState = 3
 }
 
-pub trait JointDef: WrappedMutBase<JointDefBase> {}
+pub trait JointDef: WrappedMutBase<JointDefBase> {
+    fn joint_type(&self) -> JointType {
+        unsafe {
+            (*self.base_ptr()).joint_type
+        }
+    }
+}
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -130,7 +135,7 @@ impl JointDefBase {
 }
 
 #[allow(visible_private_types)]
-pub trait ConstJoint: WrappedJoint+WrappedBase<ffi::Joint> {
+pub trait ConstJoint: RequiredJointType+WrappedBase<ffi::Joint> {
     fn joint_type(&self) -> JointType {
         unsafe {
             ffi::Joint_get_type(self.base_ptr())
@@ -161,7 +166,7 @@ pub trait ConstJoint: WrappedJoint+WrappedBase<ffi::Joint> {
         }
     }
     
-    fn next<'a>(&'a self) -> UnknownJointRef<'a> {
+    fn next<'a>(&'a self) -> UnknownJointPtr<'a> {
         unsafe {
             WrappedConstBase::from_ptr(ffi::Joint_get_next_const(self.base_ptr()))
         }
@@ -180,19 +185,19 @@ pub trait ConstJoint: WrappedJoint+WrappedBase<ffi::Joint> {
 
 #[allow(visible_private_types)]
 pub trait MutJoint: ConstJoint+WrappedMutBase<ffi::Joint> {
-    fn body_a<'a>(&'a mut self) -> BodyMutRef<'a> {
+    fn body_a<'a>(&'a mut self) -> BodyMutPtr<'a> {
         unsafe {
             WrappedMut::from_ptr(ffi::Joint_get_body_a(self.mut_base_ptr()))
         }
     }
     
-    fn body_b<'a>(&'a mut self) -> BodyMutRef<'a> {
+    fn body_b<'a>(&'a mut self) -> BodyMutPtr<'a> {
         unsafe {
             WrappedMut::from_ptr(ffi::Joint_get_body_b(self.mut_base_ptr()))
         }
     }
     
-    fn mut_next<'a>(&'a mut self) -> UnknownJointMutRef<'a> {
+    fn mut_next<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
         unsafe {
             WrappedMutBase::from_ptr(ffi::Joint_get_next(self.mut_base_ptr()))
         }
@@ -216,192 +221,192 @@ pub trait MutJoint: ConstJoint+WrappedMutBase<ffi::Joint> {
     } 
 }
 
-pub enum UnknownJointMutRef<'l> {
-    UnknownMutRef,
-    RevoluteMutRef(RevoluteJointMutRef<'l>),
-    PrismaticMutRef(PrismaticJointMutRef<'l>),
-    DistanceMutRef(DistanceJointMutRef<'l>),
-    PulleyMutRef(PulleyJointMutRef<'l>),
-    MouseMutRef(MouseJointMutRef<'l>),
-    GearMutRef(GearJointMutRef<'l>),
-    WheelMutRef(WheelJointMutRef<'l>),
-    WeldMutRef(WeldJointMutRef<'l>),
-    FrictionMutRef(FrictionJointMutRef<'l>),
-    RopeMutRef(RopeJointMutRef<'l>),
-    MotorMutRef(MotorJointMutRef<'l>)
+pub enum UnknownJointMutPtr<'l> {
+    UnknownMutPtr,
+    RevoluteMutPtr(RevoluteJointMutPtr<'l>),
+    PrismaticMutPtr(PrismaticJointMutPtr<'l>),
+    DistanceMutPtr(DistanceJointMutPtr<'l>),
+    PulleyMutPtr(PulleyJointMutPtr<'l>),
+    MouseMutPtr(MouseJointMutPtr<'l>),
+    GearMutPtr(GearJointMutPtr<'l>),
+    WheelMutPtr(WheelJointMutPtr<'l>),
+    WeldMutPtr(WeldJointMutPtr<'l>),
+    FrictionMutPtr(FrictionJointMutPtr<'l>),
+    RopeMutPtr(RopeJointMutPtr<'l>),
+    MotorMutPtr(MotorJointMutPtr<'l>)
 }
 
-pub enum UnknownJointRef<'l> {
-    UnknownRef,
-    RevoluteRef(RevoluteJointRef<'l>),
-    PrismaticRef(PrismaticJointRef<'l>),
-    DistanceRef(DistanceJointRef<'l>),
-    PulleyRef(PulleyJointRef<'l>),
-    MouseRef(MouseJointRef<'l>),
-    GearRef(GearJointRef<'l>),
-    WheelRef(WheelJointRef<'l>),
-    WeldRef(WeldJointRef<'l>),
-    FrictionRef(FrictionJointRef<'l>),
-    RopeRef(RopeJointRef<'l>),
-    MotorRef(MotorJointRef<'l>)
+pub enum UnknownJointPtr<'l> {
+    UnknownPtr,
+    RevolutePtr(RevoluteJointPtr<'l>),
+    PrismaticPtr(PrismaticJointPtr<'l>),
+    DistancePtr(DistanceJointPtr<'l>),
+    PulleyPtr(PulleyJointPtr<'l>),
+    MousePtr(MouseJointPtr<'l>),
+    GearPtr(GearJointPtr<'l>),
+    WheelPtr(WheelJointPtr<'l>),
+    WeldPtr(WeldJointPtr<'l>),
+    FrictionPtr(FrictionJointPtr<'l>),
+    RopePtr(RopeJointPtr<'l>),
+    MotorPtr(MotorJointPtr<'l>)
 }
 
-impl<'l> WrappedJoint for UnknownJointMutRef<'l> {
-    fn joint_type(_: Option<*const UnknownJointMutRef>) -> JointType {
+impl<'l> RequiredJointType for UnknownJointMutPtr<'l> {
+    fn get(_: Option<*const UnknownJointMutPtr>) -> JointType {
         UnknownJointType
     }
 }
 
-impl<'l> WrappedJoint for UnknownJointRef<'l> {
-    fn joint_type(_: Option<*const UnknownJointRef>) -> JointType {
+impl<'l> RequiredJointType for UnknownJointPtr<'l> {
+    fn get(_: Option<*const UnknownJointPtr>) -> JointType {
         UnknownJointType
     }
 }
 
-impl<'l> WrappedBase<ffi::Joint> for UnknownJointMutRef<'l> {
+impl<'l> WrappedBase<ffi::Joint> for UnknownJointMutPtr<'l> {
     unsafe fn base_ptr(&self) -> *const ffi::Joint {
         match self {
-            &DistanceMutRef(ref x) => x.base_ptr(),
-            &FrictionMutRef(ref x) => x.base_ptr(),
-            &GearMutRef(ref x) => x.base_ptr(),
-            &MotorMutRef(ref x) => x.base_ptr(),
-            &MouseMutRef(ref x) => x.base_ptr(),
-            &PrismaticMutRef(ref x) => x.base_ptr(),
-            &PulleyMutRef(ref x) => x.base_ptr(),
-            &RevoluteMutRef(ref x) => x.base_ptr(),
-            &RopeMutRef(ref x) => x.base_ptr(),
-            &WeldMutRef(ref x) => x.base_ptr(),
-            &WheelMutRef(ref x) => x.base_ptr(),
+            &DistanceMutPtr(ref x) => x.base_ptr(),
+            &FrictionMutPtr(ref x) => x.base_ptr(),
+            &GearMutPtr(ref x) => x.base_ptr(),
+            &MotorMutPtr(ref x) => x.base_ptr(),
+            &MouseMutPtr(ref x) => x.base_ptr(),
+            &PrismaticMutPtr(ref x) => x.base_ptr(),
+            &PulleyMutPtr(ref x) => x.base_ptr(),
+            &RevoluteMutPtr(ref x) => x.base_ptr(),
+            &RopeMutPtr(ref x) => x.base_ptr(),
+            &WeldMutPtr(ref x) => x.base_ptr(),
+            &WheelMutPtr(ref x) => x.base_ptr(),
             _ => fail!("Truly unknown joint")
         }
     }
 }
 
-impl<'l> WrappedBase<ffi::Joint> for UnknownJointRef<'l> {
+impl<'l> WrappedBase<ffi::Joint> for UnknownJointPtr<'l> {
     unsafe fn base_ptr(&self) -> *const ffi::Joint {
         match self {
-            &DistanceRef(ref x) => x.base_ptr(),
-            &FrictionRef(ref x) => x.base_ptr(),
-            &GearRef(ref x) => x.base_ptr(),
-            &MotorRef(ref x) => x.base_ptr(),
-            &MouseRef(ref x) => x.base_ptr(),
-            &PrismaticRef(ref x) => x.base_ptr(),
-            &PulleyRef(ref x) => x.base_ptr(),
-            &RevoluteRef(ref x) => x.base_ptr(),
-            &RopeRef(ref x) => x.base_ptr(),
-            &WeldRef(ref x) => x.base_ptr(),
-            &WheelRef(ref x) => x.base_ptr(),
+            &DistancePtr(ref x) => x.base_ptr(),
+            &FrictionPtr(ref x) => x.base_ptr(),
+            &GearPtr(ref x) => x.base_ptr(),
+            &MotorPtr(ref x) => x.base_ptr(),
+            &MousePtr(ref x) => x.base_ptr(),
+            &PrismaticPtr(ref x) => x.base_ptr(),
+            &PulleyPtr(ref x) => x.base_ptr(),
+            &RevolutePtr(ref x) => x.base_ptr(),
+            &RopePtr(ref x) => x.base_ptr(),
+            &WeldPtr(ref x) => x.base_ptr(),
+            &WheelPtr(ref x) => x.base_ptr(),
             _ => fail!("Truly unknown joint")
         }
     }
 }
 
-impl<'l> WrappedMutBase<ffi::Joint> for UnknownJointMutRef<'l> {
-    unsafe fn from_ptr(ptr: *mut ffi::Joint) -> UnknownJointMutRef<'l> {
+impl<'l> WrappedMutBase<ffi::Joint> for UnknownJointMutPtr<'l> {
+    unsafe fn from_ptr(ptr: *mut ffi::Joint) -> UnknownJointMutPtr<'l> {
         assert!(!ptr.is_null())
         let joint_type = ffi::Joint_get_type(ptr as *const ffi::Joint);
         match joint_type {
-            RevoluteJointType => RevoluteMutRef(
+            RevoluteJointType => RevoluteMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            PrismaticJointType => PrismaticMutRef(
+            PrismaticJointType => PrismaticMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            DistanceJointType => DistanceMutRef(
+            DistanceJointType => DistanceMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            PulleyJointType => PulleyMutRef(
+            PulleyJointType => PulleyMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            MouseJointType => MouseMutRef(
+            MouseJointType => MouseMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            GearJointType => GearMutRef(
+            GearJointType => GearMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            WheelJointType => WheelMutRef(
+            WheelJointType => WheelMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            WeldJointType => WeldMutRef(
+            WeldJointType => WeldMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            FrictionJointType => FrictionMutRef(
+            FrictionJointType => FrictionMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            RopeJointType => RopeMutRef(
+            RopeJointType => RopeMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            MotorJointType => MotorMutRef(
+            MotorJointType => MotorMutPtr(
                 WrappedMutBase::from_ptr(ptr)
                 ),
-            _ => UnknownMutRef
+            _ => UnknownMutPtr
         }
     }
     
     unsafe fn mut_base_ptr(&mut self) -> *mut ffi::Joint {
         match self {
-            &DistanceMutRef(ref mut x) => x.mut_base_ptr(),
-            &FrictionMutRef(ref mut x) => x.mut_base_ptr(),
-            &GearMutRef(ref mut x) => x.mut_base_ptr(),
-            &MotorMutRef(ref mut x) => x.mut_base_ptr(),
-            &MouseMutRef(ref mut x) => x.mut_base_ptr(),
-            &PrismaticMutRef(ref mut x) => x.mut_base_ptr(),
-            &PulleyMutRef(ref mut x) => x.mut_base_ptr(),
-            &RevoluteMutRef(ref mut x) => x.mut_base_ptr(),
-            &RopeMutRef(ref mut x) => x.mut_base_ptr(),
-            &WeldMutRef(ref mut x) => x.mut_base_ptr(),
-            &WheelMutRef(ref mut x) => x.mut_base_ptr(),
+            &DistanceMutPtr(ref mut x) => x.mut_base_ptr(),
+            &FrictionMutPtr(ref mut x) => x.mut_base_ptr(),
+            &GearMutPtr(ref mut x) => x.mut_base_ptr(),
+            &MotorMutPtr(ref mut x) => x.mut_base_ptr(),
+            &MouseMutPtr(ref mut x) => x.mut_base_ptr(),
+            &PrismaticMutPtr(ref mut x) => x.mut_base_ptr(),
+            &PulleyMutPtr(ref mut x) => x.mut_base_ptr(),
+            &RevoluteMutPtr(ref mut x) => x.mut_base_ptr(),
+            &RopeMutPtr(ref mut x) => x.mut_base_ptr(),
+            &WeldMutPtr(ref mut x) => x.mut_base_ptr(),
+            &WheelMutPtr(ref mut x) => x.mut_base_ptr(),
             _ => fail!("Truly unknown joint")
         }
     }
 }
 
-impl<'l> WrappedConstBase<ffi::Joint> for UnknownJointRef<'l> {
-    unsafe fn from_ptr(ptr: *const ffi::Joint) -> UnknownJointRef<'l> {
+impl<'l> WrappedConstBase<ffi::Joint> for UnknownJointPtr<'l> {
+    unsafe fn from_ptr(ptr: *const ffi::Joint) -> UnknownJointPtr<'l> {
         assert!(!ptr.is_null())
         let joint_type = ffi::Joint_get_type(ptr);
         match joint_type {
-            RevoluteJointType => RevoluteRef(
+            RevoluteJointType => RevolutePtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            PrismaticJointType => PrismaticRef(
+            PrismaticJointType => PrismaticPtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            DistanceJointType => DistanceRef(
+            DistanceJointType => DistancePtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            PulleyJointType => PulleyRef(
+            PulleyJointType => PulleyPtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            MouseJointType => MouseRef(
+            MouseJointType => MousePtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            GearJointType => GearRef(
+            GearJointType => GearPtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            WheelJointType => WheelRef(
+            WheelJointType => WheelPtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            WeldJointType => WeldRef(
+            WeldJointType => WeldPtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            FrictionJointType => FrictionRef(
+            FrictionJointType => FrictionPtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            RopeJointType => RopeRef(
+            RopeJointType => RopePtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            MotorJointType => MotorRef(
+            MotorJointType => MotorPtr(
                 WrappedConstBase::from_ptr(ptr)
                 ),
-            _ => UnknownRef
+            _ => UnknownPtr
         }
     }
 }
 
-impl<'l> ConstJoint for UnknownJointMutRef<'l> {}
-impl<'l> MutJoint for UnknownJointMutRef<'l> {}
-impl<'l> ConstJoint for UnknownJointRef<'l> {}
+impl<'l> ConstJoint for UnknownJointMutPtr<'l> {}
+impl<'l> MutJoint for UnknownJointMutPtr<'l> {}
+impl<'l> ConstJoint for UnknownJointPtr<'l> {}
 
 joint_def!(DistanceJointDef
     () local_anchor_a: Vec2,
@@ -500,8 +505,8 @@ joint_def!(WheelJointDef
 )
 
 impl DistanceJointDef {    
-    pub fn new(body_a: &mut BodyMutRef,
-               body_b: &mut BodyMutRef,
+    pub fn new(body_a: &mut BodyMutPtr,
+               body_b: &mut BodyMutPtr,
                anchor_a: &Vec2,
                anchor_b: &Vec2) -> DistanceJointDef {
         unsafe {
@@ -524,8 +529,8 @@ impl DistanceJointDef {
 }
 
 impl FrictionJointDef {
-    pub fn new(body_a: &mut BodyMutRef,
-               body_b: &mut BodyMutRef,
+    pub fn new(body_a: &mut BodyMutPtr,
+               body_b: &mut BodyMutPtr,
                anchor: &Vec2) -> FrictionJointDef {
         unsafe {
             let mut joint =
@@ -560,8 +565,8 @@ impl GearJointDef {
 }
 
 impl MotorJointDef {
-    pub fn new(body_a: &mut BodyMutRef,
-               body_b: &mut BodyMutRef) -> MotorJointDef {
+    pub fn new(body_a: &mut BodyMutPtr,
+               body_b: &mut BodyMutPtr) -> MotorJointDef {
         unsafe {
             let mut joint = 
                 MotorJointDef {
@@ -593,8 +598,8 @@ impl MouseJointDef {
 }
 
 impl PrismaticJointDef {
-    pub fn new(body_a: &mut BodyMutRef,
-               body_b: &mut BodyMutRef,
+    pub fn new(body_a: &mut BodyMutPtr,
+               body_b: &mut BodyMutPtr,
                anchor: &Vec2,
                axis: &Vec2) -> PrismaticJointDef {
         unsafe {
@@ -622,8 +627,8 @@ impl PrismaticJointDef {
 }
 
 impl PulleyJointDef {
-    pub fn new(body_a: &mut BodyMutRef,
-               body_b: &mut BodyMutRef,
+    pub fn new(body_a: &mut BodyMutPtr,
+               body_b: &mut BodyMutPtr,
                ground_anchor_a: &Vec2,
                ground_anchor_b: &Vec2,
                anchor_a: &Vec2,
@@ -655,8 +660,8 @@ impl PulleyJointDef {
 }
 
 impl RevoluteJointDef {
-    pub fn new(body_a: &mut BodyMutRef,
-               body_b: &mut BodyMutRef,
+    pub fn new(body_a: &mut BodyMutPtr,
+               body_b: &mut BodyMutPtr,
                anchor: &Vec2) -> RevoluteJointDef {
         unsafe {
             let mut joint =
@@ -693,8 +698,8 @@ impl RopeJointDef {
 }
 
 impl WeldJointDef {
-    pub fn new(body_a: &mut BodyMutRef,
-               body_b: &mut BodyMutRef,
+    pub fn new(body_a: &mut BodyMutPtr,
+               body_b: &mut BodyMutPtr,
                anchor: &Vec2) -> WeldJointDef {
         unsafe {
             let mut joint =
@@ -716,8 +721,8 @@ impl WeldJointDef {
 }
 
 impl WheelJointDef {
-    pub fn new(body_a: &mut BodyMutRef,
-               body_b: &mut BodyMutRef,
+    pub fn new(body_a: &mut BodyMutPtr,
+               body_b: &mut BodyMutPtr,
                anchor: &Vec2,
                axis: &Vec2) -> WheelJointDef {
         unsafe {
@@ -742,57 +747,57 @@ impl WheelJointDef {
     }
 }
 
-wrapped_joint!(ffi::DistanceJoint into DistanceJointMutRef, DistanceJointRef
+wrapped_joint!(ffi::DistanceJoint into DistanceJointMutPtr, DistanceJointPtr
                (DistanceJointType)
                << ffi::Joint_as_distance_joint
                >> ffi::DistanceJoint_as_joint
                )
-wrapped_joint!(ffi::FrictionJoint into FrictionJointMutRef, FrictionJointRef
+wrapped_joint!(ffi::FrictionJoint into FrictionJointMutPtr, FrictionJointPtr
                (FrictionJointType)
                << ffi::Joint_as_friction_joint
                >> ffi::FrictionJoint_as_joint
                )
-wrapped_joint!(ffi::GearJoint into GearJointMutRef, GearJointRef
+wrapped_joint!(ffi::GearJoint into GearJointMutPtr, GearJointPtr
                (GearJointType)
                << ffi::Joint_as_gear_joint
                >> ffi::GearJoint_as_joint
                )
-wrapped_joint!(ffi::MotorJoint into MotorJointMutRef, MotorJointRef
+wrapped_joint!(ffi::MotorJoint into MotorJointMutPtr, MotorJointPtr
                (MotorJointType)
                << ffi::Joint_as_motor_joint
                >> ffi::MotorJoint_as_joint
                )
-wrapped_joint!(ffi::MouseJoint into MouseJointMutRef, MouseJointRef
+wrapped_joint!(ffi::MouseJoint into MouseJointMutPtr, MouseJointPtr
                (MouseJointType)
                << ffi::Joint_as_mouse_joint
                >> ffi::MouseJoint_as_joint
                )
-wrapped_joint!(ffi::PrismaticJoint into PrismaticJointMutRef, PrismaticJointRef
+wrapped_joint!(ffi::PrismaticJoint into PrismaticJointMutPtr, PrismaticJointPtr
                (PrismaticJointType)
                << ffi::Joint_as_prismatic_joint
                >> ffi::PrismaticJoint_as_joint
                )
-wrapped_joint!(ffi::PulleyJoint into PulleyJointMutRef, PulleyJointRef
+wrapped_joint!(ffi::PulleyJoint into PulleyJointMutPtr, PulleyJointPtr
                (PulleyJointType)
                << ffi::Joint_as_pulley_joint
                >> ffi::PulleyJoint_as_joint
                )
-wrapped_joint!(ffi::RevoluteJoint into RevoluteJointMutRef, RevoluteJointRef
+wrapped_joint!(ffi::RevoluteJoint into RevoluteJointMutPtr, RevoluteJointPtr
                (RevoluteJointType)
                << ffi::Joint_as_revolute_joint
                >> ffi::RevoluteJoint_as_joint
                )
-wrapped_joint!(ffi::RopeJoint into RopeJointMutRef, RopeJointRef
+wrapped_joint!(ffi::RopeJoint into RopeJointMutPtr, RopeJointPtr
                (RopeJointType)
                << ffi::Joint_as_rope_joint
                >> ffi::RopeJoint_as_joint
                )
-wrapped_joint!(ffi::WeldJoint into WeldJointMutRef, WeldJointRef
+wrapped_joint!(ffi::WeldJoint into WeldJointMutPtr, WeldJointPtr
                (WeldJointType)
                << ffi::Joint_as_weld_joint
                >> ffi::WeldJoint_as_joint
                )
-wrapped_joint!(ffi::WheelJoint into WheelJointMutRef, WheelJointRef
+wrapped_joint!(ffi::WheelJoint into WheelJointMutPtr, WheelJointPtr
                (WheelJointType)
                << ffi::Joint_as_wheel_joint
                >> ffi::WheelJoint_as_joint
@@ -856,9 +861,9 @@ pub trait MutDistanceJoint: ConstDistanceJoint+WrappedMut<ffi::DistanceJoint> {
     }
 }
 
-impl<'l> ConstDistanceJoint for DistanceJointMutRef<'l> {}
-impl<'l> MutDistanceJoint for DistanceJointMutRef<'l> {}
-impl<'l> ConstDistanceJoint for DistanceJointRef<'l> {}
+impl<'l> ConstDistanceJoint for DistanceJointMutPtr<'l> {}
+impl<'l> MutDistanceJoint for DistanceJointMutPtr<'l> {}
+impl<'l> ConstDistanceJoint for DistanceJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstFrictionJoint: Wrapped<ffi::FrictionJoint> {
@@ -906,9 +911,9 @@ pub trait MutFrictionJoint: ConstFrictionJoint+WrappedMut<ffi::FrictionJoint> {
     }
 }
 
-impl<'l> ConstFrictionJoint for FrictionJointMutRef<'l> {}
-impl<'l> MutFrictionJoint for FrictionJointMutRef<'l> {}
-impl<'l> ConstFrictionJoint for FrictionJointRef<'l> {}
+impl<'l> ConstFrictionJoint for FrictionJointMutPtr<'l> {}
+impl<'l> MutFrictionJoint for FrictionJointMutPtr<'l> {}
+impl<'l> ConstFrictionJoint for FrictionJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstGearJoint: Wrapped<ffi::GearJoint> {
@@ -921,13 +926,13 @@ pub trait ConstGearJoint: Wrapped<ffi::GearJoint> {
 
 #[allow(visible_private_types)]
 pub trait MutGearJoint: ConstGearJoint+WrappedMut<ffi::GearJoint> {
-    fn joint_a<'a>(&'a mut self) -> UnknownJointMutRef<'a> {
+    fn joint_a<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
         unsafe {
             WrappedMutBase::from_ptr(ffi::GearJoint_get_joint_1(self.mut_ptr()))
         }
     }
     
-    fn joint_b<'a>(&'a mut self) -> UnknownJointMutRef<'a> {
+    fn joint_b<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
         unsafe {
             WrappedMutBase::from_ptr(ffi::GearJoint_get_joint_2(self.mut_ptr()))
         }
@@ -940,9 +945,9 @@ pub trait MutGearJoint: ConstGearJoint+WrappedMut<ffi::GearJoint> {
     }
 }
 
-impl<'l> ConstGearJoint for GearJointMutRef<'l> {}
-impl<'l> MutGearJoint for GearJointMutRef<'l> {}
-impl<'l> ConstGearJoint for GearJointRef<'l> {}
+impl<'l> ConstGearJoint for GearJointMutPtr<'l> {}
+impl<'l> MutGearJoint for GearJointMutPtr<'l> {}
+impl<'l> ConstGearJoint for GearJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstMotorJoint: Wrapped<ffi::MotorJoint> {
@@ -1012,9 +1017,9 @@ pub trait MutMotorJoint: ConstMotorJoint+WrappedMut<ffi::MotorJoint> {
     }
 }
 
-impl<'l> ConstMotorJoint for MotorJointMutRef<'l> {}
-impl<'l> MutMotorJoint for MotorJointMutRef<'l> {}
-impl<'l> ConstMotorJoint for MotorJointRef<'l> {}
+impl<'l> ConstMotorJoint for MotorJointMutPtr<'l> {}
+impl<'l> MutMotorJoint for MotorJointMutPtr<'l> {}
+impl<'l> ConstMotorJoint for MotorJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstMouseJoint: Wrapped<ffi::MouseJoint> {
@@ -1072,9 +1077,9 @@ pub trait MutMouseJoint: ConstMouseJoint+WrappedMut<ffi::MouseJoint> {
     }
 }
 
-impl<'l> ConstMouseJoint for MouseJointMutRef<'l> {}
-impl<'l> MutMouseJoint for MouseJointMutRef<'l> {}
-impl<'l> ConstMouseJoint for MouseJointRef<'l> {}
+impl<'l> ConstMouseJoint for MouseJointMutPtr<'l> {}
+impl<'l> MutMouseJoint for MouseJointMutPtr<'l> {}
+impl<'l> ConstMouseJoint for MouseJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstPrismaticJoint: Wrapped<ffi::PrismaticJoint> {
@@ -1191,9 +1196,9 @@ pub trait MutPrismaticJoint: ConstPrismaticJoint+WrappedMut<ffi::PrismaticJoint>
     }
 }
 
-impl<'l> ConstPrismaticJoint for PrismaticJointMutRef<'l> {}
-impl<'l> MutPrismaticJoint for PrismaticJointMutRef<'l> {}
-impl<'l> ConstPrismaticJoint for PrismaticJointRef<'l> {}
+impl<'l> ConstPrismaticJoint for PrismaticJointMutPtr<'l> {}
+impl<'l> MutPrismaticJoint for PrismaticJointMutPtr<'l> {}
+impl<'l> ConstPrismaticJoint for PrismaticJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstPulleyJoint: Wrapped<ffi::PulleyJoint> {
@@ -1245,9 +1250,9 @@ pub trait MutPulleyJoint: ConstPulleyJoint+WrappedMut<ffi::PulleyJoint> {
 
 }
 
-impl<'l> ConstPulleyJoint for PulleyJointMutRef<'l> {}
-impl<'l> MutPulleyJoint for PulleyJointMutRef<'l> {}
-impl<'l> ConstPulleyJoint for PulleyJointRef<'l> {}
+impl<'l> ConstPulleyJoint for PulleyJointMutPtr<'l> {}
+impl<'l> MutPulleyJoint for PulleyJointMutPtr<'l> {}
+impl<'l> ConstPulleyJoint for PulleyJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstRevoluteJoint: Wrapped<ffi::RevoluteJoint> {
@@ -1356,9 +1361,9 @@ pub trait MutRevoluteJoint: ConstRevoluteJoint+WrappedMut<ffi::RevoluteJoint> {
     }
 }
 
-impl<'l> ConstRevoluteJoint for RevoluteJointMutRef<'l> {}
-impl<'l> MutRevoluteJoint for RevoluteJointMutRef<'l> {}
-impl<'l> ConstRevoluteJoint for RevoluteJointRef<'l> {}
+impl<'l> ConstRevoluteJoint for RevoluteJointMutPtr<'l> {}
+impl<'l> MutRevoluteJoint for RevoluteJointMutPtr<'l> {}
+impl<'l> ConstRevoluteJoint for RevoluteJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstRopeJoint: Wrapped<ffi::RopeJoint> {
@@ -1400,9 +1405,9 @@ pub trait MutRopeJoint: ConstRopeJoint+WrappedMut<ffi::RopeJoint> {
     }
 }
 
-impl<'l> ConstRopeJoint for RopeJointMutRef<'l> {}
-impl<'l> MutRopeJoint for RopeJointMutRef<'l> {}
-impl<'l> ConstRopeJoint for RopeJointRef<'l> {}
+impl<'l> ConstRopeJoint for RopeJointMutPtr<'l> {}
+impl<'l> MutRopeJoint for RopeJointMutPtr<'l> {}
+impl<'l> ConstRopeJoint for RopeJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstWeldJoint: Wrapped<ffi::WeldJoint> {
@@ -1456,9 +1461,9 @@ pub trait MutWeldJoint: ConstWeldJoint+WrappedMut<ffi::WeldJoint> {
     }
 }
 
-impl<'l> ConstWeldJoint for WeldJointMutRef<'l> {}
-impl<'l> MutWeldJoint for WeldJointMutRef<'l> {}
-impl<'l> ConstWeldJoint for WeldJointRef<'l> {}
+impl<'l> ConstWeldJoint for WeldJointMutPtr<'l> {}
+impl<'l> MutWeldJoint for WeldJointMutPtr<'l> {}
+impl<'l> ConstWeldJoint for WeldJointPtr<'l> {}
 
 #[allow(visible_private_types)]
 pub trait ConstWheelJoint: Wrapped<ffi::WheelJoint> {
@@ -1568,6 +1573,6 @@ pub trait MutWheelJoint: ConstWheelJoint+WrappedMut<ffi::WheelJoint> {
     }
 }
 
-impl<'l> ConstWheelJoint for WheelJointMutRef<'l> {}
-impl<'l> MutWheelJoint for WheelJointMutRef<'l> {}
-impl<'l> ConstWheelJoint for WheelJointRef<'l> {}
+impl<'l> ConstWheelJoint for WheelJointMutPtr<'l> {}
+impl<'l> MutWheelJoint for WheelJointMutPtr<'l> {}
+impl<'l> ConstWheelJoint for WheelJointPtr<'l> {}

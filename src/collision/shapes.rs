@@ -207,7 +207,7 @@ impl ChainShape {
         }
     }
     
-    /// __WARNING__: is the shape cloned ?
+    /// __VERIFY__ that the shape is cloned in C++
     pub fn child_edge(&self, index: i32) -> EdgeShape {
         unsafe {
             let edge = ffi::EdgeShape_new();

@@ -1,17 +1,17 @@
 pub use self::joints::{
-    JointType, JointDef, JointDefBase, MutJoint, ConstJoint,
-    UnknownJointType, UnknownJointMutRef, UnknownJointRef,
-    DistanceJointType, DistanceJointDef, DistanceJointMutRef, FrictionJointRef,
-    FrictionJointType, FrictionJointDef, FrictionJointMutRef, FrictionJointRef,
-    GearJointType, GearJointDef, GearJointMutRef, GearJointRef,
-    MotorJointType, MotorJointDef, MotorJointMutRef, MotorJointRef,
-    MouseJointType, MouseJointDef, MouseJointMutRef, MouseJointRef,
-    PrismaticJointType, PrismaticJointDef, PrismaticJointMutRef, PrismaticJointRef,
-    PulleyJointType, PulleyJointDef, PulleyJointMutRef, PulleyJointRef,
-    RevoluteJointType, RevoluteJointDef, RevoluteJointMutRef, RevoluteJointRef,
-    RopeJointType, RopeJointDef, RopeJointMutRef, RopeJointRef,
-    WeldJointType, WeldJointDef, WeldJointMutRef, WeldJointRef,
-    WheelJointType, WheelJointDef, WheelJointMutRef, WheelJointRef
+    JointType, JointDef, JointDefBase, ConstJoint, MutJoint,
+    UnknownJointType, UnknownJointMutPtr, UnknownJointPtr,
+    DistanceJointType, DistanceJointDef, DistanceJointMutPtr, DistanceJointPtr, ConstDistanceJoint, MutDistanceJoint,
+    FrictionJointType, FrictionJointDef, FrictionJointMutPtr, FrictionJointPtr, ConstFrictionJoint, MutFrictionJoint,
+    GearJointType, GearJointDef, GearJointMutPtr, GearJointPtr, ConstGearJoint, MutGearJoint,
+    MotorJointType, MotorJointDef, MotorJointMutPtr, MotorJointPtr, ConstMotorJoint, MutMotorJoint,
+    MouseJointType, MouseJointDef, MouseJointMutPtr, MouseJointPtr, ConstMouseJoint, MutMouseJoint,
+    PrismaticJointType, PrismaticJointDef, PrismaticJointMutPtr, PrismaticJointPtr, ConstPrismaticJoint, MutPrismaticJoint,
+    PulleyJointType, PulleyJointDef, PulleyJointMutPtr, PulleyJointPtr, ConstPulleyJoint, MutPulleyJoint,
+    RevoluteJointType, RevoluteJointDef, RevoluteJointMutPtr, RevoluteJointPtr, ConstRevoluteJoint, MutRevoluteJoint,
+    RopeJointType, RopeJointDef, RopeJointMutPtr, RopeJointPtr, ConstRopeJoint, MutRopeJoint,
+    WeldJointType, WeldJointDef, WeldJointMutPtr, WeldJointPtr, ConstWeldJoint, MutWeldJoint,
+    WheelJointType, WheelJointDef, WheelJointMutPtr, WheelJointPtr, ConstWheelJoint, MutWheelJoint
 };
 
 use std::ptr;
@@ -24,7 +24,6 @@ use {
 use common::{Draw, DrawFlags};
 use common::private::DrawLink;
 use math::{Vec2, Transform};
-use dynamics::joints::private::WrappedJoint;
 use collision::{
     RayCastInput, RayCastOutput, AABB,
     Shape, ShapeType, UnknownShape, MassData
@@ -82,7 +81,8 @@ impl World {
         }
     }
     
-    pub fn set_destruction_listener(&mut self, destruction_listener: &mut DestructionListener) {
+    /// __VERIFY__ that there is no problem when the Box is copied in C++
+    pub fn set_destruction_listener(&mut self, destruction_listener: Box<DestructionListener>) {
         unsafe {
             self.destruction_listener_link.set_object(mem::transmute(destruction_listener));
             ffi::World_set_destruction_listener(self.mut_ptr(),
@@ -91,7 +91,8 @@ impl World {
         }
     }
     
-    pub fn set_contact_filter(&mut self, contact_filter: &mut ContactFilter) {
+    /// __VERIFY__ that there is no problem when the Box is copied in C++
+    pub fn set_contact_filter(&mut self, contact_filter: Box<ContactFilter>) {
         unsafe {
             self.contact_filter_link.set_object(mem::transmute(contact_filter));
             ffi::World_set_contact_filter(self.mut_ptr(),
@@ -100,7 +101,8 @@ impl World {
         }
     }
     
-    pub fn set_contact_listener(&mut self, contact_listener: &mut ContactListener) {
+    /// __VERIFY__ that there is no problem when the Box is copied in C++
+    pub fn set_contact_listener(&mut self, contact_listener: Box<ContactListener>) {
         unsafe {
             self.contact_listener_link.set_object(mem::transmute(contact_listener));
             ffi::World_set_contact_listener(self.mut_ptr(),
@@ -109,13 +111,13 @@ impl World {
         }
     }
     
-    pub fn create_body(&mut self, def: &BodyDef) -> BodyMutRef {
+    pub fn create_body<'a, 'b>(&'a mut self, def: &BodyDef) -> BodyMutPtr<'b> {
         unsafe {
             WrappedMut::from_ptr(ffi::World_create_body(self.mut_ptr(), def))
         }
     }
     
-    pub fn destroy_body(&mut self, mut body: BodyMutRef) {
+    pub fn destroy_body(&mut self, mut body: BodyMutPtr) {
         unsafe {
             ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr())
         }
@@ -123,13 +125,14 @@ impl World {
     
     pub fn create_joint<J: MutJoint>(&mut self, def: &JointDef) -> J {
         unsafe {
+            let required_joint_type = JointType::of::<J>();
+            assert!(def.joint_type() == required_joint_type ||
+                    required_joint_type == UnknownJointType)
             let joint: J = WrappedMutBase::from_ptr(
                 ffi::World_create_joint(self.mut_ptr(), def.base_ptr())
                 );
-            assert!(
-                joint.joint_type() == WrappedJoint::joint_type(None::<*const J>)
-                || self::UnknownJointType == WrappedJoint::joint_type(None::<*const J>)
-                )
+            assert!(joint.joint_type() == required_joint_type ||
+                    required_joint_type == UnknownJointType)
             joint
         }
     }
@@ -192,7 +195,7 @@ impl World {
         }
     }
     
-    pub fn mut_body_list<'a>(&'a mut self) -> Vec<BodyMutRef<'a>> {
+    pub fn mut_body_list<'a>(&'a mut self) -> Vec<BodyMutPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_body_list(self.mut_ptr());
             
@@ -205,7 +208,7 @@ impl World {
         }
     }
     
-    pub fn body_list<'a>(&'a mut self) -> Vec<BodyRef<'a>> {
+    pub fn body_list<'a>(&'a mut self) -> Vec<BodyPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_body_list_const(self.ptr());
             
@@ -218,7 +221,7 @@ impl World {
         }
     }
     
-    pub fn mut_joint_list<'a>(&'a mut self) -> Vec<UnknownJointMutRef<'a>> {
+    pub fn mut_joint_list<'a>(&'a mut self) -> Vec<UnknownJointMutPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_joint_list(self.mut_ptr());
             
@@ -231,7 +234,7 @@ impl World {
         }
     }
     
-    pub fn joint_list<'a>(&'a mut self) -> Vec<UnknownJointRef<'a>> {
+    pub fn joint_list<'a>(&'a mut self) -> Vec<UnknownJointPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_joint_list_const(self.ptr());
             
@@ -244,7 +247,7 @@ impl World {
         }
     }
     /*
-    pub fn mut_contact_list<'a>(&'a mut self) -> Vec<ContactMutRef<'a>> {
+    pub fn mut_contact_list<'a>(&'a mut self) -> Vec<ContactMutPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_contact_list(self.mut_ptr());
             
@@ -257,7 +260,7 @@ impl World {
         }
     }
     
-    pub fn contact_list<'a>(&'a mut self) -> Vec<ContactRef<'a>> {
+    pub fn contact_list<'a>(&'a mut self) -> Vec<ContactPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_contact_list_const(self.ptr());
             
@@ -471,7 +474,7 @@ impl BodyDef {
     }
 }
 
-wrapped!(ffi::Body into BodyMutRef, BodyRef)
+wrapped!(ffi::Body into BodyMutPtr, BodyPtr)
 
 #[allow(visible_private_types)]
 pub trait ConstBody: Wrapped<ffi::Body> {
@@ -637,7 +640,7 @@ pub trait ConstBody: Wrapped<ffi::Body> {
         }
     }
     
-    fn fixture_list<'a>(&'a self) -> Vec<FixtureRef<'a>> {
+    fn fixture_list<'a>(&'a self) -> Vec<FixturePtr<'a>> {
         unsafe {
             let mut ptr = ffi::Body_get_fixture_list_const(self.ptr());
             
@@ -650,7 +653,7 @@ pub trait ConstBody: Wrapped<ffi::Body> {
         }
     }
     
-    fn next<'a>(&'a self) -> BodyRef<'a> {
+    fn next<'a>(&'a self) -> BodyPtr<'a> {
         unsafe {
             WrappedConst::from_ptr(ffi::Body_get_next_const(self.ptr()))
         }
@@ -663,20 +666,20 @@ pub trait ConstBody: Wrapped<ffi::Body> {
 
 #[allow(visible_private_types)]
 pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
-    fn create_fixture(&mut self, def: &FixtureDef) -> FixtureMutRef {
+    fn create_fixture(&mut self, def: &FixtureDef) -> FixtureMutPtr {
         unsafe {
             WrappedMut::from_ptr(ffi::Body_create_fixture(self.mut_ptr(), def))
         }
     }
     
-    fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> FixtureMutRef {
+    fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> FixtureMutPtr {
         unsafe {
             WrappedMut::from_ptr(ffi::Body_create_fast_fixture(self.mut_ptr(),
                                  shape.base_ptr(), density))
         }
     }
     
-    fn destroy_fixture(&mut self, mut fixture: FixtureMutRef) {
+    fn destroy_fixture(&mut self, mut fixture: FixtureMutPtr) {
         unsafe {
             ffi::Body_destroy_fixture(self.mut_ptr(), fixture.mut_ptr())
         }
@@ -797,7 +800,7 @@ pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
         }
     }
     
-    fn mut_fixture_list<'a>(&'a mut self) -> Vec<FixtureMutRef<'a>> {
+    fn mut_fixture_list<'a>(&'a mut self) -> Vec<FixtureMutPtr<'a>> {
         unsafe {
             let mut ptr = ffi::Body_get_fixture_list(self.mut_ptr());
             
@@ -810,7 +813,7 @@ pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
         }
     }
     
-    fn mut_next<'a>(&'a mut self) -> BodyMutRef<'a> {
+    fn mut_next<'a>(&'a mut self) -> BodyMutPtr<'a> {
         unsafe {
             WrappedMut::from_ptr(ffi::Body_get_next(self.mut_ptr()))
         }
@@ -833,9 +836,9 @@ pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
     }
 }
 
-impl<'l> ConstBody for BodyMutRef<'l> {}
-impl<'l> MutBody for BodyMutRef<'l> {}
-impl<'l> ConstBody for BodyRef<'l> {}
+impl<'l> ConstBody for BodyMutPtr<'l> {}
+impl<'l> MutBody for BodyMutPtr<'l> {}
+impl<'l> ConstBody for BodyPtr<'l> {}
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -888,7 +891,7 @@ impl FixtureDef {
     }
 }
 
-wrapped!(ffi::Fixture into FixtureMutRef, FixtureRef)
+wrapped!(ffi::Fixture into FixtureMutPtr, FixturePtr)
 
 #[allow(visible_private_types)]
 pub trait ConstFixture: Wrapped<ffi::Fixture> {
@@ -912,7 +915,7 @@ pub trait ConstFixture: Wrapped<ffi::Fixture> {
         }
     }
     
-    fn next<'a>(&'a self) -> FixtureRef<'a>{
+    fn next<'a>(&'a self) -> FixturePtr<'a>{
         unsafe {
             WrappedConst::from_ptr(ffi::Fixture_get_next_const(self.ptr()))
         }
@@ -1000,13 +1003,13 @@ pub trait MutFixture: ConstFixture+WrappedMut<ffi::Fixture> {
         }
     }
     /*
-    fn mut_body(&mut self) -> BodyMutRef<'l>{
+    fn mut_body(&mut self) -> BodyMutPtr<'l>{
         unsafe {
             WrappedMut::from_ptr(ffi::Fixture_get_body(self.mut_ptr()))
         }
     }
     */
-    fn mut_next<'a>(&'a mut self) -> FixtureMutRef<'a>{
+    fn mut_next<'a>(&'a mut self) -> FixtureMutPtr<'a>{
         unsafe {
             WrappedMut::from_ptr(ffi::Fixture_get_next(self.mut_ptr()))
         }
@@ -1041,9 +1044,9 @@ pub trait MutFixture: ConstFixture+WrappedMut<ffi::Fixture> {
     }
 }
 
-impl<'l> ConstFixture for FixtureMutRef<'l> {}
-impl<'l> MutFixture for FixtureMutRef<'l> {}
-impl<'l> ConstFixture for FixtureRef<'l> {}
+impl<'l> ConstFixture for FixtureMutPtr<'l> {}
+impl<'l> MutFixture for FixtureMutPtr<'l> {}
+impl<'l> ConstFixture for FixturePtr<'l> {}
 
 #[repr(C)]
 pub struct ContactImpulse {
@@ -1077,7 +1080,7 @@ pub struct ManifoldPoint {
     pub id: u32
 }
 
-wrapped!(ffi::Contact into ContactMutRef, ContactRef)
+wrapped!(ffi::Contact into ContactMutPtr, ContactPtr)
 
 #[allow(visible_private_types)]
 pub trait ConstContact: Wrapped<ffi::Contact> {
@@ -1089,32 +1092,32 @@ pub trait MutContact: ConstContact+WrappedMut<ffi::Contact> {
 
 }
 
-impl<'l> ConstContact for ContactMutRef<'l> {}
-impl<'l> MutContact for ContactMutRef<'l> {}
-impl<'l> ConstContact for ContactRef<'l> {}
+impl<'l> ConstContact for ContactMutPtr<'l> {}
+impl<'l> MutContact for ContactMutPtr<'l> {}
+impl<'l> ConstContact for ContactPtr<'l> {}
 
 pub trait DestructionListener {
-    fn goodbye_joint(&mut self, joint: UnknownJointMutRef);
-    fn goodbye_fixture(&mut self, fixture: FixtureMutRef);
+    fn goodbye_joint(&mut self, joint: UnknownJointMutPtr);
+    fn goodbye_fixture(&mut self, fixture: FixtureMutPtr);
 }
 
 pub trait ContactFilter {
-    fn should_collide(&mut self, fixture_a: FixtureMutRef, fixture_b: FixtureMutRef) -> bool;
+    fn should_collide(&mut self, fixture_a: FixtureMutPtr, fixture_b: FixtureMutPtr) -> bool;
 }
 
 pub trait ContactListener {
-    fn begin_contact(&mut self, contact: ContactMutRef);
-    fn end_contact(&mut self, contact: ContactMutRef);
-    fn pre_solve(&mut self, contact: ContactMutRef, manifold: &Manifold);
-    fn post_solve(&mut self, contact: ContactMutRef, impulse: &ContactImpulse);
+    fn begin_contact(&mut self, contact: ContactMutPtr);
+    fn end_contact(&mut self, contact: ContactMutPtr);
+    fn pre_solve(&mut self, contact: ContactMutPtr, manifold: &Manifold);
+    fn post_solve(&mut self, contact: ContactMutPtr, impulse: &ContactImpulse);
 }
 
 pub trait QueryCallback {
-    fn report_fixture(&mut self, fixture: FixtureMutRef) -> bool;
+    fn report_fixture(&mut self, fixture: FixtureMutPtr) -> bool;
 }
 
 pub trait RayCastCallback {
-    fn report_fixture(&mut self, fixture: FixtureMutRef, p: &Vec2, normal: &Vec2,
+    fn report_fixture(&mut self, fixture: FixtureMutPtr, p: &Vec2, normal: &Vec2,
                       fraction: f32) -> f32;
 }
 

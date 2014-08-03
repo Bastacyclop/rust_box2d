@@ -82,7 +82,7 @@ impl World {
     }
     
     /// __VERIFY__ that there is no problem when the Box is copied in C++
-    pub fn set_destruction_listener(&mut self, destruction_listener: Box<DestructionListener>) {
+    pub unsafe fn set_destruction_listener(&mut self, destruction_listener: Box<DestructionListener>) {
         unsafe {
             self.destruction_listener_link.set_object(mem::transmute(destruction_listener));
             ffi::World_set_destruction_listener(self.mut_ptr(),
@@ -92,7 +92,7 @@ impl World {
     }
     
     /// __VERIFY__ that there is no problem when the Box is copied in C++
-    pub fn set_contact_filter(&mut self, contact_filter: Box<ContactFilter>) {
+    pub unsafe fn set_contact_filter(&mut self, contact_filter: Box<ContactFilter>) {
         unsafe {
             self.contact_filter_link.set_object(mem::transmute(contact_filter));
             ffi::World_set_contact_filter(self.mut_ptr(),
@@ -102,7 +102,7 @@ impl World {
     }
     
     /// __VERIFY__ that there is no problem when the Box is copied in C++
-    pub fn set_contact_listener(&mut self, contact_listener: Box<ContactListener>) {
+    pub unsafe fn set_contact_listener(&mut self, contact_listener: Box<ContactListener>) {
         unsafe {
             self.contact_listener_link.set_object(mem::transmute(contact_listener));
             ffi::World_set_contact_listener(self.mut_ptr(),
@@ -117,7 +117,7 @@ impl World {
         }
     }
     
-    pub fn destroy_body(&mut self, mut body: BodyMutPtr) {
+    pub unsafe fn destroy_body(&mut self, mut body: BodyMutPtr) {
         unsafe {
             ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr())
         }
@@ -138,7 +138,7 @@ impl World {
         }
     }
     
-    pub fn destroy_joint<J: MutJoint>(&mut self, mut joint: J) {
+    pub unsafe fn destroy_joint<J: MutJoint>(&mut self, mut joint: J) {
         unsafe {
             ffi::World_destroy_joint(self.mut_ptr(), joint.mut_base_ptr())
         }
@@ -196,7 +196,7 @@ impl World {
         }
     }
     
-    pub fn mut_body_list<'a>(&'a mut self) -> Vec<BodyMutPtr<'a>> {
+    pub unsafe fn mut_body_list<'a>(&'a mut self) -> Vec<BodyMutPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_body_list(self.mut_ptr());
             
@@ -209,7 +209,7 @@ impl World {
         }
     }
     
-    pub fn body_list<'a>(&'a mut self) -> Vec<BodyPtr<'a>> {
+    pub unsafe fn body_list<'a>(&'a mut self) -> Vec<BodyPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_body_list_const(self.ptr());
             
@@ -222,7 +222,7 @@ impl World {
         }
     }
     
-    pub fn mut_joint_list<'a>(&'a mut self) -> Vec<UnknownJointMutPtr<'a>> {
+    pub unsafe fn mut_joint_list<'a>(&'a mut self) -> Vec<UnknownJointMutPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_joint_list(self.mut_ptr());
             
@@ -235,7 +235,7 @@ impl World {
         }
     }
     
-    pub fn joint_list<'a>(&'a mut self) -> Vec<UnknownJointPtr<'a>> {
+    pub unsafe fn joint_list<'a>(&'a mut self) -> Vec<UnknownJointPtr<'a>> {
         unsafe {
             let mut ptr = ffi::World_get_joint_list_const(self.ptr());
             
@@ -629,7 +629,7 @@ pub trait ConstBody: Wrapped<ffi::Body> {
         }
     }
     
-    fn fixture_list<'a>(&'a self) -> Vec<FixturePtr<'a>> {
+    unsafe fn fixture_list<'a>(&'a self) -> Vec<FixturePtr<'a>> {
         unsafe {
             let mut ptr = ffi::Body_get_fixture_list_const(self.ptr());
             
@@ -642,7 +642,7 @@ pub trait ConstBody: Wrapped<ffi::Body> {
         }
     }
     
-    fn next<'a>(&'a self) -> BodyPtr<'a> {
+    unsafe fn next<'a>(&'a self) -> BodyPtr<'a> {
         unsafe {
             WrappedConst::from_ptr(ffi::Body_get_next_const(self.ptr()))
         }
@@ -668,7 +668,7 @@ pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
         }
     }
     
-    fn destroy_fixture(&mut self, mut fixture: FixtureMutPtr) {
+    unsafe fn destroy_fixture(&mut self, mut fixture: FixtureMutPtr) {
         unsafe {
             ffi::Body_destroy_fixture(self.mut_ptr(), fixture.mut_ptr())
         }
@@ -789,7 +789,7 @@ pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
         }
     }
     
-    fn mut_fixture_list<'a>(&'a mut self) -> Vec<FixtureMutPtr<'a>> {
+    unsafe fn mut_fixture_list<'a>(&'a mut self) -> Vec<FixtureMutPtr<'a>> {
         unsafe {
             let mut ptr = ffi::Body_get_fixture_list(self.mut_ptr());
             
@@ -802,7 +802,7 @@ pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
         }
     }
     
-    fn mut_next<'a>(&'a mut self) -> BodyMutPtr<'a> {
+    unsafe fn mut_next<'a>(&'a mut self) -> BodyMutPtr<'a> {
         unsafe {
             WrappedMut::from_ptr(ffi::Body_get_next(self.mut_ptr()))
         }
@@ -902,7 +902,13 @@ pub trait ConstFixture: Wrapped<ffi::Fixture> {
         }
     }
     
-    fn next<'a>(&'a self) -> FixturePtr<'a>{
+    unsafe fn body<'a>(&'a mut self) -> BodyPtr<'a>{
+        unsafe {
+            WrappedConst::from_ptr(ffi::Fixture_get_body_const(self.ptr()))
+        }
+    }
+    
+    unsafe fn next<'a>(&'a self) -> FixturePtr<'a>{
         unsafe {
             WrappedConst::from_ptr(ffi::Fixture_get_next_const(self.ptr()))
         }
@@ -963,13 +969,14 @@ pub trait ConstFixture: Wrapped<ffi::Fixture> {
 
 #[allow(visible_private_types)]
 pub trait MutFixture: ConstFixture+WrappedMut<ffi::Fixture> {
+    /*
     /// __Warning__: Is the shape cloned ?
     fn shape(&mut self) -> UnknownShape {
         unsafe {
             WrappedMutBase::from_ptr(ffi::Fixture_get_shape(self.mut_ptr()))
         }
     }
-    
+    */
     fn set_sensor(&mut self, flag: bool) {
         unsafe {
             ffi::Fixture_set_sensor(self.mut_ptr(), flag)
@@ -987,14 +994,14 @@ pub trait MutFixture: ConstFixture+WrappedMut<ffi::Fixture> {
             ffi::Fixture_refilter(self.mut_ptr())
         }
     }
-    /*
-    fn mut_body(&mut self) -> BodyMutPtr<'l>{
+    
+    unsafe fn mut_body<'a>(&'a mut self) -> BodyMutPtr<'a>{
         unsafe {
             WrappedMut::from_ptr(ffi::Fixture_get_body(self.mut_ptr()))
         }
     }
-    */
-    fn mut_next<'a>(&'a mut self) -> FixtureMutPtr<'a>{
+    
+    unsafe fn mut_next<'a>(&'a mut self) -> FixtureMutPtr<'a>{
         unsafe {
             WrappedMut::from_ptr(ffi::Fixture_get_next(self.mut_ptr()))
         }

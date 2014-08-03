@@ -46,7 +46,6 @@ Or build it from source:
 - Documentation
 - More safety
 - CircleShape is not usable
-- Remove `assert!(!x.is_null())` when `x` comes from a C++ reference ?
 - Use an explicit unit system ?
 - explicit World/Local ?
 - Contacts

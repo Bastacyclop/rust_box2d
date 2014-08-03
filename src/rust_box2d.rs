@@ -182,7 +182,6 @@ pub mod b2 {
     pub use super::*;
     pub use super::common::*;
     pub use super::dynamics::*;
-    pub use super::dynamics::{ConstBody, MutBody};
     pub use super::collision::*;
     pub use super::math::*;
     pub use super::settings::*;

@@ -41,22 +41,21 @@ pub mod private {
 
     unsafe extern fn draw_polygon(any: ffi::FatAny, vertices: *const Vec2,
                                   count: i32, color: *const Color) {
-        assert!(!color.is_null())
+         // color comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
         draw.draw_polygon(vec::raw::from_buf(vertices, count as uint), &*color)
     }
 
     unsafe extern fn draw_solid_polygon(any: ffi::FatAny, vertices: *const Vec2,
                                         count: i32, color: *const Color) {
-        assert!(!color.is_null())
+         // color comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
         draw.draw_solid_polygon(vec::raw::from_buf(vertices, count as uint), &*color)
     }
 
     unsafe extern fn draw_circle(any: ffi::FatAny, center: *const Vec2,
                                  radius: f32, color: *const Color) {
-        assert!(!center.is_null())
-        assert!(!color.is_null())
+        // center and color are coming from C++ &s
         let draw = mem::transmute::<_, &mut Draw>(any);
         draw.draw_circle(&*center, radius, &*color)
     }
@@ -64,24 +63,20 @@ pub mod private {
     unsafe extern fn draw_solid_circle(any: ffi::FatAny, center: *const Vec2,
                                        radius: f32, axis: *const Vec2,
                                        color: *const Color) {
-        assert!(!center.is_null())
-        assert!(!axis.is_null())
-        assert!(!color.is_null())
+        // center, axis and color are coming from C++ &s
         let draw = mem::transmute::<_, &mut Draw>(any);
         draw.draw_solid_circle(&*center, radius, &*axis, &*color)
     }
 
     unsafe extern fn draw_segment(any: ffi::FatAny, p1: *const Vec2,
                                   p2: *const Vec2, color: *const Color) {
-        assert!(!p1.is_null())
-        assert!(!p2.is_null())
-        assert!(!color.is_null())
+        // p1, p2 and color are coming from C++ &s
         let draw = mem::transmute::<_, &mut Draw>(any);
         draw.draw_segment(&*p1, &*p2, &*color)
     }
 
     unsafe extern fn draw_transform(any: ffi::FatAny, xf: *const Transform) {
-        assert!(!xf.is_null())
+        // xf comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
         draw.draw_transform(&*xf)
     }

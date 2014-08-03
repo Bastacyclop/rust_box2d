@@ -131,7 +131,7 @@ impl WrappedMutBase<ffi::Shape> for UnknownShape {
                 WrappedMutBase::from_ptr(ptr)
                 ),
             _ => Unknown,
-        } 
+        }
     }
     
     unsafe fn mut_base_ptr(&mut self) -> *mut ffi::Shape {
@@ -206,15 +206,16 @@ impl ChainShape {
             ffi::ChainShape_set_next_vertex(self.mut_ptr(), vertex)
         }
     }
-    
+    /*
     /// __VERIFY__ that the shape is cloned in C++
-    pub fn child_edge(&self, index: i32) -> EdgeShape {
+    pub fn child_edge<'a>(&'a self, index: i32) -> EdgeShape {
         unsafe {
             let edge = ffi::EdgeShape_new();
             ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
             WrappedMut::from_ptr(edge)
         }
     }
+    */
 }
 
 impl CircleShape {
@@ -232,9 +233,7 @@ impl CircleShape {
     
     pub fn support_vertex<'a>(&'a self, dir: &Vec2) -> &'a Vec2 {
         unsafe {
-            let vertex = ffi::CircleShape_get_support_vertex(self.ptr(), dir);
-            assert!(!vertex.is_null())
-            &*vertex
+            &*ffi::CircleShape_get_support_vertex(self.ptr(), dir) // Comes from a C++ &
         }
     }
     
@@ -246,9 +245,7 @@ impl CircleShape {
     
     pub fn vertex<'a>(&'a self, index: uint) -> &'a Vec2 {
         unsafe {
-            let vertex = ffi::CircleShape_get_vertex(self.ptr(), index as i32);
-            assert!(!vertex.is_null())
-            &*vertex
+            &*ffi::CircleShape_get_vertex(self.ptr(), index as i32) // Comes from a C++ &
         }
     }
 }
@@ -305,9 +302,7 @@ impl PolygonShape {
     
     pub fn vertex<'a>(&'a self, index: uint) -> &'a Vec2 {
         unsafe {
-            let vertex = ffi::PolygonShape_get_vertex(self.ptr(), index as i32);
-            assert!(!vertex.is_null())
-            &*vertex
+            &*ffi::PolygonShape_get_vertex(self.ptr(), index as i32) // Comes from a C++ &
         }
     }
     

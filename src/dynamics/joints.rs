@@ -166,7 +166,7 @@ pub trait ConstJoint: RequiredJointType+WrappedBase<ffi::Joint> {
         }
     }
     
-    fn next<'a>(&'a self) -> UnknownJointPtr<'a> {
+    unsafe fn next<'a>(&'a self) -> UnknownJointPtr<'a> {
         unsafe {
             WrappedConstBase::from_ptr(ffi::Joint_get_next_const(self.base_ptr()))
         }
@@ -185,19 +185,19 @@ pub trait ConstJoint: RequiredJointType+WrappedBase<ffi::Joint> {
 
 #[allow(visible_private_types)]
 pub trait MutJoint: ConstJoint+WrappedMutBase<ffi::Joint> {
-    fn body_a<'a>(&'a mut self) -> BodyMutPtr<'a> {
+    unsafe fn body_a<'a>(&'a mut self) -> BodyMutPtr<'a> {
         unsafe {
             WrappedMut::from_ptr(ffi::Joint_get_body_a(self.mut_base_ptr()))
         }
     }
     
-    fn body_b<'a>(&'a mut self) -> BodyMutPtr<'a> {
+    unsafe fn body_b<'a>(&'a mut self) -> BodyMutPtr<'a> {
         unsafe {
             WrappedMut::from_ptr(ffi::Joint_get_body_b(self.mut_base_ptr()))
         }
     }
     
-    fn mut_next<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
+    unsafe fn mut_next<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
         unsafe {
             WrappedMutBase::from_ptr(ffi::Joint_get_next(self.mut_base_ptr()))
         }
@@ -807,17 +807,13 @@ wrapped_joint!(ffi::WheelJoint into WheelJointMutPtr, WheelJointPtr
 pub trait ConstDistanceJoint: Wrapped<ffi::DistanceJoint> {
     fn local_anchor_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::DistanceJoint_get_local_anchor_a(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::DistanceJoint_get_local_anchor_a(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_anchor_b<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::DistanceJoint_get_local_anchor_b(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::DistanceJoint_get_local_anchor_b(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -869,17 +865,13 @@ impl<'l> ConstDistanceJoint for DistanceJointPtr<'l> {}
 pub trait ConstFrictionJoint: Wrapped<ffi::FrictionJoint> {
     fn local_anchor_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::FrictionJoint_get_local_anchor_a(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::FrictionJoint_get_local_anchor_a(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_anchor_b<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::FrictionJoint_get_local_anchor_b(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::FrictionJoint_get_local_anchor_b(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -926,13 +918,13 @@ pub trait ConstGearJoint: Wrapped<ffi::GearJoint> {
 
 #[allow(visible_private_types)]
 pub trait MutGearJoint: ConstGearJoint+WrappedMut<ffi::GearJoint> {
-    fn joint_a<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
+    unsafe fn joint_a<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
         unsafe {
             WrappedMutBase::from_ptr(ffi::GearJoint_get_joint_1(self.mut_ptr()))
         }
     }
     
-    fn joint_b<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
+    unsafe fn joint_b<'a>(&'a mut self) -> UnknownJointMutPtr<'a> {
         unsafe {
             WrappedMutBase::from_ptr(ffi::GearJoint_get_joint_2(self.mut_ptr()))
         }
@@ -953,9 +945,7 @@ impl<'l> ConstGearJoint for GearJointPtr<'l> {}
 pub trait ConstMotorJoint: Wrapped<ffi::MotorJoint> {
     fn linear_offset<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let offset = ffi::MotorJoint_get_linear_offset(self.ptr());
-            assert!(!offset.is_null())
-            &*offset
+            &*ffi::MotorJoint_get_linear_offset(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -1025,9 +1015,7 @@ impl<'l> ConstMotorJoint for MotorJointPtr<'l> {}
 pub trait ConstMouseJoint: Wrapped<ffi::MouseJoint> {
     fn target<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let target = ffi::MouseJoint_get_target(self.ptr());
-            assert!(!target.is_null())
-            &*target
+            &*ffi::MouseJoint_get_target(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -1085,25 +1073,19 @@ impl<'l> ConstMouseJoint for MouseJointPtr<'l> {}
 pub trait ConstPrismaticJoint: Wrapped<ffi::PrismaticJoint> {
     fn local_anchor_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::PrismaticJoint_get_local_anchor_a(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::PrismaticJoint_get_local_anchor_a(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_anchor_b<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::PrismaticJoint_get_local_anchor_b(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::PrismaticJoint_get_local_anchor_b(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_axis_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let axis = ffi::PrismaticJoint_get_local_axis_a(self.ptr());
-            assert!(!axis.is_null())
-            &*axis
+            &*ffi::PrismaticJoint_get_local_axis_a(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -1258,17 +1240,13 @@ impl<'l> ConstPulleyJoint for PulleyJointPtr<'l> {}
 pub trait ConstRevoluteJoint: Wrapped<ffi::RevoluteJoint> {
     fn local_anchor_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::RevoluteJoint_get_local_anchor_a(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::RevoluteJoint_get_local_anchor_a(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_anchor_b<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::RevoluteJoint_get_local_anchor_b(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::RevoluteJoint_get_local_anchor_b(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -1369,17 +1347,13 @@ impl<'l> ConstRevoluteJoint for RevoluteJointPtr<'l> {}
 pub trait ConstRopeJoint: Wrapped<ffi::RopeJoint> {
     fn local_anchor_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::RopeJoint_get_local_anchor_a(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::RopeJoint_get_local_anchor_a(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_anchor_b<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let  anchor = ffi::RopeJoint_get_local_anchor_b(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::RopeJoint_get_local_anchor_b(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -1413,17 +1387,13 @@ impl<'l> ConstRopeJoint for RopeJointPtr<'l> {}
 pub trait ConstWeldJoint: Wrapped<ffi::WeldJoint> {
     fn local_anchor_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::WeldJoint_get_local_anchor_a(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::WeldJoint_get_local_anchor_a(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_anchor_b<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::WeldJoint_get_local_anchor_b(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::WeldJoint_get_local_anchor_b(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -1469,25 +1439,19 @@ impl<'l> ConstWeldJoint for WeldJointPtr<'l> {}
 pub trait ConstWheelJoint: Wrapped<ffi::WheelJoint> {
     fn local_anchor_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::WheelJoint_get_local_anchor_a(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::WheelJoint_get_local_anchor_a(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_anchor_b<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let anchor = ffi::WheelJoint_get_local_anchor_b(self.ptr());
-            assert!(!anchor.is_null())
-            &*anchor
+            &*ffi::WheelJoint_get_local_anchor_b(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_axis_a<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let axis = ffi::WheelJoint_get_local_axis_a(self.ptr());
-            assert!(!axis.is_null())
-            &*axis
+            &*ffi::WheelJoint_get_local_axis_a(self.ptr()) // Comes from a C++ &
         }
     }
     

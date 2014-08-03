@@ -131,8 +131,9 @@ impl World {
             let joint: J = WrappedMutBase::from_ptr(
                 ffi::World_create_joint(self.mut_ptr(), def.base_ptr())
                 );
-            assert!(joint.joint_type() == required_joint_type ||
-                    required_joint_type == UnknownJointType)
+            // Probably too much:
+            // assert!(joint.joint_type() == required_joint_type ||
+            //        required_joint_type == UnknownJointType)
             joint
         }
     }
@@ -401,9 +402,7 @@ impl World {
     
     pub fn profile<'a>(&'a self) -> &'a Profile {
         unsafe {
-            let profile = ffi::World_get_profile(self.ptr());
-            assert!(!profile.is_null())
-            &*profile
+            &*ffi::World_get_profile(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -480,17 +479,13 @@ wrapped!(ffi::Body into BodyMutPtr, BodyPtr)
 pub trait ConstBody: Wrapped<ffi::Body> {
     fn transform<'a>(&'a self) -> &'a Transform {
         unsafe {
-            let transform = ffi::Body_get_transform(self.ptr());
-            assert!(!transform.is_null())
-            &*transform
+            &*ffi::Body_get_transform(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn position<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let position = ffi::Body_get_position(self.ptr());
-            assert!(!position.is_null())
-            &*position
+            &*ffi::Body_get_position(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -502,25 +497,19 @@ pub trait ConstBody: Wrapped<ffi::Body> {
     
     fn world_center<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let center = ffi::Body_get_world_center(self.ptr());
-            assert!(!center.is_null())
-            &*center
+            &*ffi::Body_get_world_center(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn local_center<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let center = ffi::Body_get_local_center(self.ptr());
-            assert!(!center.is_null())
-            &*center
+            &*ffi::Body_get_local_center(self.ptr()) // Comes from a C++ &
         }
     }
     
     fn linear_velocity<'a>(&'a self) -> &'a Vec2 {
         unsafe {
-            let velocity = ffi::Body_get_linear_velocity(self.ptr());
-            assert!(!velocity.is_null())
-            &*velocity
+            &*ffi::Body_get_linear_velocity(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -909,9 +898,7 @@ pub trait ConstFixture: Wrapped<ffi::Fixture> {
     
     fn filter_data<'a>(&'a self) -> &'a Filter {
         unsafe {
-            let data = ffi::Fixture_get_filter_data(self.ptr());
-            assert!(!data.is_null())
-            &*data
+            &*ffi::Fixture_get_filter_data(self.ptr()) // Comes from a C++ &
         }
     }
     
@@ -965,9 +952,7 @@ pub trait ConstFixture: Wrapped<ffi::Fixture> {
     
     fn aabb<'a>(&'a self, child_index: uint) -> &'a AABB {
         unsafe {
-            let aabb = ffi::Fixture_get_aabb(self.ptr(), child_index as i32);
-            assert!(!aabb.is_null())
-            &*aabb
+            &*ffi::Fixture_get_aabb(self.ptr(), child_index as i32) // Comes from a C++ &
         }
     }
     
@@ -1167,8 +1152,7 @@ unsafe extern fn qc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
 unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture,
                                     point: *const Vec2, normal: *const Vec2,
                                     fraction: f32) -> f32 {
-    assert!(!point.is_null())
-    assert!(!normal.is_null())
+    // point and normal are coming from C++ &s
     let callback = mem::transmute::<_, &mut RayCastCallback>(any);
     callback.report_fixture(WrappedMut::from_ptr(fixture), &*point, &*normal,
                             fraction)

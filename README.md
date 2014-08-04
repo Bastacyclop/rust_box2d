@@ -45,6 +45,7 @@ Or build it from source:
 
 - Documentation
 - More safety
+- Check `...Def` pointers and lifetimes
 - CircleShape is not usable
 - Use an explicit unit system ?
 - explicit World/Local ?

@@ -37,21 +37,21 @@ macro_rules! joint_def(
     ($name:ident $(($(($visibility:ident))*) $field:ident: $typ:ty),+) => (
         #[repr(C)]
         #[allow(dead_code)]
-        pub struct $name {
+        pub struct $name<'l> {
             pub base: JointDefBase,
             $(
                 $($visibility)* $field: $typ,
             )+
         }
         
-        impl WrappedBase<JointDefBase> for $name {
+        impl<'l> WrappedBase<JointDefBase> for $name<'l> {
             unsafe fn base_ptr(&self) -> *const JointDefBase {
                 self as *const $name as *const JointDefBase
             }
         }
         
-        impl WrappedMutBase<JointDefBase> for $name {
-            unsafe fn from_ptr(ptr: *mut JointDefBase) -> $name {
+        impl<'l> WrappedMutBase<JointDefBase> for $name<'l> {
+            unsafe fn from_ptr(ptr: *mut JointDefBase) -> $name<'l> {
                 *(ptr as *mut $name)
             }
             
@@ -60,7 +60,7 @@ macro_rules! joint_def(
             }
         }
         
-        impl JointDef for $name {}
+        impl<'l> JointDef for $name<'l> {}
     );
 )
 
@@ -504,11 +504,11 @@ joint_def!(WheelJointDef
     ((pub)) damping_ratio: f32
 )
 
-impl DistanceJointDef {    
-    pub fn new(body_a: &mut BodyMutPtr,
-               body_b: &mut BodyMutPtr,
+impl<'l> DistanceJointDef<'l> {
+    pub fn new(body_a: &mut BodyMutPtr<'l>,
+               body_b: &mut BodyMutPtr<'l>,
                anchor_a: &Vec2,
-               anchor_b: &Vec2) -> DistanceJointDef {
+               anchor_b: &Vec2) -> DistanceJointDef<'l> {
         unsafe {
             let mut joint =
                 DistanceJointDef {
@@ -528,10 +528,10 @@ impl DistanceJointDef {
     }
 }
 
-impl FrictionJointDef {
-    pub fn new(body_a: &mut BodyMutPtr,
-               body_b: &mut BodyMutPtr,
-               anchor: &Vec2) -> FrictionJointDef {
+impl<'l> FrictionJointDef<'l> {
+    pub fn new(body_a: &mut BodyMutPtr<'l>,
+               body_b: &mut BodyMutPtr<'l>,
+               anchor: &Vec2) -> FrictionJointDef<'l> {
         unsafe {
             let mut joint =
                 FrictionJointDef {
@@ -550,9 +550,9 @@ impl FrictionJointDef {
     }
 }
 
-impl GearJointDef {
-    pub fn new(joint_a: &mut MutJoint,
-               joint_b: &mut MutJoint) -> GearJointDef {
+impl<'l> GearJointDef<'l> {
+    pub fn new(joint_a: &'l mut MutJoint,
+               joint_b: &'l mut MutJoint) -> GearJointDef<'l> {
         unsafe {
             GearJointDef {
                 base: JointDefBase::new(GearJointType),
@@ -564,9 +564,9 @@ impl GearJointDef {
     }
 }
 
-impl MotorJointDef {
-    pub fn new(body_a: &mut BodyMutPtr,
-               body_b: &mut BodyMutPtr) -> MotorJointDef {
+impl<'l> MotorJointDef<'l> {
+    pub fn new(body_a: &mut BodyMutPtr<'l>,
+               body_b: &mut BodyMutPtr<'l>) -> MotorJointDef<'l> {
         unsafe {
             let mut joint = 
                 MotorJointDef {
@@ -585,8 +585,8 @@ impl MotorJointDef {
     }
 }
 
-impl MouseJointDef {
-    pub fn new() -> MouseJointDef {
+impl<'l> MouseJointDef<'l> {
+    pub fn new() -> MouseJointDef<'l> {
         MouseJointDef {
             base: JointDefBase::new(MouseJointType),
             target: Vec2 { x:0., y:0. },
@@ -597,11 +597,11 @@ impl MouseJointDef {
     }
 }
 
-impl PrismaticJointDef {
-    pub fn new(body_a: &mut BodyMutPtr,
-               body_b: &mut BodyMutPtr,
+impl<'l> PrismaticJointDef<'l> {
+    pub fn new(body_a: &mut BodyMutPtr<'l>,
+               body_b: &mut BodyMutPtr<'l>,
                anchor: &Vec2,
-               axis: &Vec2) -> PrismaticJointDef {
+               axis: &Vec2) -> PrismaticJointDef<'l> {
         unsafe {
             let mut joint =
                 PrismaticJointDef {
@@ -626,14 +626,14 @@ impl PrismaticJointDef {
     }
 }
 
-impl PulleyJointDef {
-    pub fn new(body_a: &mut BodyMutPtr,
-               body_b: &mut BodyMutPtr,
+impl<'l> PulleyJointDef<'l> {
+    pub fn new(body_a: &mut BodyMutPtr<'l>,
+               body_b: &mut BodyMutPtr<'l>,
                ground_anchor_a: &Vec2,
                ground_anchor_b: &Vec2,
                anchor_a: &Vec2,
                anchor_b: &Vec2,
-               ratio: f32) -> PulleyJointDef {
+               ratio: f32) -> PulleyJointDef<'l> {
         unsafe {
             let mut joint =
                 PulleyJointDef {
@@ -659,10 +659,10 @@ impl PulleyJointDef {
     }
 }
 
-impl RevoluteJointDef {
-    pub fn new(body_a: &mut BodyMutPtr,
-               body_b: &mut BodyMutPtr,
-               anchor: &Vec2) -> RevoluteJointDef {
+impl<'l> RevoluteJointDef<'l> {
+    pub fn new(body_a: &mut BodyMutPtr<'l>,
+               body_b: &mut BodyMutPtr<'l>,
+               anchor: &Vec2) -> RevoluteJointDef<'l> {
         unsafe {
             let mut joint =
                 RevoluteJointDef {
@@ -686,8 +686,8 @@ impl RevoluteJointDef {
     }
 }
 
-impl RopeJointDef {
-    pub fn new() -> RopeJointDef {
+impl<'l> RopeJointDef<'l> {
+    pub fn new() -> RopeJointDef<'l> {
         RopeJointDef {
             base: JointDefBase::new(RopeJointType),
             local_anchor_a: Vec2 { x:-1., y:0. },
@@ -697,10 +697,10 @@ impl RopeJointDef {
     }
 }
 
-impl WeldJointDef {
-    pub fn new(body_a: &mut BodyMutPtr,
-               body_b: &mut BodyMutPtr,
-               anchor: &Vec2) -> WeldJointDef {
+impl<'l> WeldJointDef<'l> {
+    pub fn new(body_a: &mut BodyMutPtr<'l>,
+               body_b: &mut BodyMutPtr<'l>,
+               anchor: &Vec2) -> WeldJointDef<'l> {
         unsafe {
             let mut joint =
                 WeldJointDef {
@@ -720,11 +720,11 @@ impl WeldJointDef {
     }
 }
 
-impl WheelJointDef {
-    pub fn new(body_a: &mut BodyMutPtr,
-               body_b: &mut BodyMutPtr,
+impl<'l> WheelJointDef<'l> {
+    pub fn new(body_a: &mut BodyMutPtr<'l>,
+               body_b: &mut BodyMutPtr<'l>,
                anchor: &Vec2,
-               axis: &Vec2) -> WheelJointDef {
+               axis: &Vec2) -> WheelJointDef<'l> {
         unsafe {
             let mut joint =
                 WheelJointDef {

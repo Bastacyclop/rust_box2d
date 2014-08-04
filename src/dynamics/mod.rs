@@ -655,9 +655,10 @@ pub trait ConstBody: Wrapped<ffi::Body> {
 
 #[allow(visible_private_types)]
 pub trait MutBody: ConstBody+WrappedMut<ffi::Body> {
-    fn create_fixture(&mut self, def: &FixtureDef) -> FixtureMutPtr {
+    fn create_fixture(&mut self, shape: &Shape, mut def: FixtureDef) -> FixtureMutPtr {
         unsafe {
-            WrappedMut::from_ptr(ffi::Body_create_fixture(self.mut_ptr(), def))
+            def.shape = shape.base_ptr();
+            WrappedMut::from_ptr(ffi::Body_create_fixture(self.mut_ptr(), &def))
         }
     }
     
@@ -857,14 +858,14 @@ pub struct FixtureDef {
     pub restitution: f32,
     pub density: f32,
     pub is_sensor: bool,
-    pub filter: Filter
+    pub filter: Filter,
 }
 
 impl FixtureDef {
-    pub fn new(shape: &Shape) -> FixtureDef {
+    pub fn new() -> FixtureDef {
         unsafe {
             FixtureDef {
-                shape: shape.base_ptr(),
+                shape: ptr::null(), // need to be specified later
                 user_data: ptr::mut_null(),
                 friction: 0.2,
                 restitution: 0.,

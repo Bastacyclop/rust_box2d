@@ -35,7 +35,7 @@ pub trait Draw {
 pub mod private {
     use std::mem;
     use std::vec;
-    use {ffi, Wrapped, WrappedMut};
+    use {ffi, Wrapped, BuildWrapped};
     use math::{Vec2, Transform};
     use super::{Draw, DrawFlags, Color};
 
@@ -81,18 +81,19 @@ pub mod private {
         draw.draw_transform(&*xf)
     }
 
-    wrapped!(ffi::DrawLink owned into DrawLink)
+    wrapped!(ffi::DrawLink into DrawLink)
 
     impl DrawLink {
         pub fn new() -> DrawLink {
             unsafe {
-                WrappedMut::from_ptr(ffi::DrawLink_new(ffi::FatAny::null(),
-                                                       draw_polygon,
-                                                       draw_solid_polygon,
-                                                       draw_circle,
-                                                       draw_solid_circle,
-                                                       draw_segment,
-                                                       draw_transform))
+                BuildWrapped::with(ffi::DrawLink_new(ffi::FatAny::null(),
+                                                     draw_polygon,
+                                                     draw_solid_polygon,
+                                                     draw_circle,
+                                                     draw_solid_circle,
+                                                     draw_segment,
+                                                     draw_transform),
+                                   ())
             }
         }
         

@@ -39,10 +39,10 @@ fn main () {
     
     let mut body_box = b2::PolygonShape::new();
         body_box.set_as_box(1., 1.);
-    let mut fixture_def = b2::FixtureDef::new(&body_box);
+    let mut fixture_def = b2::FixtureDef::new();
         fixture_def.density = 1.;
         fixture_def.friction = 0.3;
-    body.create_fixture(&fixture_def);
+    body.create_fixture(&body_box, fixture_def);
     
     for _ in range::<uint>(0, 60) {
         world.step(time_step, velocity_iterations, position_iterations);
@@ -51,6 +51,6 @@ fn main () {
         println!("({:.03f}, {:.03f}) {:.03f}", pos.x, pos.y, angle);
     }
 
-    world.destroy_body(body); // Unecessary here
+    unsafe { world.destroy_body(body); } // Unecessary here
     assert_eq!(world.body_count(), 1);
 }

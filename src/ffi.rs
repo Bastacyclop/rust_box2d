@@ -4,10 +4,10 @@ use math::{Vec2, Transform};
 use common::{Color, DrawFlags};
 use dynamics::{
     BodyDef, BodyType, FixtureDef,
-    JointDefBase, JointType, DistanceJointDef, FrictionJointDef,
+    JointDefBase, JointType, JointEdge, DistanceJointDef, FrictionJointDef,
     MotorJointDef, PrismaticJointDef, PulleyJointDef, RevoluteJointDef,
     WeldJointDef, WheelJointDef,
-    Filter, Profile, Manifold, ContactImpulse
+    Filter, Profile, Manifold, ContactImpulse, ContactEdge
 };
 use dynamics::joints::LimitState;
 use collision::{
@@ -29,8 +29,6 @@ pub struct DrawLink;
 
 pub struct Contact;
 pub struct ContactManager;
-pub struct JointEdge;
-pub struct ContactEdge;
 
 pub struct World;
 pub struct Body;

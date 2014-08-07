@@ -1,13 +1,13 @@
-use {ffi, Wrapped, WrappedMut, WrappedBase, WrappedMutBase};
+use {ffi, Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase, Owned, RefMut};
 use math::{Vec2, Transform};
 use collision::{RayCastInput, RayCastOutput, AABB};
 
 macro_rules! wrapped_shape(
-    ($wrapped:ty owned into $wrap:ident
+    ($wrapped:ty into $wrap:ident
      << $base_as:path
      >> $as_base:path) => (
      
-        wrapped!($wrapped owned into $wrap with base ffi::Shape
+        wrapped!($wrapped into $wrap with base ffi::Shape
                  << $base_as
                  >> $as_base)
                  
@@ -43,7 +43,7 @@ impl MassData {
 }
 
 #[allow(visible_private_types)]
-pub trait Shape: WrappedMutBase<ffi::Shape> {        
+pub trait Shape: WrappedBase<ffi::Shape> {        
     fn shape_type(&self) -> ShapeType {
         unsafe {
             ffi::Shape_get_type(self.base_ptr())
@@ -111,28 +111,6 @@ impl WrappedBase<ffi::Shape> for UnknownShape {
             _ => fail!("Truly unknown shape")
         }
     }
-}
-
-impl WrappedMutBase<ffi::Shape> for UnknownShape {
-    unsafe fn from_ptr(ptr: *mut ffi::Shape) -> UnknownShape {
-        assert!(!ptr.is_null())
-        let shape_type = ffi::Shape_get_type(ptr as *const ffi::Shape);
-        match shape_type {
-            CircleShapeType => Circle(
-                WrappedMutBase::from_ptr(ptr)
-                ),
-            EdgeShapeType => Edge(
-                WrappedMutBase::from_ptr(ptr)
-                ),
-            PolygonShapeType => Polygon(
-                WrappedMutBase::from_ptr(ptr)
-                ),
-            ChainShapeType => Chain(
-                WrappedMutBase::from_ptr(ptr)
-                ),
-            _ => Unknown,
-        }
-    }
     
     unsafe fn mut_base_ptr(&mut self) -> *mut ffi::Shape {
         match self {
@@ -145,29 +123,52 @@ impl WrappedMutBase<ffi::Shape> for UnknownShape {
     }
 }
 
+impl BuildWrappedBase<ffi::Shape, ()> for UnknownShape {
+    unsafe fn with(ptr: *mut ffi::Shape, _: ()) -> UnknownShape {
+        assert!(!ptr.is_null())
+        let shape_type = ffi::Shape_get_type(ptr as *const ffi::Shape);
+        match shape_type {
+            CircleShapeType => Circle(
+                BuildWrappedBase::with(ptr, ())
+                ),
+            EdgeShapeType => Edge(
+                BuildWrappedBase::with(ptr, ())
+                ),
+            PolygonShapeType => Polygon(
+                BuildWrappedBase::with(ptr, ())
+                ),
+            ChainShapeType => Chain(
+                BuildWrappedBase::with(ptr, ())
+                ),
+            _ => Unknown,
+        }
+    }
+    
+}
+
 impl Shape for UnknownShape {}
 
-wrapped_shape!(ffi::ChainShape owned into ChainShape
+wrapped_shape!(ffi::ChainShape into ChainShape
                << ffi::Shape_as_chain_shape
                >> ffi::ChainShape_as_shape
                )
-wrapped_shape!(ffi::CircleShape owned into CircleShape
+wrapped_shape!(ffi::CircleShape into CircleShape
                << ffi::Shape_as_circle_shape
                >> ffi::CircleShape_as_shape
                )
-wrapped_shape!(ffi::EdgeShape owned into EdgeShape
+wrapped_shape!(ffi::EdgeShape into EdgeShape
                << ffi::Shape_as_edge_shape
                >> ffi::EdgeShape_as_shape
                )
-wrapped_shape!(ffi::PolygonShape owned into PolygonShape
+wrapped_shape!(ffi::PolygonShape into PolygonShape
                << ffi::Shape_as_polygon_shape
                >> ffi::PolygonShape_as_shape
                )
 
 impl ChainShape {
-    pub fn new() -> ChainShape {
+    pub fn new() -> Owned<ChainShape> {
         unsafe {
-            WrappedMut::from_ptr(ffi::ChainShape_new())
+            Owned::new(BuildWrapped::with(ffi::ChainShape_new(), ()))
         }
     }
     
@@ -206,22 +207,20 @@ impl ChainShape {
             ffi::ChainShape_set_next_vertex(self.mut_ptr(), vertex)
         }
     }
-    /*
-    /// __VERIFY__ that the shape is cloned in C++
-    pub fn child_edge<'a>(&'a self, index: i32) -> EdgeShape {
+    
+    pub fn child_edge<'a>(&'a self, index: i32) -> RefMut<'a, EdgeShape> {
         unsafe {
             let edge = ffi::EdgeShape_new();
             ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
-            WrappedMut::from_ptr(edge)
+            RefMut::new(BuildWrapped::with(edge, ()))
         }
     }
-    */
 }
 
 impl CircleShape {
-    pub fn new() -> CircleShape {
+    pub fn new() -> Owned<CircleShape> {
         unsafe {
-            WrappedMut::from_ptr(ffi::CircleShape_new())
+            Owned::new(BuildWrapped::with(ffi::CircleShape_new(), ()))
         }
     }
     
@@ -251,9 +250,9 @@ impl CircleShape {
 }
 
 impl EdgeShape {
-    pub fn new() -> EdgeShape {
+    pub fn new() -> Owned<EdgeShape> {
         unsafe {
-            WrappedMut::from_ptr(ffi::EdgeShape_new())
+            Owned::new(BuildWrapped::with(ffi::EdgeShape_new(), ()))
         }
     }
     
@@ -265,9 +264,9 @@ impl EdgeShape {
 }
 
 impl PolygonShape {
-    pub fn new() -> PolygonShape {
+    pub fn new() -> Owned<PolygonShape> {
         unsafe {
-            WrappedMut::from_ptr(ffi::PolygonShape_new())
+            Owned::new(BuildWrapped::with(ffi::PolygonShape_new(), ()))
         }
     }
     
@@ -313,7 +312,8 @@ impl PolygonShape {
     }
 }
 
-impl Drop for ChainShape {
+#[unsafe_destructor]
+impl Drop for Owned<ChainShape> {
     fn drop(&mut self) {
         unsafe {
             ffi::ChainShape_drop(self.mut_ptr())
@@ -321,7 +321,8 @@ impl Drop for ChainShape {
     }
 }
 
-impl Drop for CircleShape {
+#[unsafe_destructor]
+impl Drop for Owned<CircleShape> {
     fn drop(&mut self) {
         unsafe {
             ffi::CircleShape_drop(self.mut_ptr())
@@ -329,7 +330,8 @@ impl Drop for CircleShape {
     }
 }
 
-impl Drop for EdgeShape {
+#[unsafe_destructor]
+impl Drop for Owned<EdgeShape> {
     fn drop(&mut self) {
         unsafe {
             ffi::EdgeShape_drop(self.mut_ptr())
@@ -337,7 +339,8 @@ impl Drop for EdgeShape {
     }
 }
 
-impl Drop for PolygonShape {
+#[unsafe_destructor]
+impl Drop for Owned<PolygonShape> {
     fn drop(&mut self) {
         unsafe {
             ffi::PolygonShape_drop(self.mut_ptr())

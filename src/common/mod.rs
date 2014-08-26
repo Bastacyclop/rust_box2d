@@ -13,6 +13,7 @@ pub struct Color {
 }
 
 bitflags!(
+    #[repr(C)]
     flags DrawFlags: u32 {
     static DRAW_SHAPE = 0x0001,
     static DRAW_JOINT = 0x0002,

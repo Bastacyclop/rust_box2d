@@ -123,10 +123,6 @@ impl<T> Owned<T> {
     pub fn new(t: T) -> Owned<T> {
         Owned { object: t }
     }
-    
-    //pub fn alter<U>(self, f: |T| -> U) -> Owned<U> {
-    //    Owned::new(f(self.object))
-    //}
 }
 
 impl<T> Deref<T> for Owned<T> {

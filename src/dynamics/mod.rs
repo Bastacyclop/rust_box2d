@@ -1089,8 +1089,8 @@ wrapped!(ffi::Contact into Contact)
 
 #[repr(C)]
 pub struct ContactEdge {
-    other: *mut Body,
-    contact: *mut Contact,
+    other: *mut ffi::Body,
+    contact: *mut ffi::Contact,
     prev: *mut ContactEdge,
     next: *mut ContactEdge
 }
@@ -1105,11 +1105,11 @@ impl ContactEdge {
     }
     
     pub unsafe fn mut_contact<'a>(&'a mut self) -> RefMut<'a, Contact> {
-        RefMut::new(BuildWrappedBase::with(self.joint, ()))
+        RefMut::new(BuildWrapped::with(self.contact, ()))
     }
     
     pub unsafe fn contact<'a>(&'a self) -> Ref<'a, Contact> {
-        Ref::new(BuildWrappedBase::with(self.joint, ()))
+        Ref::new(BuildWrapped::with(self.contact, ()))
     }
     
     pub unsafe fn mut_prev(&mut self) -> *mut ContactEdge {

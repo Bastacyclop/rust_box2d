@@ -5,6 +5,7 @@ bin/
 target/
 
 *~
+*.lock
 *.o
 *.swp
 *.bak

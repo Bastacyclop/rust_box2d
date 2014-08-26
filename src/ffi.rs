@@ -14,42 +14,42 @@ use collision::{
     ShapeType, MassData, AABB, RayCastInput, RayCastOutput
 };
 
-pub struct DestructionListener;
-pub struct DestructionListenerLink;
-pub struct ContactFilter;
-pub struct ContactFilterLink;
-pub struct ContactListener;
-pub struct ContactListenerLink;
-pub struct QueryCallback;
-pub struct QueryCallbackLink;
-pub struct RayCastCallback;
-pub struct RayCastCallbackLink;
-pub struct Draw;
-pub struct DrawLink;
+#[repr(C)] pub struct DestructionListener;
+#[repr(C)] pub struct DestructionListenerLink;
+#[repr(C)] pub struct ContactFilter;
+#[repr(C)] pub struct ContactFilterLink;
+#[repr(C)] pub struct ContactListener;
+#[repr(C)] pub struct ContactListenerLink;
+#[repr(C)] pub struct QueryCallback;
+#[repr(C)] pub struct QueryCallbackLink;
+#[repr(C)] pub struct RayCastCallback;
+#[repr(C)] pub struct RayCastCallbackLink;
+#[repr(C)] pub struct Draw;
+#[repr(C)] pub struct DrawLink;
 
-pub struct Contact;
-pub struct ContactManager;
+#[repr(C)] pub struct Contact;
+#[repr(C)] pub struct ContactManager;
 
-pub struct World;
-pub struct Body;
-pub struct Fixture;
-pub struct Shape;
-pub struct ChainShape;
-pub struct EdgeShape;
-pub struct CircleShape;
-pub struct PolygonShape;
-pub struct Joint;
-pub struct DistanceJoint;
-pub struct FrictionJoint;
-pub struct GearJoint;
-pub struct MotorJoint;
-pub struct MouseJoint;
-pub struct PrismaticJoint;
-pub struct PulleyJoint;
-pub struct RevoluteJoint;
-pub struct RopeJoint;
-pub struct WeldJoint;
-pub struct WheelJoint;
+#[repr(C)] pub struct World;
+#[repr(C)] pub struct Body;
+#[repr(C)] pub struct Fixture;
+#[repr(C)] pub struct Shape;
+#[repr(C)] pub struct ChainShape;
+#[repr(C)] pub struct EdgeShape;
+#[repr(C)] pub struct CircleShape;
+#[repr(C)] pub struct PolygonShape;
+#[repr(C)] pub struct Joint;
+#[repr(C)] pub struct DistanceJoint;
+#[repr(C)] pub struct FrictionJoint;
+#[repr(C)] pub struct GearJoint;
+#[repr(C)] pub struct MotorJoint;
+#[repr(C)] pub struct MouseJoint;
+#[repr(C)] pub struct PrismaticJoint;
+#[repr(C)] pub struct PulleyJoint;
+#[repr(C)] pub struct RevoluteJoint;
+#[repr(C)] pub struct RopeJoint;
+#[repr(C)] pub struct WeldJoint;
+#[repr(C)] pub struct WheelJoint;
 
 pub type Any = *mut c_void;
 

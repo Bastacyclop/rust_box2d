@@ -2,7 +2,7 @@ extern crate rust_box2d;
 
 pub use rust_box2d::b2;
 
-use b2::{ConstBody, MutBody};
+use b2::{Owned, Ref, RefMut};
 
 fn main () {
     println!("Rust Box2D example");
@@ -26,7 +26,7 @@ fn main () {
     
     let mut ground_box = b2::PolygonShape::new();
         ground_box.set_as_box(50., 10.);
-    ground_body.create_fast_fixture(&ground_box, 0.);
+    ground_body.create_fast_fixture(&*ground_box, 0.);
 
     let mut body_def = b2::BodyDef::new();
         body_def.body_type = b2::dynamics::DynamicBodyType;
@@ -42,12 +42,12 @@ fn main () {
     let mut fixture_def = b2::FixtureDef::new();
         fixture_def.density = 1.;
         fixture_def.friction = 0.3;
-    body.create_fixture(&body_box, fixture_def);
+    body.create_fixture(&*body_box, fixture_def);
     
     for _ in range::<uint>(0, 60) {
         world.step(time_step, velocity_iterations, position_iterations);
-        let pos = body.position();
-        let angle = body.angle();
+        let pos = (&*body).position();
+        let angle = (&*body).angle();
         println!("({:.03f}, {:.03f}) {:.03f}", pos.x, pos.y, angle);
     }
 

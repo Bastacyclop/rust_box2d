@@ -6,6 +6,6 @@ authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 license = "GPLv3"
 build = "./build_frontend.sh"
 
-[[lib]]
+[lib]
 
 name = "rust_box2d"

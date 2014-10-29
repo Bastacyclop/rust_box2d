@@ -55,7 +55,7 @@ macro_rules! joint_def(
     );
 )
 
-trait RequiredJointType {
+pub trait RequiredJointType {
     fn get(_: Option<*const Self>) -> JointType;
 }
 
@@ -113,9 +113,9 @@ impl JointDefBase {
     fn new(joint_type: JointType) -> JointDefBase {
         JointDefBase {
             joint_type: joint_type,
-            user_data: ptr::mut_null(),
-            body_a: ptr::mut_null(),
-            body_b: ptr::mut_null(),
+            user_data: ptr::null_mut(),
+            body_a: ptr::null_mut(),
+            body_b: ptr::null_mut(),
             collide_connected: false
         }
     }
@@ -125,7 +125,6 @@ impl JointDefBase {
     }
 }
 
-#[allow(visible_private_types)]
 pub trait Joint: RequiredJointType+WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
     fn joint_type(&self) -> JointType {
         unsafe {

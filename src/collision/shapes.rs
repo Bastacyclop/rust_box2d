@@ -42,7 +42,6 @@ impl MassData {
     }
 }
 
-#[allow(visible_private_types)]
 pub trait Shape: WrappedBase<ffi::Shape> {        
     fn shape_type(&self) -> ShapeType {
         unsafe {

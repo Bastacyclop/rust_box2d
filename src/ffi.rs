@@ -62,8 +62,8 @@ pub struct FatAny {
 impl FatAny {
     pub fn null() -> FatAny {
         FatAny {
-            raw1: ptr::mut_null(),
-            raw2: ptr::mut_null()
+            raw1: ptr::null_mut(),
+            raw2: ptr::null_mut()
         }
     }
 }

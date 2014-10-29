@@ -40,7 +40,7 @@ pub struct Profile {
     pub solve_velocity: f32,
     pub solve_position: f32,
     pub brad_phase: f32,
-    pub solve_TOI: f32
+    pub solve_toi: f32
 }
 
 pub struct World {
@@ -160,7 +160,7 @@ impl World {
             ffi::World_set_debug_draw(self.mut_ptr(),
                                       ffi::DrawLink_as_base(self.draw_link.mut_ptr()));
             ffi::World_draw_debug_data(self.mut_ptr());
-            ffi::World_set_debug_draw(self.mut_ptr(), ptr::mut_null());
+            ffi::World_set_debug_draw(self.mut_ptr(), ptr::null_mut());
             self.draw_link.set_object(ffi::FatAny::null());
         }
     }
@@ -455,7 +455,7 @@ impl BodyDef {
             fixed_rotation: false,
             bullet: false,
             active: true,
-            user_data: ptr::mut_null(),
+            user_data: ptr::null_mut(),
             gravity_scale: 1.
         }
     }
@@ -882,7 +882,7 @@ impl FixtureDef {
         unsafe {
             FixtureDef {
                 shape: ptr::null(), // need to be specified later
-                user_data: ptr::mut_null(),
+                user_data: ptr::null_mut(),
                 friction: 0.2,
                 restitution: 0.,
                 density: 0.,

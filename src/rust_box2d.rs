@@ -97,21 +97,21 @@ pub mod dynamics;
 pub mod common;
 pub mod collision;
 
-trait Wrapped<T> {
+pub trait Wrapped<T> {
     unsafe fn ptr(&self) -> *const T;
     unsafe fn mut_ptr(&mut self) -> *mut T;
 }
 
-trait BuildWrapped<T, A> {
+pub trait BuildWrapped<T, A> {
     unsafe fn with(ptr: *mut T, a: A) -> Self;
 }
 
-trait WrappedBase<B> {
+pub trait WrappedBase<B> {
     unsafe fn base_ptr(&self) -> *const B;
     unsafe fn mut_base_ptr(&mut self) -> *mut B;
 }
 
-trait BuildWrappedBase<B, A> {
+pub trait BuildWrappedBase<B, A> {
     unsafe fn with(ptr: *mut B, a: A) -> Self;
 }
 

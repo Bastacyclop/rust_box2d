@@ -15,11 +15,11 @@ pub struct Color {
 bitflags!(
     #[repr(C)]
     flags DrawFlags: u32 {
-    static DRAW_SHAPE = 0x0001,
-    static DRAW_JOINT = 0x0002,
-    static DRAW_AABB = 0x0004,
-    static DRAW_PAIR = 0x0008,
-    static DRAW_CENTER_OF_MASS = 0x0010
+    const DRAW_SHAPE = 0x0001,
+    const DRAW_JOINT = 0x0002,
+    const DRAW_AABB = 0x0004,
+    const DRAW_PAIR = 0x0008,
+    const DRAW_CENTER_OF_MASS = 0x0010
     }
 )
 
@@ -32,7 +32,6 @@ pub trait Draw {
     fn draw_transform(&mut self, xf: &Transform);
 }
 
-#[allow(visible_private_types)]
 pub mod private {
     use std::mem;
     use std::vec;

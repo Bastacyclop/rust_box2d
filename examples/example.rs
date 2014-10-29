@@ -2,7 +2,7 @@ extern crate rust_box2d;
 
 pub use rust_box2d::b2;
 
-use b2::{Owned, Ref, RefMut};
+//use b2::{Owned, Ref, RefMut};
 
 fn main () {
     println!("Rust Box2D example");

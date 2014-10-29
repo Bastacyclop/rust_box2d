@@ -17,8 +17,8 @@ pub use self::joints::{
 use std::ptr;
 use std::mem;
 use {
-    ffi, settings,
-    Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase, Owned, RefMut, Ref
+    ffi, settings, MaybeOwned, Owned, NotOwned,
+    Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase, Ref, RefMut
 };
 use common::{Draw, DrawFlags};
 use common::private::DrawLink;
@@ -48,27 +48,29 @@ pub struct World {
     draw_link: DrawLink,
     destruction_listener_link: DestructionListenerLink,
     contact_filter_link: ContactFilterLink,
-    contact_listener_link: ContactListenerLink
+    contact_listener_link: ContactListenerLink,
+    mb_owned: MaybeOwned
 }
 
 wrapped!(ffi::World into custom World)
 
-impl BuildWrapped<ffi::World, ()> for World {
-    fn with(ptr: *mut ffi::World, _: ()) -> World {
+impl BuildWrapped<ffi::World, MaybeOwned> for World {
+    fn with(ptr: *mut ffi::World, mb_owned: MaybeOwned) -> World {
         World {
             ptr: ptr,
             draw_link: DrawLink::new(),
             destruction_listener_link: DestructionListenerLink::new(),
             contact_filter_link: ContactFilterLink::new(),
-            contact_listener_link: ContactListenerLink::new()
+            contact_listener_link: ContactListenerLink::new(),
+            mb_owned: mb_owned
         }
     }
 }
 
 impl World {
-    pub fn new(gravity: &Vec2) -> Owned<World> {
+    pub fn new(gravity: &Vec2) -> World {
         unsafe {
-            Owned::new(BuildWrapped::with(ffi::World_new(gravity), ()))
+            BuildWrapped::with(ffi::World_new(gravity), Owned)
         }
     }
     
@@ -104,7 +106,7 @@ impl World {
     
     pub fn create_body<'a, 'b>(&'a mut self, def: &BodyDef) -> RefMut<'b, Body> {
         unsafe {
-            RefMut::new(BuildWrapped::with(ffi::World_create_body(self.mut_ptr(), def), ()))
+            RefMut::new(BuildWrapped::with(ffi::World_create_body(self.mut_ptr(), def), NotOwned))
         }
     }
     
@@ -120,7 +122,7 @@ impl World {
             assert!(def.joint_type() == required_joint_type ||
                     required_joint_type == UnknownJointType)
             let joint: J = BuildWrappedBase::with(
-                ffi::World_create_joint(self.mut_ptr(), def.base_ptr()), ()
+                ffi::World_create_joint(self.mut_ptr(), def.base_ptr()), NotOwned
                 );
             // Probably too much:
             // assert!(joint.joint_type() == required_joint_type ||
@@ -193,7 +195,7 @@ impl World {
             
             let mut vec = Vec::new();
             while !ptr.is_null() {
-                vec.push(RefMut::new(BuildWrapped::with(ptr, ())));
+                vec.push(RefMut::new(BuildWrapped::with(ptr, NotOwned)));
                 ptr = ffi::Body_get_next(ptr);
             }
             vec
@@ -206,7 +208,7 @@ impl World {
             
             let mut vec = Vec::new();
             while !ptr.is_null() {
-                vec.push(Ref::new(BuildWrapped::with(ptr as *mut ffi::Body, ())));
+                vec.push(Ref::new(BuildWrapped::with(ptr as *mut ffi::Body, NotOwned)));
                 ptr = ffi::Body_get_next_const(ptr);
             }
             vec
@@ -219,7 +221,7 @@ impl World {
             
             let mut vec = Vec::new();
             while !ptr.is_null() {
-                vec.push(RefMut::new(BuildWrappedBase::with(ptr, ())));
+                vec.push(RefMut::new(BuildWrappedBase::with(ptr, NotOwned)));
                 ptr = ffi::Joint_get_next(ptr);
             }
             vec
@@ -232,7 +234,7 @@ impl World {
             
             let mut vec = Vec::new();
             while !ptr.is_null() {
-                vec.push(Ref::new(BuildWrappedBase::with(ptr as *mut ffi::Joint, ())));
+                vec.push(Ref::new(BuildWrappedBase::with(ptr as *mut ffi::Joint, NotOwned)));
                 ptr = ffi::Joint_get_next_const(ptr);
             }
             vec
@@ -404,11 +406,12 @@ impl World {
     }
 }
 
-#[unsafe_destructor]
-impl Drop for Owned<World> {
+impl Drop for World {
     fn drop(&mut self) {
         unsafe {
-            ffi::World_drop(self.mut_ptr())
+            if self.mb_owned == Owned {
+                ffi::World_drop(self.mut_ptr())
+            }
         }
     }
 }
@@ -626,7 +629,7 @@ impl Body {
             
             let mut vec = Vec::new();
             while !ptr.is_null() {
-                vec.push(Ref::new(BuildWrapped::with(ptr as *mut ffi::Fixture, ())));
+                vec.push(Ref::new(BuildWrapped::with(ptr as *mut ffi::Fixture, NotOwned)));
                 ptr = ffi::Fixture_get_next_const(ptr);
             }
             vec
@@ -661,7 +664,7 @@ impl Body {
     
     pub unsafe fn next<'a>(&'a self) -> Ref<'a, Body> {
         unsafe {
-            Ref::new(BuildWrapped::with(ffi::Body_get_next_const(self.ptr()) as *mut ffi::Body, ()))
+            Ref::new(BuildWrapped::with(ffi::Body_get_next_const(self.ptr()) as *mut ffi::Body, NotOwned))
         }
     }
     
@@ -672,14 +675,14 @@ impl Body {
     pub fn create_fixture<'a, 'b>(&'a mut self, shape: &Shape, mut def: FixtureDef) -> RefMut<'b, Fixture> {
         unsafe {
             def.shape = shape.base_ptr();
-            RefMut::new(BuildWrapped::with(ffi::Body_create_fixture(self.mut_ptr(), &def), ()))
+            RefMut::new(BuildWrapped::with(ffi::Body_create_fixture(self.mut_ptr(), &def), NotOwned))
         }
     }
     
     pub fn create_fast_fixture<'a, 'b>(&'a mut self, shape: &Shape, density: f32) -> RefMut<'b, Fixture> {
         unsafe {
            RefMut::new(BuildWrapped::with(ffi::Body_create_fast_fixture(self.mut_ptr(),
-                                 shape.base_ptr(), density), ()))
+                                 shape.base_ptr(), density), NotOwned))
         }
     }
     
@@ -810,7 +813,7 @@ impl Body {
             
             let mut vec = Vec::new();
             while !ptr.is_null() {
-                vec.push(RefMut::new(BuildWrapped::with(ptr, ())));
+                vec.push(RefMut::new(BuildWrapped::with(ptr, NotOwned)));
                 ptr = ffi::Fixture_get_next(ptr);
             }
             vec
@@ -819,7 +822,7 @@ impl Body {
     
     pub unsafe fn mut_next<'a>(&'a mut self) -> RefMut<'a, Body> {
         unsafe {
-            RefMut::new(BuildWrapped::with(ffi::Body_get_next(self.mut_ptr()), ()))
+            RefMut::new(BuildWrapped::with(ffi::Body_get_next(self.mut_ptr()), NotOwned))
         }
     }
     
@@ -829,13 +832,13 @@ impl Body {
     
     pub unsafe fn mut_world<'a>(&'a mut self) -> RefMut<'a, World> {
         unsafe {
-            RefMut::new(BuildWrapped::with(ffi::Body_get_world(self.mut_ptr()), ()))
+            RefMut::new(BuildWrapped::with(ffi::Body_get_world(self.mut_ptr()), NotOwned))
         }
     }
     
     pub unsafe fn world<'a>(&'a self) -> Ref<'a, World> {
         unsafe {
-            Ref::new(BuildWrapped::with(ffi::Body_get_world_const(self.ptr()) as *mut ffi::World, ()))
+            Ref::new(BuildWrapped::with(ffi::Body_get_world_const(self.ptr()) as *mut ffi::World, NotOwned))
         }
     }
     
@@ -920,13 +923,13 @@ impl Fixture {
     
     pub unsafe fn body<'a>(&'a mut self) -> Ref<'a, Body>{
         unsafe {
-            Ref::new(BuildWrapped::with(ffi::Fixture_get_body_const(self.ptr()) as *mut ffi::Body, ()))
+            Ref::new(BuildWrapped::with(ffi::Fixture_get_body_const(self.ptr()) as *mut ffi::Body, NotOwned))
         }
     }
     
     pub unsafe fn next<'a>(&'a self) -> Ref<'a, Fixture>{
         unsafe {
-            Ref::new(BuildWrapped::with(ffi::Fixture_get_next_const(self.ptr()) as *mut ffi::Fixture, ()))
+            Ref::new(BuildWrapped::with(ffi::Fixture_get_next_const(self.ptr()) as *mut ffi::Fixture, NotOwned))
         }
     }
     
@@ -984,13 +987,13 @@ impl Fixture {
 
     pub fn mut_shape<'a>(&'a mut self) -> RefMut<'a, UnknownShape> {
         unsafe {
-            RefMut::new(BuildWrappedBase::with(ffi::Fixture_get_shape(self.mut_ptr()), ()))
+            RefMut::new(BuildWrappedBase::with(ffi::Fixture_get_shape(self.mut_ptr()), NotOwned))
         }
     }
     
     pub fn shape<'a>(&'a self) -> Ref<'a, UnknownShape> {
         unsafe {
-            Ref::new(BuildWrappedBase::with(ffi::Fixture_get_shape_const(self.ptr()) as *mut ffi::Shape, ()))
+            Ref::new(BuildWrappedBase::with(ffi::Fixture_get_shape_const(self.ptr()) as *mut ffi::Shape, NotOwned))
         }
     }
 
@@ -1014,13 +1017,13 @@ impl Fixture {
     
     pub unsafe fn mut_body<'a>(&'a mut self) -> RefMut<'a, Body>{
         unsafe {
-            RefMut::new(BuildWrapped::with(ffi::Fixture_get_body(self.mut_ptr()), ()))
+            RefMut::new(BuildWrapped::with(ffi::Fixture_get_body(self.mut_ptr()), NotOwned))
         }
     }
     
     pub unsafe fn mut_next<'a>(&'a mut self) -> RefMut<'a, Fixture>{
         unsafe {
-            RefMut::new(BuildWrapped::with(ffi::Fixture_get_next(self.mut_ptr()), ()))
+            RefMut::new(BuildWrapped::with(ffi::Fixture_get_next(self.mut_ptr()), NotOwned))
         }
     }
     
@@ -1097,19 +1100,19 @@ pub struct ContactEdge {
 
 impl ContactEdge {
     pub unsafe fn mut_other<'a>(&'a mut self) -> RefMut<'a, Body> {
-        RefMut::new(BuildWrapped::with(self.other, ()))
+        RefMut::new(BuildWrapped::with(self.other, NotOwned))
     }
     
     pub unsafe fn other<'a>(&'a self) -> Ref<'a, Body> {
-        Ref::new(BuildWrapped::with(self.other, ()))
+        Ref::new(BuildWrapped::with(self.other, NotOwned))
     }
     
     pub unsafe fn mut_contact<'a>(&'a mut self) -> RefMut<'a, Contact> {
-        RefMut::new(BuildWrapped::with(self.contact, ()))
+        RefMut::new(BuildWrapped::with(self.contact, NotOwned))
     }
     
     pub unsafe fn contact<'a>(&'a self) -> Ref<'a, Contact> {
-        Ref::new(BuildWrapped::with(self.contact, ()))
+        Ref::new(BuildWrapped::with(self.contact, NotOwned))
     }
     
     pub unsafe fn mut_prev(&mut self) -> *mut ContactEdge {
@@ -1156,45 +1159,45 @@ pub trait RayCastCallback {
 
 unsafe extern fn goodbye_joint(any: ffi::FatAny, joint: *mut ffi::Joint) {
     let listener = mem::transmute::<_, &mut DestructionListener>(any);
-    listener.goodbye_joint(RefMut::new(BuildWrappedBase::with(joint, ())))
+    listener.goodbye_joint(RefMut::new(BuildWrappedBase::with(joint, NotOwned)))
 }
 unsafe extern fn goodbye_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture) {
     let listener = mem::transmute::<_, &mut DestructionListener>(any);
-    listener.goodbye_fixture(RefMut::new(BuildWrapped::with(fixture, ())))
+    listener.goodbye_fixture(RefMut::new(BuildWrapped::with(fixture, NotOwned)))
 }
 
 unsafe extern fn should_collide(any: ffi::FatAny, fixture_a: *mut ffi::Fixture,
                                 fixture_b: *mut ffi::Fixture) -> bool {
     let filter = mem::transmute::<_, &mut ContactFilter>(any);
-    filter.should_collide(RefMut::new(BuildWrapped::with(fixture_a, ())),
-                          RefMut::new(BuildWrapped::with(fixture_b, ())))
+    filter.should_collide(RefMut::new(BuildWrapped::with(fixture_a, NotOwned)),
+                          RefMut::new(BuildWrapped::with(fixture_b, NotOwned)))
 }
 
 unsafe extern fn begin_contact(any: ffi::FatAny, contact: *mut ffi::Contact) {
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    listener.begin_contact(RefMut::new(BuildWrapped::with(contact, ())))
+    listener.begin_contact(RefMut::new(BuildWrapped::with(contact, NotOwned)))
 }
 unsafe extern fn end_contact(any: ffi::FatAny, contact: *mut ffi::Contact) {
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    listener.end_contact(RefMut::new(BuildWrapped::with(contact, ())))
+    listener.end_contact(RefMut::new(BuildWrapped::with(contact, NotOwned)))
 }
 unsafe extern fn pre_solve(any: ffi::FatAny, contact: *mut ffi::Contact,
                            old_manifold: *const Manifold) {
     assert!(!old_manifold.is_null())
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    listener.pre_solve(RefMut::new(BuildWrapped::with(contact, ())), &*old_manifold)
+    listener.pre_solve(RefMut::new(BuildWrapped::with(contact, NotOwned)), &*old_manifold)
 }
 unsafe extern fn post_solve(any: ffi::FatAny, contact: *mut ffi::Contact,
                             impulse: *const ContactImpulse) {
     assert!(!impulse.is_null())
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    listener.post_solve(RefMut::new(BuildWrapped::with(contact, ())), &*impulse)
+    listener.post_solve(RefMut::new(BuildWrapped::with(contact, NotOwned)), &*impulse)
 }
 
 unsafe extern fn qc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                                    ) -> bool {
     let callback = mem::transmute::<_, &mut QueryCallback>(any);
-    callback.report_fixture(RefMut::new(BuildWrapped::with(fixture, ())))
+    callback.report_fixture(RefMut::new(BuildWrapped::with(fixture, NotOwned)))
 }
 
 unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture,
@@ -1202,7 +1205,7 @@ unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                                     fraction: f32) -> f32 {
     // point and normal are coming from C++ &s
     let callback = mem::transmute::<_, &mut RayCastCallback>(any);
-    callback.report_fixture(RefMut::new(BuildWrapped::with(fixture, ())), &*point, &*normal,
+    callback.report_fixture(RefMut::new(BuildWrapped::with(fixture, NotOwned)), &*point, &*normal,
                             fraction)
 }
 
@@ -1218,7 +1221,7 @@ impl DestructionListenerLink {
             BuildWrapped::with(ffi::DestructionListenerLink_new(ffi::FatAny::null(),
                                                                 goodbye_joint,
                                                                 goodbye_fixture),
-                               ())
+                               Owned)
         }
     }
     
@@ -1232,7 +1235,7 @@ impl ContactFilterLink {
         unsafe {
             BuildWrapped::with(ffi::ContactFilterLink_new(ffi::FatAny::null(),
                                                           should_collide),
-                               ())
+                               Owned)
         }
     }
     
@@ -1249,7 +1252,7 @@ impl ContactListenerLink {
                                                             end_contact,
                                                             pre_solve,
                                                             post_solve),
-                               ())
+                               Owned)
         }
     }
     
@@ -1263,7 +1266,7 @@ impl QueryCallbackLink {
         unsafe {
             BuildWrapped::with(ffi::QueryCallbackLink_new(ffi::FatAny::null(),
                                                           qc_report_fixture),
-                               ())
+                               Owned)
         }
     }
     
@@ -1277,7 +1280,7 @@ impl RayCastCallbackLink {
         unsafe {
             BuildWrapped::with(ffi::RayCastCallbackLink_new(ffi::FatAny::null(),
                                                             rcc_report_fixture),
-                               ())
+                               Owned)
         }
     }
     
@@ -1289,7 +1292,9 @@ impl RayCastCallbackLink {
 impl Drop for DestructionListenerLink {
     fn drop(&mut self) {
         unsafe {
-            ffi::DestructionListenerLink_drop(self.mut_ptr())
+            if self.mb_owned == Owned {
+                ffi::DestructionListenerLink_drop(self.mut_ptr())
+            }
         }
     }
 }
@@ -1297,7 +1302,9 @@ impl Drop for DestructionListenerLink {
 impl Drop for ContactFilterLink {
     fn drop(&mut self) {
         unsafe {
-            ffi::ContactFilterLink_drop(self.mut_ptr())
+            if self.mb_owned == Owned {
+                ffi::ContactFilterLink_drop(self.mut_ptr())
+            }
         }
     }
 }
@@ -1305,7 +1312,9 @@ impl Drop for ContactFilterLink {
 impl Drop for ContactListenerLink {
     fn drop(&mut self) {
         unsafe {
-            ffi::ContactListenerLink_drop(self.mut_ptr())
+            if self.mb_owned == Owned {
+                ffi::ContactListenerLink_drop(self.mut_ptr())
+            }
         }
     }
 }
@@ -1313,7 +1322,9 @@ impl Drop for ContactListenerLink {
 impl Drop for QueryCallbackLink {
     fn drop(&mut self) {
         unsafe {
-            ffi::QueryCallbackLink_drop(self.mut_ptr())
+            if self.mb_owned == Owned {
+                ffi::QueryCallbackLink_drop(self.mut_ptr())
+            }
         }
     }
 }
@@ -1321,7 +1332,9 @@ impl Drop for QueryCallbackLink {
 impl Drop for RayCastCallbackLink {
     fn drop(&mut self) {
         unsafe  {
-            ffi::RayCastCallbackLink_drop(self.mut_ptr())
+            if self.mb_owned == Owned {
+                ffi::RayCastCallbackLink_drop(self.mut_ptr())
+            }
         }
     }
 }

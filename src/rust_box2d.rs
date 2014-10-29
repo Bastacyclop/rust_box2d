@@ -24,17 +24,19 @@ macro_rules! wrapped(
     );
     
     ($wrapped:ty into $wrap:ident) => (
-        pub struct $wrap {
-            ptr: *mut $wrapped
-        }
-        
         wrapped!($wrapped into custom $wrap)
         
-        impl BuildWrapped<$wrapped, ()> for $wrap {
-            unsafe fn with(ptr: *mut $wrapped, _: ()) -> $wrap {
+        pub struct $wrap {
+            ptr: *mut $wrapped,
+            mb_owned: MaybeOwned
+        }
+        
+        impl BuildWrapped<$wrapped, MaybeOwned> for $wrap {
+            unsafe fn with(ptr: *mut $wrapped, mb_owned: MaybeOwned) -> $wrap {
                 assert!(!ptr.is_null())
                 $wrap {
-                    ptr: ptr
+                    ptr: ptr,
+                    mb_owned: mb_owned
                 }
             }
         }
@@ -72,11 +74,12 @@ macro_rules! wrapped(
             }
         }
         
-        impl BuildWrappedBase<$base, ()> for $wrap {
-            unsafe fn with(ptr: *mut $base, _: ()) -> $wrap {
+        impl BuildWrappedBase<$base, MaybeOwned> for $wrap {
+            unsafe fn with(ptr: *mut $base, mb_owned: MaybeOwned) -> $wrap {
                 assert!(!ptr.is_null())
                 $wrap {
-                    ptr: $base_as(ptr)
+                    ptr: $base_as(ptr),
+                    mb_owned: mb_owned
                 }
             }
         }
@@ -97,13 +100,15 @@ pub mod dynamics;
 pub mod common;
 pub mod collision;
 
+#[deriving(PartialEq)]
+pub enum MaybeOwned {
+    Owned,
+    NotOwned
+}
+
 pub trait Wrapped<T> {
     unsafe fn ptr(&self) -> *const T;
     unsafe fn mut_ptr(&mut self) -> *mut T;
-}
-
-pub trait BuildWrapped<T, A> {
-    unsafe fn with(ptr: *mut T, a: A) -> Self;
 }
 
 pub trait WrappedBase<B> {
@@ -111,30 +116,12 @@ pub trait WrappedBase<B> {
     unsafe fn mut_base_ptr(&mut self) -> *mut B;
 }
 
+pub trait BuildWrapped<T, A> {
+    unsafe fn with(ptr: *mut T, a: A) -> Self;
+}
+
 pub trait BuildWrappedBase<B, A> {
     unsafe fn with(ptr: *mut B, a: A) -> Self;
-}
-
-pub struct Owned<T> {
-    object: T
-}
-
-impl<T> Owned<T> {
-    pub fn new(t: T) -> Owned<T> {
-        Owned { object: t }
-    }
-}
-
-impl<T> Deref<T> for Owned<T> {
-    fn deref<'a>(&'a self) -> &'a T {
-        &self.object
-    }
-}
-
-impl<T> DerefMut<T> for Owned<T> {
-    fn deref_mut<'a>(&'a mut self) -> &'a mut T {
-        &mut self.object
-    }
 }
 
 pub struct RefMut<'l, T> {

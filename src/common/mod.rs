@@ -35,7 +35,7 @@ pub trait Draw {
 pub mod private {
     use std::mem;
     use std::vec;
-    use {ffi, Wrapped, BuildWrapped};
+    use {ffi, MaybeOwned, Owned, Wrapped, BuildWrapped};
     use math::{Vec2, Transform};
     use super::{Draw, DrawFlags, Color};
 
@@ -93,7 +93,7 @@ pub mod private {
                                                      draw_solid_circle,
                                                      draw_segment,
                                                      draw_transform),
-                                   ())
+                                   Owned)
             }
         }
         
@@ -129,7 +129,9 @@ pub mod private {
     impl Drop for DrawLink {
         fn drop(&mut self) {
             unsafe {
-                ffi::DrawLink_drop(self.mut_ptr())
+                if self.mb_owned == Owned {
+                    ffi::DrawLink_drop(self.mut_ptr())
+                }
             }
         }
     }

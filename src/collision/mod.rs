@@ -2,7 +2,7 @@ pub use self::shapes::{
     Shape, UnknownShape,
     PolygonShape, EdgeShape,  CircleShape, ChainShape,
     MassData, ShapeType,
-    PolygonShapeType, EdgeShapeType, CircleShapeType, ChainShapeType, CountShapeType
+    PolygonShapeType, EdgeShapeType, CircleShapeType, ChainShapeType, ShapeTypeCount
 };
 
 use math::Vec2;

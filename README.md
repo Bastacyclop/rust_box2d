@@ -42,7 +42,6 @@ Or build it from source:
 - Replace `MaybeOwned` enum with some compile-time trick
 - More safety
 - Check `...Def` pointers and lifetimes
-- CircleShape is not usable
 - explicit World/Local ?
 - Contacts
 

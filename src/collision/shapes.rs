@@ -16,16 +16,6 @@ macro_rules! wrapped_shape(
 )
 
 #[repr(C)]
-#[deriving(PartialEq, Show)]
-pub enum ShapeType {
-    CircleShapeType = 0,
-    EdgeShapeType = 1,
-    PolygonShapeType = 2,
-    ChainShapeType = 3,
-    CountShapeType = 4
-}
-
-#[repr(C)]
 pub struct MassData {
     pub mass: f32,
     pub center: Vec2,
@@ -40,6 +30,16 @@ impl MassData {
             inertia: 0.,
         }
     }
+}
+
+#[repr(C)]
+#[deriving(PartialEq, Show)]
+pub enum ShapeType {
+    CircleShapeType = 0,
+    EdgeShapeType = 1,
+    PolygonShapeType = 2,
+    ChainShapeType = 3,
+    ShapeTypeCount = 4
 }
 
 pub trait Shape: WrappedBase<ffi::Shape> {        
@@ -244,6 +244,30 @@ impl CircleShape {
     pub fn vertex<'a>(&'a self, index: uint) -> &'a Vec2 {
         unsafe {
             &*ffi::CircleShape_get_vertex(self.ptr(), index as i32) // Comes from a C++ &
+        }
+    }
+    
+    pub fn radius(&self) -> f32 {
+        unsafe {
+            ffi::Shape_get_radius(self.base_ptr())
+        }
+    }
+    
+    pub fn set_radius(&mut self, radius: f32) {
+        unsafe {
+            ffi::Shape_set_radius(self.mut_base_ptr(), radius)
+        }
+    }
+    
+    pub fn position(&self) -> Vec2 {
+        unsafe {
+            ffi::CircleShape_get_pos(self.ptr())
+        }
+    }
+    
+    pub fn set_position(&mut self, pos: Vec2) {
+        unsafe {
+            ffi::CircleShape_set_pos(self.mut_ptr(), pos)
         }
     }
 }

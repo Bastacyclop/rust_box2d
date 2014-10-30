@@ -313,6 +313,8 @@ extern {
     pub fn Shape_compute_mass_virtual(slf: *const Shape,
                                       data: *mut MassData,
                                       density: f32);
+    pub fn Shape_get_radius(slf: *const Shape) -> f32;
+    pub fn Shape_set_radius(slf: *mut Shape, radius: f32);
                                       
     pub fn ChainShape_new() -> *mut ChainShape;
     pub fn ChainShape_drop(slf: *mut ChainShape);
@@ -347,6 +349,8 @@ extern {
     pub fn CircleShape_get_vertex_count(slf: *const CircleShape) -> i32;
     pub fn CircleShape_get_vertex(slf: *const CircleShape, index: i32
                                  ) -> *const Vec2;
+    pub fn CircleShape_get_pos(slf: *const CircleShape) -> Vec2;
+    pub fn CircleShape_set_pos(slf: *mut CircleShape, pos: Vec2);
     
     pub fn PolygonShape_new() -> *mut PolygonShape;
     pub fn PolygonShape_drop(slf: *mut PolygonShape);

@@ -96,8 +96,8 @@ extern {
     pub fn World_get_body_list_const(slf: *const World) -> *const Body;
     pub fn World_get_joint_list(slf: *mut World) -> *mut Joint;
     pub fn World_get_joint_list_const(slf: *const World) -> *const Joint;
-    pub fn World_get_contact_list(slf: *mut World) -> *mut Contact;
-    pub fn World_get_contact_list_const(slf: *const World) -> *const Contact;
+    pub fn World_get_contact_list(slf: *mut World) -> *mut ContactEdge;
+    pub fn World_get_contact_list_const(slf: *const World) -> *const ContactEdge;
     pub fn World_set_allow_sleeping(slf: *mut World, flag: bool);
     pub fn World_get_allow_sleeping(slf: *const World) -> bool;
     pub fn World_set_warm_starting(slf: *mut World, flag: bool);

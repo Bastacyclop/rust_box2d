@@ -1,4 +1,4 @@
-use {ffi, MaybeOwned, Owned, NotOwned, Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase, Ref, RefMut};
+use {ffi, MaybeOwned, Owned, NotOwned, Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase, Ref};
 use math::{Vec2, Transform};
 use collision::{RayCastInput, RayCastOutput, AABB};
 

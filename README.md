@@ -8,7 +8,7 @@ You won't find a lot of information about Box2D here, look at [the official webs
 instead. If you know how to use Box2D, you should know how to use this binding.
 They are differences however, so you should look at the examples and the documentation before using something.
 
-__Rust_Box2D is not meant to be thread-safe__.
+__Rust_Box2D is not thread-safe__.
 
 # Installation
 
@@ -39,10 +39,10 @@ Or build it from source:
 ## Todo
 
 - Documentation
+- Replace `MaybeOwned` enum with some compile-time trick
 - More safety
 - Check `...Def` pointers and lifetimes
 - CircleShape is not usable
-- Use an explicit unit system ?
 - explicit World/Local ?
 - Contacts
 

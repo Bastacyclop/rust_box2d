@@ -41,6 +41,23 @@ macro_rules! wrapped(
             }
         }
     );
+    
+    ($wrapped:ty into simple $wrap:ident) => (
+        wrapped!($wrapped into custom $wrap)
+        
+        pub struct $wrap {
+            ptr: *mut $wrapped,
+        }
+        
+        impl BuildWrapped<$wrapped, ()> for $wrap {
+            unsafe fn with(ptr: *mut $wrapped, _: ()) -> $wrap {
+                assert!(!ptr.is_null())
+                $wrap {
+                    ptr: ptr,
+                }
+            }
+        }
+    );
         
     ($wrapped:ty into custom $wrap:ident with base $base:ty
      >> $as_base:path) => (
@@ -80,6 +97,32 @@ macro_rules! wrapped(
                 $wrap {
                     ptr: $base_as(ptr),
                     mb_owned: mb_owned
+                }
+            }
+        }
+    );
+    
+    ($wrapped:ty into simple $wrap:ident with base $base:ty
+     << $base_as:path
+     >> $as_base:path) => (
+     
+        wrapped!($wrapped into simple $wrap)
+        
+        impl WrappedBase<$base> for $wrap {            
+            unsafe fn base_ptr(&self) -> *const $base {
+                $as_base(self.ptr) as *const $base
+            }
+            
+            unsafe fn mut_base_ptr(&mut self) -> *mut $base {
+                $as_base(self.ptr)
+            }
+        }
+        
+        impl BuildWrappedBase<$base, ()> for $wrap {
+            unsafe fn with(ptr: *mut $base, _: ()) -> $wrap {
+                assert!(!ptr.is_null())
+                $wrap {
+                    ptr: $base_as(ptr),
                 }
             }
         }

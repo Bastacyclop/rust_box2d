@@ -1,6 +1,6 @@
 use std::ptr;
 use {
-    ffi, MaybeOwned, Owned, NotOwned, Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase, Ref, RefMut
+    ffi, Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase, Ref, RefMut
 };
 use math::Vec2;
 use dynamics::Body;
@@ -10,7 +10,7 @@ macro_rules! wrapped_joint(
      << $base_as:path
      >> $as_base:path) => (
      
-        wrapped!($wrapped into $wrap with base ffi::Joint
+        wrapped!($wrapped into simple $wrap with base ffi::Joint
                  << $base_as
                  >> $as_base)
         
@@ -125,7 +125,7 @@ impl JointDefBase {
     }
 }
 
-pub trait Joint: RequiredJointType+WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, MaybeOwned> {
+pub trait Joint: RequiredJointType+WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
     fn joint_type(&self) -> JointType {
         unsafe {
             ffi::Joint_get_type(self.base_ptr())
@@ -156,13 +156,11 @@ pub trait Joint: RequiredJointType+WrappedBase<ffi::Joint>+BuildWrappedBase<ffi:
         }
     }
     
-    /*
     unsafe fn next<'a>(&'a self) -> Ref<'a, UnknownJoint> {
-        unsafe {
-            Ref::new(BuildWrappedBase::with(ffi::Joint_get_next_const(self.base_ptr()) as *mut ffi::Joint, ()))
-        }
+        Ref::new(BuildWrappedBase::with(
+            ffi::Joint_get_next_const(self.base_ptr()) as *mut ffi::Joint, ()
+            ))
     }
-    */
     
     fn is_active(&self) -> bool {
         unsafe {
@@ -173,25 +171,19 @@ pub trait Joint: RequiredJointType+WrappedBase<ffi::Joint>+BuildWrappedBase<ffi:
     unsafe fn user_data<T>(&self) -> *mut T {
         ffi::Joint_get_user_data(self.base_ptr()) as *mut T
     }
-    /*
+    
     unsafe fn body_a<'a>(&'a mut self) -> RefMut<'a, Body> {
-        unsafe {
-            RefMut::new(BuildWrapped::with(ffi::Joint_get_body_a(self.mut_base_ptr()), ()))
-        }
+        RefMut::new(BuildWrapped::with(ffi::Joint_get_body_a(self.mut_base_ptr()), ()))
     }
     
     unsafe fn body_b<'a>(&'a mut self) -> RefMut<'a, Body> {
-        unsafe {
-            RefMut::new(BuildWrapped::with(ffi::Joint_get_body_b(self.mut_base_ptr()), ()))
-        }
+        RefMut::new(BuildWrapped::with(ffi::Joint_get_body_b(self.mut_base_ptr()), ()))
     }
     
     unsafe fn mut_next<'a>(&'a mut self) -> RefMut<'a, UnknownJoint> {
-        unsafe {
-            RefMut::new(BuildWrappedBase::with(ffi::Joint_get_next(self.mut_base_ptr()), ()))
-        }
+        RefMut::new(BuildWrappedBase::with(ffi::Joint_get_next(self.mut_base_ptr()), ()))
     }
-    */
+    
     unsafe fn set_user_data<T>(&mut self, data: *mut T) {
         ffi::Joint_set_user_data(self.mut_base_ptr(), data as ffi::Any)
     }
@@ -204,8 +196,7 @@ pub trait Joint: RequiredJointType+WrappedBase<ffi::Joint>+BuildWrappedBase<ffi:
     
     fn shift_origin(&mut self, origin: &Vec2) {
         unsafe {
-            ffi::Joint_shift_origin_virtual(self.mut_base_ptr(),
-                                            origin)
+            ffi::Joint_shift_origin_virtual(self.mut_base_ptr(), origin)
         }
     } 
 }
@@ -220,19 +211,19 @@ pub struct JointEdge {
 
 impl JointEdge {
     pub unsafe fn mut_other<'a>(&'a mut self) -> RefMut<'a, Body> {
-        RefMut::new(BuildWrapped::with(self.other, NotOwned))
+        RefMut::new(BuildWrapped::with(self.other, ()))
     }
     
     pub unsafe fn other<'a>(&'a self) -> Ref<'a, Body> {
-        Ref::new(BuildWrapped::with(self.other, NotOwned))
+        Ref::new(BuildWrapped::with(self.other, ()))
     }
     
     pub unsafe fn mut_joint<'a>(&'a mut self) -> RefMut<'a, UnknownJoint> {
-        RefMut::new(BuildWrappedBase::with(self.joint, NotOwned))
+        RefMut::new(BuildWrappedBase::with(self.joint, ()))
     }
     
     pub unsafe fn joint<'a>(&'a self) -> Ref<'a, UnknownJoint> {
-        Ref::new(BuildWrappedBase::with(self.joint, NotOwned))
+        Ref::new(BuildWrappedBase::with(self.joint, ()))
     }
     
     pub unsafe fn mut_prev(&mut self) -> *mut JointEdge {
@@ -309,44 +300,22 @@ impl WrappedBase<ffi::Joint> for UnknownJoint {
     }
 }
 
-impl BuildWrappedBase<ffi::Joint, MaybeOwned> for UnknownJoint {
-    unsafe fn with(ptr: *mut ffi::Joint, owned: MaybeOwned) -> UnknownJoint {
+impl BuildWrappedBase<ffi::Joint, ()> for UnknownJoint {
+    unsafe fn with(ptr: *mut ffi::Joint, _: ()) -> UnknownJoint {
         assert!(!ptr.is_null())
         let joint_type = ffi::Joint_get_type(ptr as *const ffi::Joint);
         match joint_type {
-            RevoluteJointType => Revolute(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            PrismaticJointType => Prismatic(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            DistanceJointType => Distance(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            PulleyJointType => Pulley(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            MouseJointType => Mouse(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            GearJointType => Gear(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            WheelJointType => Wheel(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            WeldJointType => Weld(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            FrictionJointType => Friction(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            RopeJointType => Rope(
-                BuildWrappedBase::with(ptr, owned)
-                ),
-            MotorJointType => Motor(
-                 BuildWrappedBase::with(ptr, owned)
-                ),
+            RevoluteJointType => Revolute(BuildWrappedBase::with(ptr, ())),
+            PrismaticJointType => Prismatic(BuildWrappedBase::with(ptr, ())),
+            DistanceJointType => Distance(BuildWrappedBase::with(ptr, ())),
+            PulleyJointType => Pulley(BuildWrappedBase::with(ptr, ())),
+            MouseJointType => Mouse(BuildWrappedBase::with(ptr, ())),
+            GearJointType => Gear(BuildWrappedBase::with(ptr, ())),
+            WheelJointType => Wheel(BuildWrappedBase::with(ptr, ())),
+            WeldJointType => Weld(BuildWrappedBase::with(ptr, ())),
+            FrictionJointType => Friction(BuildWrappedBase::with(ptr, ())),
+            RopeJointType => Rope(BuildWrappedBase::with(ptr, ())),
+            MotorJointType => Motor(BuildWrappedBase::with(ptr, ())),
             _ => Unknown
         }
     }
@@ -835,15 +804,11 @@ impl GearJoint {
     }
     
     pub unsafe fn joint_a<'a>(&'a mut self) -> RefMut<'a, UnknownJoint> {
-        unsafe {
-            RefMut::new(BuildWrappedBase::with(ffi::GearJoint_get_joint_1(self.mut_ptr()), NotOwned))
-        }
+        RefMut::new(BuildWrappedBase::with(ffi::GearJoint_get_joint_1(self.mut_ptr()), ()))
     }
     
     pub unsafe fn joint_b<'a>(&'a mut self) -> RefMut<'a, UnknownJoint> {
-        unsafe {
-            RefMut::new(BuildWrappedBase::with(ffi::GearJoint_get_joint_2(self.mut_ptr()), NotOwned))
-        }
+        RefMut::new(BuildWrappedBase::with(ffi::GearJoint_get_joint_2(self.mut_ptr()), ()))
     }
     
     pub fn set_ratio(&mut self, ratio: f32) {

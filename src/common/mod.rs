@@ -4,7 +4,7 @@ pub mod math;
 pub mod settings;
 
 #[repr(C)]
-#[deriving(Clone, PartialEq, Show)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -12,16 +12,16 @@ pub struct Color {
     pub a: f32
 }
 
-bitflags!(
+bitflags! {
     #[repr(C)]
     flags DrawFlags: u32 {
-    const DRAW_SHAPE = 0x0001,
-    const DRAW_JOINT = 0x0002,
-    const DRAW_AABB = 0x0004,
-    const DRAW_PAIR = 0x0008,
-    const DRAW_CENTER_OF_MASS = 0x0010
+        const DRAW_SHAPE = 0x0001,
+        const DRAW_JOINT = 0x0002,
+        const DRAW_AABB = 0x0004,
+        const DRAW_PAIR = 0x0008,
+        const DRAW_CENTER_OF_MASS = 0x0010
     }
-)
+}
 
 pub trait Draw {
     fn draw_polygon(&mut self, vertices: Vec<Vec2>, color: &Color);
@@ -34,7 +34,6 @@ pub trait Draw {
 
 pub mod private {
     use std::mem;
-    use std::vec;
     use {ffi, Wrapped, BuildWrapped};
     use math::{Vec2, Transform};
     use super::{Draw, DrawFlags, Color};
@@ -43,14 +42,14 @@ pub mod private {
                                   count: i32, color: *const Color) {
          // color comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
-        draw.draw_polygon(vec::raw::from_buf(vertices, count as uint), &*color)
+        draw.draw_polygon(Vec::from_raw_buf(vertices, count as usize), &*color)
     }
 
     unsafe extern fn draw_solid_polygon(any: ffi::FatAny, vertices: *const Vec2,
                                         count: i32, color: *const Color) {
          // color comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
-        draw.draw_solid_polygon(vec::raw::from_buf(vertices, count as uint), &*color)
+        draw.draw_solid_polygon(Vec::from_raw_buf(vertices, count as usize), &*color)
     }
 
     unsafe extern fn draw_circle(any: ffi::FatAny, center: *const Vec2,
@@ -81,7 +80,7 @@ pub mod private {
         draw.draw_transform(&*xf)
     }
 
-    wrapped!(ffi::DrawLink into simple DrawLink)
+    wrap! { ffi::DrawLink: simple DrawLink }
 
     impl DrawLink {
         pub fn new() -> DrawLink {
@@ -96,35 +95,35 @@ pub mod private {
                                    ())
             }
         }
-        
+
         pub unsafe fn set_object(&mut self, object: ffi::FatAny) {
             ffi::DrawLink_set_object(self.mut_ptr(), object)
         }
-        
+
         pub fn set_flags(&mut self, flags: DrawFlags) {
             unsafe {
                 ffi::DrawLink_set_flags(self.mut_ptr(), flags)
             }
         }
-        
+
         pub fn flags(&self) -> DrawFlags {
             unsafe {
                 ffi::DrawLink_get_flags(self.ptr())
             }
         }
-        
+
         pub fn insert_flags(&mut self, flags: DrawFlags) {
             unsafe {
                 ffi::DrawLink_append_flags(self.mut_ptr(), flags)
             }
         }
-        
+
         pub fn remove_flags(&mut self, flags: DrawFlags) {
             unsafe {
                 ffi::DrawLink_clear_flags(self.mut_ptr(), flags)
             }
         }
-    }    
+    }
 
     impl Drop for DrawLink {
         fn drop(&mut self) {

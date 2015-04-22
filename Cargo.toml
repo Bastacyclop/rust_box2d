@@ -1,11 +1,15 @@
 [package]
 
-name = "rust_box2d"
-version = "0.2.0"
+name = "box2d"
+description = "Rust binding for box2d"
+version = "0.2.1"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
+
+repository = "https://gitlab.com/Bastacyclop/rust_box2d"
 license = "GPLv3"
-build = "./build_frontend.sh"
+
+build = "build_frontend.rs"
 
 [lib]
 
-name = "rust_box2d"
+name = "box2d"

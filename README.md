@@ -14,33 +14,23 @@ __Rust_Box2D is not thread-safe__.
 
 Simply add a dependency in your Cargo.toml:
 
-    [dependencies.rust_box2d]
-    
+    [dependencies.box2d]
+
     git = "https://gitlab.com/Bastacyclop/rust_box2d.git"
-    
+
 Or build it from source:
 
 0. get the source:
 
         $ git clone "https://gitlab.com/Bastacyclop/rust_box2d.git"
-        
-0. build the library:
 
-        $ cargo build
-        
-0. build the documentation:
-
-        $ rustdoc src/rust_box2d.rs
-        
-0. build the examples:
-
-        $ cargo test
+0. simply use cargo.
 
 ## Todo
 
 - Documentation
 - Replace `MaybeOwned` enum with some compile-time trick
-- More safety
+- Check/improve safety
 - Check `...Def` pointers and lifetimes
 - explicit World/Local ?
 - Contacts

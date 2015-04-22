@@ -1,8 +1,7 @@
 pub use self::shapes::{
-    Shape, UnknownShape,
+    Shape, ShapeType, UnknownShape,
     PolygonShape, EdgeShape,  CircleShape, ChainShape,
-    MassData, ShapeType,
-    PolygonShapeType, EdgeShapeType, CircleShapeType, ChainShapeType, ShapeTypeCount
+    MassData
 };
 
 use math::Vec2;
@@ -10,7 +9,7 @@ use math::Vec2;
 pub mod shapes;
 
 #[repr(C)]
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct RayCastInput {
     pub p1: Vec2,
     pub p2: Vec2,
@@ -18,7 +17,7 @@ pub struct RayCastInput {
 }
 
 #[repr(C)]
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct RayCastOutput {
     pub normal: Vec2,
     pub fraction: f32
@@ -34,7 +33,7 @@ impl RayCastOutput {
 }
 
 #[repr(C)]
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct AABB {
     pub lower_bound: Vec2,
     pub upper_bound: Vec2

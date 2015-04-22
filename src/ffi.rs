@@ -68,7 +68,6 @@ impl FatAny {
     }
 }
 
-#[link(name = "box2d_frontend", kind = "static")]
 extern {
     pub fn World_new(gravity: *const Vec2) -> *mut World;
     pub fn World_drop(slf: *mut World);
@@ -122,7 +121,7 @@ extern {
     //pub fn World_get_contact_manager(slf: *const World) -> *const ContactManager;
     pub fn World_get_profile(slf: *const World) -> *const Profile;
     pub fn World_dump(slf: *mut World);
-    
+
     pub fn DestructionListenerLink_new(
         object: FatAny,
         goodbye_joint: unsafe extern fn(FatAny, *mut Joint),
@@ -173,7 +172,7 @@ extern {
     pub fn RayCastCallbackLink_as_base(slf: *mut RayCastCallbackLink
                                     ) -> *mut RayCastCallback;
     pub fn RayCastCallbackLink_drop(slf: *mut RayCastCallbackLink);
-    
+
     pub fn DrawLink_new(
         object: FatAny,
         draw_polygon: unsafe extern fn(FatAny, *const Vec2, i32, *const Color),
@@ -192,7 +191,7 @@ extern {
     pub fn DrawLink_get_flags(slf: *const DrawLink) -> DrawFlags;
     pub fn DrawLink_append_flags(slf: *mut DrawLink, flags: DrawFlags);
     pub fn DrawLink_clear_flags(slf: *mut DrawLink, flags: DrawFlags);
-    
+
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;
     pub fn Body_create_fast_fixture(slf: *mut Body, shape: *const Shape,
@@ -249,7 +248,7 @@ extern {
     pub fn Body_set_active(slf: *mut Body, flag: bool);
     pub fn Body_is_active(slf: *const Body) -> bool;
     pub fn Body_set_fixed_rotation(slf: *mut Body, flag: bool);
-    pub fn Body_is_fixed_rotation(slf: *const Body) -> bool; 
+    pub fn Body_is_fixed_rotation(slf: *const Body) -> bool;
     pub fn Body_get_fixture_list(slf: *mut Body) -> *mut Fixture;
     pub fn Body_get_fixture_list_const(slf: *const Body) -> *const Fixture;
     pub fn Body_get_joint_list(slf: *mut Body) -> *mut JointEdge;
@@ -262,8 +261,8 @@ extern {
     pub fn Body_set_user_data(slf: *mut Body, data: Any);
     pub fn Body_get_world(slf: *mut Body) -> *mut World;
     pub fn Body_get_world_const(slf: *const Body) -> *const World;
-    pub fn Body_dump(slf: *mut Body);                 
-    
+    pub fn Body_dump(slf: *mut Body);
+
     pub fn Fixture_get_type(slf: *const Fixture) -> ShapeType;
     pub fn Fixture_get_shape(slf: *mut Fixture) -> *mut Shape;
     pub fn Fixture_get_shape_const(slf: *const Fixture) -> *const Shape;
@@ -292,7 +291,7 @@ extern {
     pub fn Fixture_set_restitution(slf: *mut Fixture, restitution: f32);
     pub fn Fixture_get_aabb(slf: *const Fixture, child_id: i32) -> *const AABB;
     pub fn Fixture_dump(slf: *mut Fixture, body_id: i32);
-    
+
     //pub fn Shape_drop_virtual(slf: *mut Shape);
     //pub fn Shape_clone_virtual(slf: *const Shape,
     //                           alloc: *mut BlockAllocator) -> *mut Shape;
@@ -315,7 +314,7 @@ extern {
                                       density: f32);
     pub fn Shape_get_radius(slf: *const Shape) -> f32;
     pub fn Shape_set_radius(slf: *mut Shape, radius: f32);
-                                      
+
     pub fn ChainShape_new() -> *mut ChainShape;
     pub fn ChainShape_drop(slf: *mut ChainShape);
     pub fn ChainShape_as_shape(slf: *mut ChainShape) -> *mut Shape;
@@ -332,7 +331,7 @@ extern {
     pub fn ChainShape_get_child_edge(slf: *const ChainShape,
                                      edge: *mut EdgeShape,
                                      index: i32);
-                                     
+
     pub fn EdgeShape_new() -> *mut EdgeShape;
     pub fn EdgeShape_drop(slf: *mut EdgeShape);
     pub fn EdgeShape_as_shape(slf: *mut EdgeShape) -> *mut Shape;
@@ -351,7 +350,7 @@ extern {
                                  ) -> *const Vec2;
     pub fn CircleShape_get_pos(slf: *const CircleShape) -> Vec2;
     pub fn CircleShape_set_pos(slf: *mut CircleShape, pos: Vec2);
-    
+
     pub fn PolygonShape_new() -> *mut PolygonShape;
     pub fn PolygonShape_drop(slf: *mut PolygonShape);
     pub fn PolygonShape_as_shape(slf: *mut PolygonShape) -> *mut Shape;
@@ -365,7 +364,7 @@ extern {
     pub fn PolygonShape_get_vertex_count(slf: *const PolygonShape) -> i32;
     pub fn PolygonShape_get_vertex(slf: *const PolygonShape, index: i32) -> *const Vec2;
     pub fn PolygonShape_validate(slf: *const PolygonShape) -> bool;
-    
+
     pub fn Joint_get_type(slf: *const Joint) -> JointType;
     pub fn Joint_get_body_a(slf: *mut Joint) -> *mut Body;
     pub fn Joint_get_body_b(slf: *mut Joint) -> *mut Body;
@@ -380,7 +379,7 @@ extern {
     pub fn Joint_is_active(slf: *const Joint) -> bool;
     pub fn Joint_dump_virtual(slf: *mut Joint);
     pub fn Joint_shift_origin_virtual(slf: *mut Joint, origin: *const Vec2);
-    
+
     pub fn DistanceJointDef_initialize(slf: *mut DistanceJointDef,
                                        body_a: *mut Body,
                                        body_b: *mut Body,
@@ -396,7 +395,7 @@ extern {
     pub fn DistanceJoint_get_frequency(slf: *const DistanceJoint) -> f32;
     pub fn DistanceJoint_set_damping_ratio(slf: *mut DistanceJoint, ratio: f32);
     pub fn DistanceJoint_get_damping_ratio(slf: *const DistanceJoint) -> f32;
-    
+
     pub fn FrictionJointDef_initialize(slf: *mut FrictionJointDef,
                                        body_a: *mut Body,
                                        body_b: *mut Body,
@@ -409,14 +408,14 @@ extern {
     pub fn FrictionJoint_get_max_force(slf: *const FrictionJoint) -> f32;
     pub fn FrictionJoint_set_max_torque(slf: *mut FrictionJoint, torque: f32);
     pub fn FrictionJoint_get_max_torque(slf: *const FrictionJoint) -> f32;
-    
+
     pub fn GearJoint_as_joint(slf: *mut GearJoint) -> *mut Joint;
     pub fn Joint_as_gear_joint(slf: *mut Joint) -> *mut GearJoint;
     pub fn GearJoint_get_joint_1(slf: *mut GearJoint) -> *mut Joint;
     pub fn GearJoint_get_joint_2(slf: *mut GearJoint) -> *mut Joint;
     pub fn GearJoint_set_ratio(slf: *mut GearJoint, ratio: f32);
     pub fn GearJoint_get_ratio(slf: *const GearJoint) -> f32;
-    
+
     pub fn MotorJointDef_initialize(slf: *mut MotorJointDef,
                                     body_a: *mut Body,
                                     body_b: *mut Body);
@@ -432,7 +431,7 @@ extern {
     pub fn MotorJoint_get_max_torque(slf: *const MotorJoint) -> f32;
     pub fn MotorJoint_set_correction_factor(slf: *mut MotorJoint, factor: f32);
     pub fn MotorJoint_get_correction_factor(slf: *const MotorJoint) -> f32;
-    
+
     pub fn MouseJoint_as_joint(slf: *mut MouseJoint) -> *mut Joint;
     pub fn Joint_as_mouse_joint(slf: *mut Joint) -> *mut MouseJoint;
     pub fn MouseJoint_set_target(slf: *mut MouseJoint, target: *const Vec2);
@@ -442,8 +441,8 @@ extern {
     pub fn MouseJoint_set_frequency(slf: *mut MouseJoint, hz: f32);
     pub fn MouseJoint_get_frequency(slf: *const MouseJoint) -> f32;
     pub fn MouseJoint_set_damping_ratio(slf: *mut MouseJoint, ratio: f32);
-    pub fn MouseJoint_get_damping_ratio(slf: *const MouseJoint) -> f32; 
-    
+    pub fn MouseJoint_get_damping_ratio(slf: *const MouseJoint) -> f32;
+
     pub fn PrismaticJointDef_initialize(slf: *mut PrismaticJointDef,
                                         body_a: *mut Body,
                                         body_b: *mut Body,
@@ -472,7 +471,7 @@ extern {
     pub fn PrismaticJoint_get_max_motor_force(slf: *const PrismaticJoint) -> f32;
     pub fn PrismaticJoint_get_motor_force(slf: *const PrismaticJoint,
                                           inv_dt: f32) -> f32;
-                                         
+
     pub fn PulleyJointDef_initialize(slf: *mut PulleyJointDef,
                                      body_a: *mut Body,
                                      body_b: *mut Body,
@@ -490,7 +489,7 @@ extern {
     pub fn PulleyJoint_get_ratio(slf: *const PulleyJoint) -> f32;
     pub fn PulleyJoint_get_current_length_a(slf: *const PulleyJoint) -> f32;
     pub fn PulleyJoint_get_current_length_b(slf: *const PulleyJoint) -> f32;
-    
+
     pub fn RevoluteJointDef_initialize(slf: *mut RevoluteJointDef,
                                        body_a: *mut Body,
                                        body_b: *mut Body,
@@ -516,7 +515,7 @@ extern {
                                               torque: f32);
     pub fn RevoluteJoint_get_max_motor_torque(slf: *const RevoluteJoint) -> f32;
     pub fn RevoluteJoint_get_motor_torque(slf: *const RevoluteJoint) -> f32;
-    
+
     pub fn RopeJoint_as_joint(slf: *mut RopeJoint) -> *mut Joint;
     pub fn Joint_as_rope_joint(slf: *mut Joint) -> *mut RopeJoint;
     pub fn RopeJoint_get_local_anchor_a(slf: *const RopeJoint) -> *const Vec2;
@@ -524,7 +523,7 @@ extern {
     pub fn RopeJoint_set_max_length(slf: *mut RopeJoint, length: f32);
     pub fn RopeJoint_get_max_length(slf: *const RopeJoint) -> f32;
     pub fn RopeJoint_get_limit_state(slf: *const RopeJoint) -> LimitState;
-    
+
     pub fn WeldJointDef_initialize(slf: *mut WeldJointDef,
                                    body_a: *mut Body,
                                    body_b: *mut Body,

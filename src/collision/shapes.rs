@@ -1,7 +1,5 @@
-use {
-    ffi, MaybeOwned, Owned, NotOwned, Ref,
-    Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase
-};
+use ffi;
+use wrap::*;
 use math::{ Vec2, Transform };
 use collision::{ RayCastInput, RayCastOutput, AABB };
 

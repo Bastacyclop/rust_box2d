@@ -34,7 +34,8 @@ pub trait Draw {
 
 pub mod private {
     use std::mem;
-    use { ffi, Wrapped, BuildWrapped };
+    use ffi;
+    use wrap::*;
     use math::{ Vec2, Transform };
     use super::{ Draw, DrawFlags, Color };
 

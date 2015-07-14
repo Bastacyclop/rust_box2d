@@ -15,10 +15,8 @@ pub use self::joints::{
 
 use std::ptr;
 use std::mem;
-use {
-    ffi, settings, MaybeOwned, Owned, NotOwned, Ref, RefMut,
-    Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase
-};
+use { ffi, settings };
+use wrap::*;
 use common::{ Draw, DrawFlags };
 use common::private::DrawLink;
 use math::{ Vec2, Transform };

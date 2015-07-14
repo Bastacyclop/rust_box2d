@@ -1,8 +1,7 @@
 use std::ptr;
 use std::marker::PhantomData;
-use {
-    ffi, Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase, Ref, RefMut
-};
+use ffi;
+use wrap::*;
 use math::Vec2;
 use dynamics::Body;
 

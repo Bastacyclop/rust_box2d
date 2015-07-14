@@ -1,4 +1,4 @@
-use math::{Vec2, Transform};
+use math::{ Vec2, Transform };
 
 pub mod math;
 pub mod settings;
@@ -34,22 +34,24 @@ pub trait Draw {
 
 pub mod private {
     use std::mem;
-    use {ffi, Wrapped, BuildWrapped};
-    use math::{Vec2, Transform};
-    use super::{Draw, DrawFlags, Color};
+    use { ffi, Wrapped, BuildWrapped };
+    use math::{ Vec2, Transform };
+    use super::{ Draw, DrawFlags, Color };
 
     unsafe extern fn draw_polygon(any: ffi::FatAny, vertices: *const Vec2,
                                   count: i32, color: *const Color) {
          // color comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
-        draw.draw_polygon(Vec::from_raw_buf(vertices, count as usize), &*color)
+        let v = ::std::slice::from_raw_parts(vertices, count as usize).to_vec();
+        draw.draw_polygon(v, &*color)
     }
 
     unsafe extern fn draw_solid_polygon(any: ffi::FatAny, vertices: *const Vec2,
                                         count: i32, color: *const Color) {
          // color comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
-        draw.draw_solid_polygon(Vec::from_raw_buf(vertices, count as usize), &*color)
+        let v = ::std::slice::from_raw_parts(vertices, count as usize).to_vec();
+        draw.draw_solid_polygon(v, &*color)
     }
 
     unsafe extern fn draw_circle(any: ffi::FatAny, center: *const Vec2,

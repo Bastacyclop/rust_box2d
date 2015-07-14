@@ -19,9 +19,9 @@ use {
     ffi, settings, MaybeOwned, Owned, NotOwned, Ref, RefMut,
     Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase
 };
-use common::{Draw, DrawFlags};
+use common::{ Draw, DrawFlags };
 use common::private::DrawLink;
-use math::{Vec2, Transform};
+use math::{ Vec2, Transform };
 use collision::{
     RayCastInput, RayCastOutput, AABB,
     Shape, ShapeType, UnknownShape, MassData
@@ -105,7 +105,9 @@ impl World {
 
     pub fn create_body<'a, 'b>(&'a mut self, def: &BodyDef) -> RefMut<'b, Body> {
         unsafe {
-            RefMut::new(BuildWrapped::with(ffi::World_create_body(self.mut_ptr(), def), ()))
+            RefMut::new(BuildWrapped::with(
+                ffi::World_create_body(self.mut_ptr(), def), ())
+            )
         }
     }
 
@@ -642,7 +644,9 @@ impl Body {
                                   ) -> RefMut<'b, Fixture> {
         unsafe {
             def.shape = shape.base_ptr();
-            RefMut::new(BuildWrapped::with(ffi::Body_create_fixture(self.mut_ptr(), def), ()))
+            RefMut::new(BuildWrapped::with(
+                ffi::Body_create_fixture(self.mut_ptr(), def), ()
+            ))
         }
     }
 
@@ -651,7 +655,7 @@ impl Body {
         unsafe {
             RefMut::new(BuildWrapped::with(
                 ffi::Body_create_fast_fixture(self.mut_ptr(), shape.base_ptr(), density), ()
-                ))
+            ))
         }
     }
 

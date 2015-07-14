@@ -1,9 +1,9 @@
 extern crate box2d;
 
-pub use box2d::b2;
+use box2d::b2;
 
 fn main () {
-    println!("Rust Box2D example");
+    println!("rust_box2d example");
 
     let time_step = 1./60.;
     let velocity_iterations = 6;

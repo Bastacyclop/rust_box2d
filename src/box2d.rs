@@ -1,21 +1,26 @@
-#![feature(libc, rustc_private, collections)]
+#![feature(libc, associated_consts)]
+
+#[link(name = "Box2D")] extern {}
+#[link(name = "stdc++")] extern {}
 
 extern crate libc;
-#[macro_use] extern crate rustc_bitflags;
+#[macro_use] extern crate bitflags;
+
+mod ffi;
+pub mod dynamics;
+pub mod common;
+pub mod collision;
 
 pub use common::math;
 pub use common::settings;
 
 pub mod b2 {
-    pub use super::common::*;
-    pub use super::dynamics::*;
-    pub use super::collision::*;
-    pub use super::math::*;
-    pub use super::settings::*;
+    pub use common::*;
+    pub use dynamics::*;
+    pub use collision::*;
+    pub use math::*;
+    pub use settings::*;
 }
-
-#[link(name = "Box2D")] extern {}
-#[link(name = "stdc++")] extern {}
 
 macro_rules! wrap {
     ($wrapped:ty: custom $wrap:ident) => (
@@ -139,15 +144,10 @@ macro_rules! wrap {
     );
 }
 
-mod ffi;
-pub mod dynamics;
-pub mod common;
-pub mod collision;
-
 use std::marker::PhantomData;
 use std::ops::{ Deref, DerefMut };
 
-pub use MaybeOwned::{Owned, NotOwned};
+pub use MaybeOwned::{ Owned, NotOwned };
 #[derive(PartialEq)]
 pub enum MaybeOwned {
     Owned,

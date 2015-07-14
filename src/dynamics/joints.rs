@@ -30,7 +30,7 @@ macro_rules! wrap_joint {
 macro_rules! joint_def {
     ($name:ident {
         $(($($visibility:ident)*) $field:ident: $typ:ty),+
-    }) => (
+    }) => {
         #[allow(dead_code)]
         #[repr(C)]
         pub struct $name<'l> {
@@ -52,7 +52,7 @@ macro_rules! joint_def {
         }
 
         impl<'l> JointDef for $name<'l> {}
-    );
+    }
 }
 
 pub trait RequiredJointType {

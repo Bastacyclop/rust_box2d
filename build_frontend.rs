@@ -9,7 +9,7 @@ fn main() {
                              &format!("{}/box2d_frontend.o", out_dir),
                              "-std=c++11", "-Isrc", "-fPIC", "-Wall"])
                        .status().unwrap();
-    Command::new("ar").args(&["rcs", "libbox2d_frontend.a", "box2d_frontend.o"])
+    Command::new("ar").args(&["crus", "libbox2d_frontend.a", "box2d_frontend.o"])
                       .current_dir(&Path::new(&out_dir))
                       .status().unwrap();
 

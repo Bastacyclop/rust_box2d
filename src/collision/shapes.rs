@@ -2,8 +2,8 @@ use {
     ffi, MaybeOwned, Owned, NotOwned, Ref,
     Wrapped, BuildWrapped, WrappedBase, BuildWrappedBase
 };
-use math::{Vec2, Transform};
-use collision::{RayCastInput, RayCastOutput, AABB};
+use math::{ Vec2, Transform };
+use collision::{ RayCastInput, RayCastOutput, AABB };
 
 macro_rules! wrap_shape {
     ($wrapped:ty: $wrap:ident

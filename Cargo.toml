@@ -1,15 +1,19 @@
 [package]
 
 name = "box2d"
-description = "Rust binding for box2d"
-version = "0.2.1"
+description = "Rust binding for Box2D"
+version = "0.2.2"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 
-repository = "https://gitlab.com/Bastacyclop/rust_box2d"
-license = "GPLv3"
+repository = "https://github.com/Bastacyclop/rust_box2d.git"
+license = "zlib"
 
 build = "build_frontend.rs"
 
 [lib]
 
 name = "box2d"
+
+[dependencies]
+
+bitflags = "*"

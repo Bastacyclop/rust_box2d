@@ -2,14 +2,16 @@
 
 Box2D for Rust.
 
-# Usage
+## Usage
 
 You won't find a lot of information about Box2D here, look at [the official website](http://box2d.org/)
 instead.
 
-# Installation
+## Installation
 
 Simply add a dependency in your Cargo.toml:
 
-    [dependencies.box2d]
-    git = "https://github.com/Bastacyclop/rust_box2d.git"
+~~~~toml
+[dependencies.box2d]
+git = "https://github.com/Bastacyclop/rust_box2d.git"
+~~~~

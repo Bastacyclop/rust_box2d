@@ -1,0 +1,20 @@
+[package]
+
+name = "box2d_testbed"
+version = "0.1.0"
+authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
+
+[lib]
+
+name = "testbed"
+
+[dependencies]
+
+piston = "*"
+pistoncore-glutin_window = "*"
+piston2d-graphics = "*"
+piston2d-opengl_graphics = "*"
+
+[dependencies.box2d]
+
+path = ".."

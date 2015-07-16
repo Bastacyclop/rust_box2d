@@ -17,3 +17,11 @@ name = "box2d"
 [dependencies]
 
 bitflags = "*"
+
+[dev_dependencies.box2d_testbed]
+
+path = "testbed"
+
+[dev_dependencies]
+
+piston = "*"

@@ -22,4 +22,3 @@ pub mod b2 {
     pub use math::*;
     pub use settings::*;
 }
-

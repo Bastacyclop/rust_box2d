@@ -2,16 +2,17 @@
 
 Box2D for Rust.
 
-## Usage
-
 You won't find a lot of information about Box2D here, look at [the official website](http://box2d.org/)
 instead.
 
-## Installation
+## Dependencies
 
-Simply add a dependency in your Cargo.toml:
+You will need the native Box2D library. And also Piston [dependencies](https://github.com/PistonDevelopers/Piston-Tutorials/tree/master/getting-started) for the examples.
 
-~~~~toml
-[dependencies.box2d]
-git = "https://github.com/Bastacyclop/rust_box2d.git"
+### Box2D header files
+
+If necessary, you can specify the Box2D header files location when compiling:
+
+~~~~sh
+BOX2D_INCLUDE_PATH="path/to/Box2D/Box2D" cargo run --example simple
 ~~~~

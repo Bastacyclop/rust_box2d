@@ -11,17 +11,16 @@ license = "zlib"
 build = "build_frontend.rs"
 
 [lib]
-
 name = "box2d"
 
-[dependencies]
+[build-dependencies]
+gcc = "*"
 
+[dependencies]
 bitflags = "*"
 
 [dev_dependencies.box2d_testbed]
-
 path = "testbed"
 
 [dev_dependencies]
-
 piston = "*"

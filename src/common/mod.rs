@@ -24,8 +24,8 @@ bitflags! {
 }
 
 pub trait Draw {
-    fn draw_polygon(&mut self, vertices: Vec<Vec2>, color: &Color);
-    fn draw_solid_polygon(&mut self, vertices: Vec<Vec2>, color: &Color);
+    fn draw_polygon(&mut self, vertices: &[Vec2], color: &Color);
+    fn draw_solid_polygon(&mut self, vertices: &[Vec2], color: &Color);
     fn draw_circle(&mut self, center: &Vec2, radius: f32, color: &Color);
     fn draw_solid_circle(&mut self, center: &Vec2, radius: f32, axis: &Vec2, color: &Color);
     fn draw_segment(&mut self, p1: &Vec2, p2: &Vec2, color: &Color);
@@ -43,16 +43,16 @@ pub mod private {
                                   count: i32, color: *const Color) {
          // color comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
-        let v = ::std::slice::from_raw_parts(vertices, count as usize).to_vec();
-        draw.draw_polygon(v, &*color)
+        let vertices = ::std::slice::from_raw_parts(vertices, count as usize);
+        draw.draw_polygon(vertices, &*color)
     }
 
     unsafe extern fn draw_solid_polygon(any: ffi::FatAny, vertices: *const Vec2,
                                         count: i32, color: *const Color) {
          // color comes from a C++ &
         let draw = mem::transmute::<_, &mut Draw>(any);
-        let v = ::std::slice::from_raw_parts(vertices, count as usize).to_vec();
-        draw.draw_solid_polygon(v, &*color)
+        let vertices = ::std::slice::from_raw_parts(vertices, count as usize);
+        draw.draw_solid_polygon(vertices, &*color)
     }
 
     unsafe extern fn draw_circle(any: ffi::FatAny, center: *const Vec2,

@@ -25,7 +25,7 @@ impl<'a> DrawSession<'a> {
 }
 
 impl<'a> b2::Draw for DrawSession<'a> {
-    fn draw_polygon(&mut self, vertices: Vec<b2::Vec2>, color: &b2::Color) {
+    fn draw_polygon(&mut self, vertices: &[b2::Vec2], color: &b2::Color) {
         let count = vertices.len();
         for i in 0..count {
             let a = &vertices[i];
@@ -34,9 +34,9 @@ impl<'a> b2::Draw for DrawSession<'a> {
         }
     }
 
-    fn draw_solid_polygon(&mut self, vertices: Vec<b2::Vec2>, color: &b2::Color) {
+    fn draw_solid_polygon(&mut self, vertices: &[b2::Vec2], color: &b2::Color) {
         Polygon::new(convert_color(color))
-            .draw(&polygon(&vertices), &self.context.draw_state, self.transform, self.gl);
+            .draw(&polygon(vertices), &self.context.draw_state, self.transform, self.gl);
     }
 
     fn draw_circle(&mut self, o: &b2::Vec2, r: f32, color: &b2::Color) {

@@ -115,9 +115,9 @@ impl World {
 
     pub fn create_joint<'a, 'b, J: Joint>(&'a mut self, def: &JointDef) -> RefMut<'b, J> {
         unsafe {
-            let required_joint_type = JointType::of::<J>();
-            assert!(def.joint_type() == required_joint_type ||
-                    required_joint_type == JointType::Unknown);
+            let assumed_joint_type = J::assumed_joint_type();
+            assert!(def.joint_type() == assumed_joint_type ||
+                    assumed_joint_type == JointType::Unknown);
             let joint: J = BuildWrappedBase::with(
                 ffi::World_create_joint(self.mut_ptr(), def.base_ptr()), ()
                 );

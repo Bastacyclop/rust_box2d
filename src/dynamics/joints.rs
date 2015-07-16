@@ -16,13 +16,9 @@ macro_rules! wrap_joint {
             < $base_as
         }
 
-        impl RequiredJointType for $wrap {
-            fn get(_: Option<*const $wrap>) -> JointType {
-                $joint_type
-            }
+        impl Joint for $wrap {
+            fn assumed_joint_type() -> JointType { $joint_type }
         }
-
-        impl Joint for $wrap {}
     );
 }
 
@@ -54,10 +50,6 @@ macro_rules! joint_def {
     }
 }
 
-pub trait RequiredJointType {
-    fn get(_: Option<*const Self>) -> JointType;
-}
-
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum JointType {
@@ -73,12 +65,6 @@ pub enum JointType {
     Friction = 9,
     Rope = 10,
     Motor = 11
-}
-
-impl JointType {
-    pub fn of<J: RequiredJointType>() -> JointType {
-        RequiredJointType::get(None::<*const J>)
-    }
 }
 
 #[repr(C)]
@@ -124,8 +110,10 @@ impl JointDefBase {
     }
 }
 
-pub trait Joint: RequiredJointType+WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
-    fn joint_type(&self) -> JointType {
+pub trait Joint: WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
+    fn assumed_joint_type() -> JointType where Self: Sized;
+    
+    fn get_type(&self) -> JointType {
         unsafe {
             ffi::Joint_get_type(self.base_ptr())
         }
@@ -257,12 +245,6 @@ pub enum UnknownJoint {
     Motor(MotorJoint)
 }
 
-impl RequiredJointType for UnknownJoint {
-    fn get(_: Option<*const UnknownJoint>) -> JointType {
-        JointType::Unknown
-    }
-}
-
 impl WrappedBase<ffi::Joint> for UnknownJoint {
     unsafe fn base_ptr(&self) -> *const ffi::Joint {
         use super::UnknownJoint::*;
@@ -323,7 +305,9 @@ impl BuildWrappedBase<ffi::Joint, ()> for UnknownJoint {
     }
 }
 
-impl Joint for UnknownJoint {}
+impl Joint for UnknownJoint {
+    fn assumed_joint_type() -> JointType { JointType::Unknown }
+}
 
 joint_def! {
     DistanceJointDef {

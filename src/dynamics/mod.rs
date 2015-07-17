@@ -77,32 +77,37 @@ impl World {
         }
     }
 
-    /// __VERIFY__
-    pub fn set_destruction_listener(&mut self, destruction_listener: Box<DestructionListener>) {
+    pub fn set_destruction_listener(&mut self,
+                                    listener: Box<DestructionListener>) {
         unsafe {
-            self.destruction_listener_link.set_object(mem::transmute(destruction_listener));
-            ffi::World_set_destruction_listener(self.mut_ptr(),
-                ffi::DestructionListenerLink_as_base(self.destruction_listener_link.mut_ptr())
+            self.destruction_listener_link.set_object(listener);
+            ffi::World_set_destruction_listener(
+                self.mut_ptr(),
+                ffi::DestructionListenerLink_as_base(
+                    self.destruction_listener_link.mut_ptr()
+                )
             );
         }
     }
 
-    /// __VERIFY__
-    pub fn set_contact_filter(&mut self, contact_filter: Box<ContactFilter>) {
+    pub fn set_contact_filter(&mut self, filter: Box<ContactFilter>) {
         unsafe {
-            self.contact_filter_link.set_object(mem::transmute(contact_filter));
-            ffi::World_set_contact_filter(self.mut_ptr(),
+            self.contact_filter_link.set_object(filter);
+            ffi::World_set_contact_filter(
+                self.mut_ptr(),
                 ffi::ContactFilterLink_as_base(self.contact_filter_link.mut_ptr())
             );
         }
     }
 
-    /// __VERIFY__
-    pub fn set_contact_listener(&mut self, contact_listener: Box<ContactListener>) {
+    pub fn set_contact_listener(&mut self, listener: Box<ContactListener>) {
         unsafe {
-            self.contact_listener_link.set_object(mem::transmute(contact_listener));
-            ffi::World_set_contact_listener(self.mut_ptr(),
-                ffi::ContactListenerLink_as_base(self.contact_listener_link.mut_ptr())
+            self.contact_listener_link.set_object(listener);
+            ffi::World_set_contact_listener(
+                self.mut_ptr(),
+                ffi::ContactListenerLink_as_base(
+                    self.contact_listener_link.mut_ptr()
+                )
             );
         }
     }
@@ -189,7 +194,6 @@ impl World {
         }
     }
 
-    /// __VERIFY__
     pub fn draw_debug_data(&mut self, draw: &mut Draw, draw_flags: DrawFlags) {
         unsafe {
             self.draw_link.set_object(mem::transmute(draw));
@@ -203,11 +207,9 @@ impl World {
         }
     }
 
-    /// __VERIFY__
-    pub fn query_aabb(&self, query_callback: &mut QueryCallback, aabb: &AABB) {
+    pub fn query_aabb(&self, callback: &mut QueryCallback, aabb: &AABB) {
         unsafe {
-            let mut query_callback_link = QueryCallbackLink::new();
-            query_callback_link.set_object(mem::transmute(query_callback));
+            let mut query_callback_link = QueryCallbackLink::new(callback);
             ffi::World_query_aabb(self.ptr(),
                 ffi::QueryCallbackLink_as_base(query_callback_link.mut_ptr()),
                 aabb
@@ -215,11 +217,9 @@ impl World {
         }
     }
 
-    /// __VERIFY__
-    pub fn ray_cast(&self, ray_cast_callback: &mut RayCastCallback, p1: &Vec2, p2: &Vec2) {
+    pub fn ray_cast(&self, callback: &mut RayCastCallback, p1: &Vec2, p2: &Vec2) {
         unsafe {
-            let mut ray_cast_callback_link = RayCastCallbackLink::new();
-            ray_cast_callback_link.set_object(mem::transmute(ray_cast_callback));
+            let mut ray_cast_callback_link = RayCastCallbackLink::new(callback);
             ffi::World_ray_cast(self.ptr(),
                 ffi::RayCastCallbackLink_as_base(ray_cast_callback_link.mut_ptr()),
                 p1, p2
@@ -1185,88 +1185,111 @@ unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
     callback.report_fixture(fixture, &*point, &*normal, fraction)
 }
 
-wrap! { ffi::DestructionListenerLink: DestructionListenerLink }
-wrap! { ffi::ContactFilterLink: ContactFilterLink }
-wrap! { ffi::ContactListenerLink: ContactListenerLink }
-wrap! { ffi::QueryCallbackLink: QueryCallbackLink }
-wrap! { ffi::RayCastCallbackLink: RayCastCallbackLink }
+pub struct DestructionListenerLink {
+    ptr: *mut ffi::DestructionListenerLink,
+    object: Option<Box<DestructionListener>>,
+}
+
+pub struct ContactFilterLink {
+    ptr: *mut ffi::ContactFilterLink,
+    object: Option<Box<ContactFilter>>,
+}
+
+pub struct ContactListenerLink {
+    ptr: *mut ffi::ContactListenerLink,
+    object: Option<Box<ContactListener>>,
+}
+
+wrap! { ffi::DestructionListenerLink: custom DestructionListenerLink }
+wrap! { ffi::ContactFilterLink: custom ContactFilterLink }
+wrap! { ffi::ContactListenerLink: custom ContactListenerLink }
 
 impl DestructionListenerLink {
     fn new() -> DestructionListenerLink {
         unsafe {
-            DestructionListenerLink::from_ffi(
-                ffi::DestructionListenerLink_new(ffi::FatAny::null(),
-                                                 goodbye_joint,
-                                                 goodbye_fixture)
-            )
+            DestructionListenerLink {
+                ptr: ffi::DestructionListenerLink_new(ffi::FatAny::null(),
+                                                      goodbye_joint,
+                                                      goodbye_fixture),
+                object: None
+            }
         }
     }
 
-    unsafe fn set_object(&mut self, object: ffi::FatAny) {
-        ffi::DestructionListenerLink_set_object(self.mut_ptr(), object);
+    fn set_object(&mut self, object: Box<DestructionListener>) {
+        unsafe {
+            self.object = Some(object);
+            ffi::DestructionListenerLink_set_object(
+                self.mut_ptr(),
+                mem::transmute::<&mut DestructionListener, _>(
+                    self.object.as_mut().unwrap()
+                )
+            )
+        }
     }
 }
 
 impl ContactFilterLink {
-    fn new() -> ContactFilterLink {
-        unsafe {
-            ContactFilterLink::from_ffi(
-                ffi::ContactFilterLink_new(ffi::FatAny::null(),
-                                           should_collide)
-            )
+    unsafe fn new() -> ContactFilterLink {
+        ContactFilterLink {
+            ptr: ffi::ContactFilterLink_new(ffi::FatAny::null(),
+                                            should_collide),
+            object: None
         }
     }
 
-    unsafe fn set_object(&mut self, object: ffi::FatAny) {
-        ffi::ContactFilterLink_set_object(self.mut_ptr(), object);
+    unsafe fn set_object(&mut self, object: Box<ContactFilter>) {
+        self.object = Some(object);
+        ffi::ContactFilterLink_set_object(
+            self.mut_ptr(),
+            mem::transmute::<&mut ContactFilter, _>(
+                self.object.as_mut().unwrap()
+            )
+        )
     }
 }
 
 impl ContactListenerLink {
-    fn new() -> ContactListenerLink {
-        unsafe {
-            ContactListenerLink::from_ffi(
-                ffi::ContactListenerLink_new(ffi::FatAny::null(),
-                                             begin_contact,
-                                             end_contact,
-                                             pre_solve,
-                                             post_solve)
-            )
+    unsafe fn new() -> ContactListenerLink {
+        ContactListenerLink {
+            ptr: ffi::ContactListenerLink_new(ffi::FatAny::null(),
+                                              begin_contact,
+                                              end_contact,
+                                              pre_solve,
+                                              post_solve),
+            object: None
         }
     }
 
-    unsafe fn set_object(&mut self, object: ffi::FatAny) {
-        ffi::ContactListenerLink_set_object(self.mut_ptr(), object);
+    unsafe fn set_object(&mut self, object: Box<ContactListener>) {
+        self.object = Some(object);
+        ffi::ContactListenerLink_set_object(
+            self.mut_ptr(),
+            mem::transmute::<&mut ContactListener, _>(
+                self.object.as_mut().unwrap()
+            )
+        )
     }
 }
 
-impl QueryCallbackLink {
-    fn new() -> QueryCallbackLink {
-        unsafe {
-            QueryCallbackLink::from_ffi(
-                ffi::QueryCallbackLink_new(ffi::FatAny::null(),
-                                           qc_report_fixture)
-            )
-        }
-    }
+wrap! { ffi::QueryCallbackLink: QueryCallbackLink }
+wrap! { ffi::RayCastCallbackLink: RayCastCallbackLink }
 
-    unsafe fn set_object(&mut self, object: ffi::FatAny) {
-        ffi::QueryCallbackLink_set_object(self.mut_ptr(), object);
+impl QueryCallbackLink {
+    unsafe fn new(object: &mut QueryCallback) -> QueryCallbackLink {
+        QueryCallbackLink::from_ffi(
+            ffi::QueryCallbackLink_new(mem::transmute(object),
+                                       qc_report_fixture)
+        )
     }
 }
 
 impl RayCastCallbackLink {
-    fn new() -> RayCastCallbackLink {
-        unsafe {
-            RayCastCallbackLink::from_ffi(
-                ffi::RayCastCallbackLink_new(ffi::FatAny::null(),
-                                             rcc_report_fixture)
-            )
-        }
-    }
-
-    unsafe fn set_object(&mut self, object: ffi::FatAny) {
-        ffi::RayCastCallbackLink_set_object(self.mut_ptr(), object);
+    unsafe fn new(object: &mut RayCastCallback) -> RayCastCallbackLink {
+        RayCastCallbackLink::from_ffi(
+            ffi::RayCastCallbackLink_new(mem::transmute(object),
+                                         rcc_report_fixture)
+        )
     }
 }
 

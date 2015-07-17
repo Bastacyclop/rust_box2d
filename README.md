@@ -14,3 +14,11 @@ If necessary, you can specify the Box2D header files location when compiling:
 ~~~~sh
 BOX2D_INCLUDE_PATH="path/to/Box2D/Box2D" cargo run --example simple
 ~~~~
+
+### TODO
+
+- make joint defs usable
+- better user data access
+- get rid of raw usize handles (with user data ?)
+- access multiple handles with only one borrow
+- test everything

@@ -419,7 +419,6 @@ joint_def! {
     }
 }
 
-/// __VERIFY__
 impl DistanceJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -444,7 +443,6 @@ impl DistanceJointDef {
     }
 }
 
-/// __VERIFY__
 impl FrictionJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -467,7 +465,6 @@ impl FrictionJointDef {
     }
 }
 
-/// __VERIFY__
 impl GearJointDef {
     pub fn new<Ja: Joint, Jb: Joint>(mut joint_a: Ja,
                                      mut joint_b: Jb
@@ -483,7 +480,6 @@ impl GearJointDef {
     }
 }
 
-/// __VERIFY__
 impl MotorJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body) -> MotorJointDef {
@@ -505,7 +501,6 @@ impl MotorJointDef {
     }
 }
 
-/// __VERIFY__
 impl MouseJointDef {
     pub fn new() -> MouseJointDef {
         MouseJointDef {
@@ -518,7 +513,6 @@ impl MouseJointDef {
     }
 }
 
-/// __VERIFY__
 impl PrismaticJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -548,7 +542,6 @@ impl PrismaticJointDef {
     }
 }
 
-/// __VERIFY__
 impl PulleyJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -582,7 +575,6 @@ impl PulleyJointDef {
     }
 }
 
-/// __VERIFY__
 impl RevoluteJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -610,7 +602,6 @@ impl RevoluteJointDef {
     }
 }
 
-/// __VERIFY__
 impl RopeJointDef {
     pub fn new() -> RopeJointDef {
         RopeJointDef {
@@ -622,7 +613,6 @@ impl RopeJointDef {
     }
 }
 
-/// __VERIFY__
 impl WeldJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -646,7 +636,6 @@ impl WeldJointDef {
     }
 }
 
-/// __VERIFY__
 impl WheelJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,

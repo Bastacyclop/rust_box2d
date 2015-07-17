@@ -1,4 +1,4 @@
-#![feature(libc, associated_consts)]
+#![feature(libc, associated_consts, vecmap, ptr_as_ref)]
 
 #[link(name = "Box2D")] extern {}
 #[link(name = "stdc++")] extern {}
@@ -7,6 +7,7 @@ extern crate libc;
 #[macro_use] extern crate bitflags;
 
 #[macro_use] pub mod wrap;
+pub mod handle;
 mod ffi;
 pub mod dynamics;
 pub mod common;

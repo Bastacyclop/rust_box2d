@@ -9,7 +9,7 @@ fn main() {
     let mut body_def = b2::BodyDef::new();
     body_def.body_type = b2::BodyType::Dynamic;
     body_def.position = b2::Vec2 { x: -20., y: 20. };
-    
+
     let mut cube_shape = b2::PolygonShape::new();
     cube_shape.set_as_box(1., 1.);
 
@@ -27,11 +27,12 @@ fn main() {
     ground_body_def.body_type = b2::BodyType::Static;
     ground_body_def.position = b2::Vec2 { x: 0., y: -10. };
 
-    let mut ground_body = world.create_body(&ground_body_def);
+    let ground_body = world.create_body(&ground_body_def);
 
     let mut ground_box = b2::PolygonShape::new();
     ground_box.set_as_box(20., 1.);
-    ground_body.create_fast_fixture(&ground_box, 0.);
+    world.get_body_mut(ground_body).unwrap()
+         .create_fast_fixture(&ground_box, 0.);
 
     let camera = testbed::Camera {
         position: [0., -5.],
@@ -47,8 +48,9 @@ fn main() {
                 if body_def.position.x > 20. {
                     body_def.position.x = -20.;
                 }
-                let mut body = world.create_body(&body_def);
-                body.create_fixture(shape, &mut fixture_def);
+                let body = world.create_body(&body_def);
+                world.get_body_mut(body).unwrap()
+                     .create_fixture(shape, &mut fixture_def);
             };
             match input {
                 Input::Press(Button::Keyboard(Key::A)) => create_body(&cube_shape),

@@ -132,16 +132,16 @@ impl WrappedBase<ffi::Shape> for UnknownShape {
     }
 }
 
-impl BuildWrappedBase<ffi::Shape, MaybeOwned> for UnknownShape {
-    unsafe fn with(ptr: *mut ffi::Shape, mb_owned: MaybeOwned) -> UnknownShape {
+impl FromFFI<ffi::Shape> for UnknownShape {
+    unsafe fn from_ffi(ptr: *mut ffi::Shape) -> UnknownShape {
         use super::UnknownShape::*;
         assert!(!ptr.is_null());
         let shape_type = ffi::Shape_get_type(ptr as *const ffi::Shape);
         match shape_type {
-            ShapeType::Circle => Circle(BuildWrappedBase::with(ptr, mb_owned)),
-            ShapeType::Edge => Edge(BuildWrappedBase::with(ptr, mb_owned)),
-            ShapeType::Polygon => Polygon(BuildWrappedBase::with(ptr, mb_owned)),
-            ShapeType::Chain => Chain(BuildWrappedBase::with(ptr, mb_owned)),
+            ShapeType::Circle => Circle(CircleShape::from_ffi(ptr)),
+            ShapeType::Edge => Edge(EdgeShape::from_ffi(ptr)),
+            ShapeType::Polygon => Polygon(PolygonShape::from_ffi(ptr)),
+            ShapeType::Chain => Chain(ChainShape::from_ffi(ptr)),
             _ => Unknown,
         }
     }
@@ -177,7 +177,7 @@ wrap_shape! {
 impl ChainShape {
     pub fn new() -> ChainShape {
         unsafe {
-            BuildWrapped::with(ffi::ChainShape_new(), Owned)
+            ChainShape::from_ffi(ffi::ChainShape_new())
         }
     }
 
@@ -215,17 +215,17 @@ impl ChainShape {
         }
     }
 
-    pub unsafe fn child_edge(&self, index: i32) -> Const<EdgeShape> {
+    pub unsafe fn child_edge<'a>(&'a self, index: i32) -> Ref<'a, EdgeShape> {
         let edge = ffi::EdgeShape_new();
         ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
-        Const::new(BuildWrapped::with(edge, NotOwned))
+        Ref::new(EdgeShape::from_ffi(edge))
     }
 }
 
 impl CircleShape {
     pub fn new() -> CircleShape {
         unsafe {
-            BuildWrapped::with(ffi::CircleShape_new(), Owned)
+            CircleShape::from_ffi(ffi::CircleShape_new())
         }
     }
 
@@ -281,7 +281,7 @@ impl CircleShape {
 impl EdgeShape {
     pub fn new() -> EdgeShape {
         unsafe {
-            BuildWrapped::with(ffi::EdgeShape_new(), Owned)
+            EdgeShape::from_ffi(ffi::EdgeShape_new())
         }
     }
 
@@ -295,7 +295,7 @@ impl EdgeShape {
 impl PolygonShape {
     pub fn new() -> PolygonShape {
         unsafe {
-            BuildWrapped::with(ffi::PolygonShape_new(), Owned)
+            PolygonShape::from_ffi(ffi::PolygonShape_new())
         }
     }
 
@@ -344,9 +344,7 @@ impl PolygonShape {
 impl Drop for ChainShape {
     fn drop(&mut self) {
         unsafe {
-            if self.mb_owned == Owned {
-                ffi::ChainShape_drop(self.mut_ptr())
-            }
+            ffi::ChainShape_drop(self.mut_ptr())
         }
     }
 }
@@ -354,9 +352,7 @@ impl Drop for ChainShape {
 impl Drop for CircleShape {
     fn drop(&mut self) {
         unsafe {
-            if self.mb_owned == Owned {
-                ffi::CircleShape_drop(self.mut_ptr())
-            }
+            ffi::CircleShape_drop(self.mut_ptr())
         }
     }
 }
@@ -364,9 +360,7 @@ impl Drop for CircleShape {
 impl Drop for EdgeShape {
     fn drop(&mut self) {
         unsafe {
-            if self.mb_owned == Owned {
-                ffi::EdgeShape_drop(self.mut_ptr())
-            }
+            ffi::EdgeShape_drop(self.mut_ptr())
         }
     }
 }
@@ -374,9 +368,7 @@ impl Drop for EdgeShape {
 impl Drop for PolygonShape {
     fn drop(&mut self) {
         unsafe {
-            if self.mb_owned == Owned {
-                ffi::PolygonShape_drop(self.mut_ptr())
-            }
+            ffi::PolygonShape_drop(self.mut_ptr())
         }
     }
 }

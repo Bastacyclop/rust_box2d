@@ -10,7 +10,7 @@ macro_rules! wrap_joint {
      < $base_as:path
     ) => (
         wrap! {
-            $wrapped: simple $wrap with base ffi::Joint
+            $wrapped: $wrap with base ffi::Joint
             > $as_base,
             < $base_as
         }
@@ -108,7 +108,7 @@ impl JointDefBase {
     }
 }
 
-pub trait Joint: WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
+pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
     fn assumed_joint_type() -> JointType where Self: Sized;
 
     fn get_type(&self) -> JointType {
@@ -141,44 +141,26 @@ pub trait Joint: WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
         }
     }
 
-    unsafe fn next_mut(&mut self) -> UnknownJoint {
-        BuildWrappedBase::with(
-            ffi::Joint_get_next(self.mut_base_ptr()), ()
-        )
-    }
-
-    unsafe fn next(&self) -> Const<UnknownJoint> {
-        Const::new(BuildWrappedBase::with(
-            ffi::Joint_get_next_const(self.base_ptr()) as *mut ffi::Joint, ()
-        ))
-    }
-
     fn is_active(&self) -> bool {
         unsafe {
             ffi::Joint_is_active(self.base_ptr())
         }
     }
 
+    fn body_a(&self) -> usize {
+        unsafe {
+            ffi::Joint_get_body_a(self.base_ptr() as *mut ffi::Joint) as usize
+        }
+    }
+
+    fn body_b(&self) -> usize {
+        unsafe {
+            ffi::Joint_get_body_b(self.base_ptr() as *mut ffi::Joint) as usize
+        }
+    }
+
     unsafe fn user_data<T>(&self) -> *mut T {
         ffi::Joint_get_user_data(self.base_ptr()) as *mut T
-    }
-
-    unsafe fn body_a(&mut self) -> Option<Body> {
-        let ptr = ffi::Joint_get_body_a(self.mut_base_ptr());
-        if ptr.is_null() {
-            None
-        } else {
-            Some(BuildWrapped::with(ptr, ()))
-        }
-    }
-
-    unsafe fn body_b(&mut self) -> Option<Body> {
-        let ptr = ffi::Joint_get_body_b(self.mut_base_ptr());
-        if ptr.is_null() {
-            None
-        } else {
-            Some(BuildWrapped::with(ptr, ()))
-        }
     }
 
     unsafe fn set_user_data<T>(&mut self, data: *mut T) {
@@ -207,36 +189,36 @@ pub struct JointEdge {
 }
 
 impl JointEdge {
-    pub unsafe fn other_mut(&mut self) -> Body {
-        BuildWrapped::with(self.other, ())
+    pub fn other(&self) -> usize {
+        self.other as usize
     }
 
-    pub unsafe fn other(&self) -> Const<Body> {
-        Const::new(BuildWrapped::with(self.other, ()))
+    pub fn joint(&self) -> usize {
+        self.joint as usize
     }
 
-    pub unsafe fn joint_mut(&mut self) -> UnknownJoint {
-        BuildWrappedBase::with(self.joint, ())
+    pub fn prev_mut(&mut self) -> Option<&mut JointEdge> {
+        unsafe {
+            self.prev.as_mut()
+        }
     }
 
-    pub unsafe fn joint(&self) -> Const<UnknownJoint> {
-        Const::new(BuildWrappedBase::with(self.joint, ()))
+    pub fn prev(&self) -> Option<&JointEdge> {
+        unsafe {
+            self.prev.as_ref()
+        }
     }
 
-    pub unsafe fn prev_mut(&mut self) -> Option<&mut JointEdge> {
-        self.prev.as_mut()
+    pub fn next_mut(&mut self) -> Option<&mut JointEdge> {
+        unsafe {
+            self.next.as_mut()
+        }
     }
 
-    pub unsafe fn prev(&self) -> Option<&JointEdge> {
-        self.prev.as_ref()
-    }
-
-    pub unsafe fn next_mut(&mut self) -> Option<&mut JointEdge> {
-        self.next.as_mut()
-    }
-
-    pub unsafe fn next(&self) -> Option<&JointEdge> {
-        self.next.as_ref()
+    pub fn next(&self) -> Option<&JointEdge> {
+        unsafe {
+            self.next.as_ref()
+        }
     }
 }
 
@@ -293,23 +275,23 @@ impl WrappedBase<ffi::Joint> for UnknownJoint {
     }
 }
 
-impl BuildWrappedBase<ffi::Joint, ()> for UnknownJoint {
-    unsafe fn with(ptr: *mut ffi::Joint, _: ()) -> UnknownJoint {
+impl FromFFI<ffi::Joint> for UnknownJoint {
+    unsafe fn from_ffi(ptr: *mut ffi::Joint) -> UnknownJoint {
         use super::UnknownJoint::*;
         assert!(!ptr.is_null());
         let joint_type = ffi::Joint_get_type(ptr as *const ffi::Joint);
         match joint_type {
-            JointType::Revolute => Revolute(BuildWrappedBase::with(ptr, ())),
-            JointType::Prismatic => Prismatic(BuildWrappedBase::with(ptr, ())),
-            JointType::Distance => Distance(BuildWrappedBase::with(ptr, ())),
-            JointType::Pulley => Pulley(BuildWrappedBase::with(ptr, ())),
-            JointType::Mouse => Mouse(BuildWrappedBase::with(ptr, ())),
-            JointType::Gear => Gear(BuildWrappedBase::with(ptr, ())),
-            JointType::Wheel => Wheel(BuildWrappedBase::with(ptr, ())),
-            JointType::Weld => Weld(BuildWrappedBase::with(ptr, ())),
-            JointType::Friction => Friction(BuildWrappedBase::with(ptr, ())),
-            JointType::Rope => Rope(BuildWrappedBase::with(ptr, ())),
-            JointType::Motor => Motor(BuildWrappedBase::with(ptr, ())),
+            JointType::Revolute => Revolute(RevoluteJoint::from_ffi(ptr)),
+            JointType::Prismatic => Prismatic(PrismaticJoint::from_ffi(ptr)),
+            JointType::Distance => Distance(DistanceJoint::from_ffi(ptr)),
+            JointType::Pulley => Pulley(PulleyJoint::from_ffi(ptr)),
+            JointType::Mouse => Mouse(MouseJoint::from_ffi(ptr)),
+            JointType::Gear => Gear(GearJoint::from_ffi(ptr)),
+            JointType::Wheel => Wheel(WheelJoint::from_ffi(ptr)),
+            JointType::Weld => Weld(WeldJoint::from_ffi(ptr)),
+            JointType::Friction => Friction(FrictionJoint::from_ffi(ptr)),
+            JointType::Rope => Rope(RopeJoint::from_ffi(ptr)),
+            JointType::Motor => Motor(MotorJoint::from_ffi(ptr)),
             _ => Unknown
         }
     }
@@ -437,6 +419,7 @@ joint_def! {
     }
 }
 
+/// __VERIFY__
 impl DistanceJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -461,6 +444,7 @@ impl DistanceJointDef {
     }
 }
 
+/// __VERIFY__
 impl FrictionJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -483,6 +467,7 @@ impl FrictionJointDef {
     }
 }
 
+/// __VERIFY__
 impl GearJointDef {
     pub fn new<Ja: Joint, Jb: Joint>(mut joint_a: Ja,
                                      mut joint_b: Jb
@@ -498,6 +483,7 @@ impl GearJointDef {
     }
 }
 
+/// __VERIFY__
 impl MotorJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body) -> MotorJointDef {
@@ -519,6 +505,7 @@ impl MotorJointDef {
     }
 }
 
+/// __VERIFY__
 impl MouseJointDef {
     pub fn new() -> MouseJointDef {
         MouseJointDef {
@@ -531,6 +518,7 @@ impl MouseJointDef {
     }
 }
 
+/// __VERIFY__
 impl PrismaticJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -560,6 +548,7 @@ impl PrismaticJointDef {
     }
 }
 
+/// __VERIFY__
 impl PulleyJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -593,6 +582,7 @@ impl PulleyJointDef {
     }
 }
 
+/// __VERIFY__
 impl RevoluteJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -620,6 +610,7 @@ impl RevoluteJointDef {
     }
 }
 
+/// __VERIFY__
 impl RopeJointDef {
     pub fn new() -> RopeJointDef {
         RopeJointDef {
@@ -631,6 +622,7 @@ impl RopeJointDef {
     }
 }
 
+/// __VERIFY__
 impl WeldJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -654,6 +646,7 @@ impl WeldJointDef {
     }
 }
 
+/// __VERIFY__
 impl WheelJointDef {
     pub fn new(mut body_a: Body,
                mut body_b: Body,
@@ -842,16 +835,16 @@ impl GearJoint {
         }
     }
 
-    pub unsafe fn joint_1(&mut self) -> UnknownJoint {
-        BuildWrappedBase::with(
-            ffi::GearJoint_get_joint_1(self.mut_ptr()), ()
-        )
+    pub fn joint_1(&self) -> usize {
+        unsafe {
+            ffi::GearJoint_get_joint_1(self.ptr() as *mut ffi::GearJoint) as usize
+        }
     }
 
-    pub unsafe fn joint_2(&mut self) -> UnknownJoint {
-        BuildWrappedBase::with(
-            ffi::GearJoint_get_joint_2(self.mut_ptr()), ()
-        )
+    pub fn joint_2(&self) -> usize {
+        unsafe {
+            ffi::GearJoint_get_joint_2(self.ptr() as *mut ffi::GearJoint) as usize
+        }
     }
 
     pub fn set_ratio(&mut self, ratio: f32) {

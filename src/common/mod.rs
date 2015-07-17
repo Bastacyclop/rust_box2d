@@ -83,20 +83,19 @@ pub mod private {
         draw.draw_transform(&*xf)
     }
 
-    wrap! { ffi::DrawLink: simple DrawLink }
+    wrap! { ffi::DrawLink: DrawLink }
 
     impl DrawLink {
         pub fn new() -> DrawLink {
             unsafe {
-                BuildWrapped::with(
+                DrawLink::from_ffi(
                     ffi::DrawLink_new(ffi::FatAny::null(),
                                       draw_polygon,
                                       draw_solid_polygon,
                                       draw_circle,
                                       draw_solid_circle,
                                       draw_segment,
-                                      draw_transform),
-                    ()
+                                      draw_transform)
                 )
             }
         }

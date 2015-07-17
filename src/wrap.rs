@@ -12,33 +12,14 @@ macro_rules! wrap {
     );
 
     ($wrapped:ty: $wrap:ident) => (
-        wrap! { $wrapped: custom $wrap }
-
-        pub struct $wrap {
-            ptr: *mut $wrapped,
-            mb_owned: MaybeOwned
-        }
-
-        impl BuildWrapped<$wrapped, MaybeOwned> for $wrap {
-            unsafe fn with(ptr: *mut $wrapped, mb_owned: MaybeOwned) -> $wrap {
-                assert!(!ptr.is_null());
-                $wrap {
-                    ptr: ptr,
-                    mb_owned: mb_owned
-                }
-            }
-        }
-    );
-
-    ($wrapped:ty: simple $wrap:ident) => (
         wrap!{ $wrapped: custom $wrap }
 
         pub struct $wrap {
             ptr: *mut $wrapped,
         }
 
-        impl BuildWrapped<$wrapped, ()> for $wrap {
-            unsafe fn with(ptr: *mut $wrapped, _: ()) -> $wrap {
+        impl FromFFI<$wrapped> for $wrap {
+            unsafe fn from_ffi(ptr: *mut $wrapped) -> $wrap {
                 assert!(!ptr.is_null());
                 $wrap {
                     ptr: ptr,
@@ -81,36 +62,8 @@ macro_rules! wrap {
             }
         }
 
-        impl BuildWrappedBase<$base, MaybeOwned> for $wrap {
-            unsafe fn with(ptr: *mut $base, mb_owned: MaybeOwned) -> $wrap {
-                assert!(!ptr.is_null());
-                $wrap {
-                    ptr: $base_as(ptr),
-                    mb_owned: mb_owned
-                }
-            }
-        }
-    );
-
-    ($wrapped:ty: simple $wrap:ident with base $base:ty
-     > $as_base:path,
-     < $base_as:path
-    ) => (
-
-        wrap! { $wrapped: simple $wrap }
-
-        impl WrappedBase<$base> for $wrap {
-            unsafe fn base_ptr(&self) -> *const $base {
-                $as_base(self.ptr) as *const $base
-            }
-
-            unsafe fn mut_base_ptr(&mut self) -> *mut $base {
-                $as_base(self.ptr)
-            }
-        }
-
-        impl BuildWrappedBase<$base, ()> for $wrap {
-            unsafe fn with(ptr: *mut $base, _: ()) -> $wrap {
+        impl FromFFI<$base> for $wrap {
+            unsafe fn from_ffi(ptr: *mut $base) -> $wrap {
                 assert!(!ptr.is_null());
                 $wrap {
                     ptr: $base_as(ptr),
@@ -120,14 +73,9 @@ macro_rules! wrap {
     );
 }
 
-use std::ops::{ Deref };
-
-pub use self::MaybeOwned::{ Owned, NotOwned };
-#[derive(PartialEq)]
-pub enum MaybeOwned {
-    Owned,
-    NotOwned
-}
+use std::mem;
+use std::marker::PhantomData;
+use std::ops::{ Deref, DerefMut };
 
 pub trait Wrapped<T> {
     unsafe fn ptr(&self) -> *const T;
@@ -139,28 +87,62 @@ pub trait WrappedBase<B> {
     unsafe fn mut_base_ptr(&mut self) -> *mut B;
 }
 
-pub trait BuildWrapped<T, A> {
-    unsafe fn with(ptr: *mut T, a: A) -> Self;
+pub trait FromFFI<T> {
+    unsafe fn from_ffi(ptr: *mut T) -> Self;
 }
 
-pub trait BuildWrappedBase<B, A> {
-    unsafe fn with(ptr: *mut B, a: A) -> Self;
+pub struct RefMut<'a, T> {
+    object: Option<T>,
+    phantom: PhantomData<&'a ()>
 }
 
-pub struct Const<T> {
-    object: T
-}
-
-impl<T> Const<T> {
-    pub fn new(t: T) -> Const<T> {
-        Const { object: t }
+impl<'a, T> RefMut<'a, T> {
+    pub unsafe fn new(t: T) -> RefMut<'a, T> {
+        RefMut {
+            object: Some(t),
+            phantom: PhantomData
+        }
     }
 }
 
-impl<T> Deref for Const<T> {
+impl<'a, T> Deref for RefMut<'a, T> {
     type Target = T;
 
-    fn deref<'a>(&'a self) -> &'a T {
-        &self.object
+    fn deref<'b>(&'b self) -> &'b T { self.object.as_ref().unwrap() }
+}
+
+impl<'a, T> DerefMut for RefMut<'a, T> {
+    fn deref_mut<'b>(&'b mut self) -> &'b mut T { self.object.as_mut().unwrap() }
+}
+
+impl<'a, T> Drop for RefMut<'a, T> {
+    fn drop(&mut self) {
+        mem::forget(self.object.take())
+    }
+}
+
+pub struct Ref<'a, T> {
+    object: Option<T>,
+    phantom: PhantomData<&'a ()>
+}
+
+impl<'a, T> Ref<'a, T> {
+    pub unsafe fn new(t: T) -> Ref<'a, T> {
+        Ref {
+            object: Some(t),
+            phantom: PhantomData
+        }
+    }
+}
+
+impl<'a, T> Deref for Ref<'a, T> {
+    type Target = T;
+
+    fn deref<'b>(&'b self) -> &'b T { self.object.as_ref().unwrap() }
+}
+
+impl<'a, T> Drop for Ref<'a, T> {
+    fn drop(&mut self) {
+        mem::forget(self.object.take())
     }
 }

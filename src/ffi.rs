@@ -90,10 +90,10 @@ extern {
                             aabb: *const AABB);
     pub fn World_ray_cast(slf: *const World, rcc: *mut RayCastCallback,
                           p1: *const Vec2, p2: *const Vec2);
-    pub fn World_get_body_list(slf: *mut World) -> *mut Body;
-    pub fn World_get_body_list_const(slf: *const World) -> *const Body;
-    pub fn World_get_joint_list(slf: *mut World) -> *mut Joint;
-    pub fn World_get_joint_list_const(slf: *const World) -> *const Joint;
+    //pub fn World_get_body_list(slf: *mut World) -> *mut Body;
+    //pub fn World_get_body_list_const(slf: *const World) -> *const Body;
+    //pub fn World_get_joint_list(slf: *mut World) -> *mut Joint;
+    //pub fn World_get_joint_list_const(slf: *const World) -> *const Joint;
     pub fn World_get_contact_list(slf: *mut World) -> *mut ContactEdge;
     pub fn World_get_contact_list_const(slf: *const World) -> *const ContactEdge;
     pub fn World_set_allow_sleeping(slf: *mut World, flag: bool);
@@ -248,18 +248,18 @@ extern {
     pub fn Body_is_active(slf: *const Body) -> bool;
     pub fn Body_set_fixed_rotation(slf: *mut Body, flag: bool);
     pub fn Body_is_fixed_rotation(slf: *const Body) -> bool;
-    pub fn Body_get_fixture_list(slf: *mut Body) -> *mut Fixture;
-    pub fn Body_get_fixture_list_const(slf: *const Body) -> *const Fixture;
+    //pub fn Body_get_fixture_list(slf: *mut Body) -> *mut Fixture;
+    //pub fn Body_get_fixture_list_const(slf: *const Body) -> *const Fixture;
     pub fn Body_get_joint_list(slf: *mut Body) -> *mut JointEdge;
     pub fn Body_get_joint_list_const(slf: *const Body) -> *const JointEdge;
     pub fn Body_get_contact_list(slf: *mut Body) -> *mut ContactEdge;
     pub fn Body_get_contact_list_const(slf: *const Body) -> *const ContactEdge;
-    pub fn Body_get_next(slf: *mut Body) -> *mut Body;
-    pub fn Body_get_next_const(slf: *const Body) -> *const Body;
+    //pub fn Body_get_next(slf: *mut Body) -> *mut Body;
+    //pub fn Body_get_next_const(slf: *const Body) -> *const Body;
     pub fn Body_get_user_data(slf: *const Body) -> Any;
     pub fn Body_set_user_data(slf: *mut Body, data: Any);
-    pub fn Body_get_world(slf: *mut Body) -> *mut World;
-    pub fn Body_get_world_const(slf: *const Body) -> *const World;
+    //pub fn Body_get_world(slf: *mut Body) -> *mut World;
+    //pub fn Body_get_world_const(slf: *const Body) -> *const World;
     pub fn Body_dump(slf: *mut Body);
 
     pub fn Fixture_get_type(slf: *const Fixture) -> ShapeType;
@@ -270,10 +270,10 @@ extern {
     pub fn Fixture_set_filter_data(slf: *mut Fixture, filter: *const Filter);
     pub fn Fixture_get_filter_data(slf: *const Fixture) -> *const Filter;
     pub fn Fixture_refilter(slf: *mut Fixture);
-    pub fn Fixture_get_body(slf: *mut Fixture) -> *mut Body;
+    //pub fn Fixture_get_body(slf: *mut Fixture) -> *mut Body;
     pub fn Fixture_get_body_const(slf: *const Fixture) -> *const Body;
-    pub fn Fixture_get_next(slf: *mut Fixture) -> *mut Fixture;
-    pub fn Fixture_get_next_const(slf: *const Fixture) -> *const Fixture;
+    //pub fn Fixture_get_next(slf: *mut Fixture) -> *mut Fixture;
+    //pub fn Fixture_get_next_const(slf: *const Fixture) -> *const Fixture;
     pub fn Fixture_get_user_data(slf: *const Fixture) -> Any;
     pub fn Fixture_set_user_data(slf: *mut Fixture, data: Any);
     pub fn Fixture_test_point(slf: *const Fixture, p: *const Vec2) -> bool;
@@ -371,8 +371,8 @@ extern {
     pub fn Joint_get_anchor_b_virtual(slf: *const Joint) -> Vec2;
     pub fn Joint_get_reaction_force_virtual(slf: *const Joint) -> Vec2;
     pub fn Joint_get_reaction_torque_virtual(slf: *const Joint) -> f32;
-    pub fn Joint_get_next(slf: *mut Joint) -> *mut Joint;
-    pub fn Joint_get_next_const(slf: *const Joint) -> *const Joint;
+    //pub fn Joint_get_next(slf: *mut Joint) -> *mut Joint;
+    //pub fn Joint_get_next_const(slf: *const Joint) -> *const Joint;
     pub fn Joint_get_user_data(slf: *const Joint) -> Any;
     pub fn Joint_set_user_data(slf: *mut Joint, data: Any);
     pub fn Joint_is_active(slf: *const Joint) -> bool;

@@ -8,7 +8,7 @@ before_install:
     - sudo apt-get install -y g++ cmake
     - git clone https://github.com/erincatto/Box2D
     - cd Box2D/Box2D/Build
-    - cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON ..
+    - cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DBOX2D_BUILD_EXAMPLES=OFF ..
     - make
     - sudo make install
 script:

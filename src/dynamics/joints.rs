@@ -239,7 +239,7 @@ pub enum UnknownJoint {
 
 impl WrappedBase<ffi::Joint> for UnknownJoint {
     unsafe fn base_ptr(&self) -> *const ffi::Joint {
-        use super::UnknownJoint::*;
+        use self::UnknownJoint::*;
         match self {
             &Distance(ref x) => x.base_ptr(),
             &Friction(ref x) => x.base_ptr(),
@@ -257,7 +257,7 @@ impl WrappedBase<ffi::Joint> for UnknownJoint {
     }
 
     unsafe fn mut_base_ptr(&mut self) -> *mut ffi::Joint {
-        use super::UnknownJoint::*;
+        use self::UnknownJoint::*;
         match self {
             &mut Distance(ref mut x) => x.mut_base_ptr(),
             &mut Friction(ref mut x) => x.mut_base_ptr(),
@@ -277,7 +277,7 @@ impl WrappedBase<ffi::Joint> for UnknownJoint {
 
 impl FromFFI<ffi::Joint> for UnknownJoint {
     unsafe fn from_ffi(ptr: *mut ffi::Joint) -> UnknownJoint {
-        use super::UnknownJoint::*;
+        use self::UnknownJoint::*;
         assert!(!ptr.is_null());
         let joint_type = ffi::Joint_get_type(ptr as *const ffi::Joint);
         match joint_type {

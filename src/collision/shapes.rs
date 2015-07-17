@@ -110,7 +110,7 @@ pub enum UnknownShape {
 
 impl WrappedBase<ffi::Shape> for UnknownShape {
     unsafe fn base_ptr(&self) -> *const ffi::Shape {
-        use super::UnknownShape::*;
+        use self::UnknownShape::*;
         match self {
             &Circle(ref x) => x.base_ptr(),
             &Edge(ref x) => x.base_ptr(),
@@ -121,7 +121,7 @@ impl WrappedBase<ffi::Shape> for UnknownShape {
     }
 
     unsafe fn mut_base_ptr(&mut self) -> *mut ffi::Shape {
-        use super::UnknownShape::*;
+        use self::UnknownShape::*;
         match self {
             &mut Circle(ref mut x) => x.mut_base_ptr(),
             &mut Edge(ref mut x) => x.mut_base_ptr(),
@@ -134,7 +134,7 @@ impl WrappedBase<ffi::Shape> for UnknownShape {
 
 impl FromFFI<ffi::Shape> for UnknownShape {
     unsafe fn from_ffi(ptr: *mut ffi::Shape) -> UnknownShape {
-        use super::UnknownShape::*;
+        use self::UnknownShape::*;
         assert!(!ptr.is_null());
         let shape_type = ffi::Shape_get_type(ptr as *const ffi::Shape);
         match shape_type {
@@ -215,10 +215,12 @@ impl ChainShape {
         }
     }
 
-    pub unsafe fn child_edge<'a>(&'a self, index: i32) -> Ref<'a, EdgeShape> {
-        let edge = ffi::EdgeShape_new();
-        ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
-        Ref::new(EdgeShape::from_ffi(edge))
+    pub fn child_edge(&self, index: i32) -> EdgeShape {
+        unsafe {
+            let edge = ffi::EdgeShape_new();
+            ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
+            EdgeShape::from_ffi(edge)
+        }
     }
 }
 

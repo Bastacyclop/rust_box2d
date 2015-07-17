@@ -1,3 +1,4 @@
+pub mod shapes;
 pub use self::shapes::{
     Shape, ShapeType, UnknownShape,
     PolygonShape, EdgeShape,  CircleShape, ChainShape,
@@ -5,8 +6,6 @@ pub use self::shapes::{
 };
 
 use math::Vec2;
-
-pub mod shapes;
 
 #[repr(C)]
 #[derive(Clone)]

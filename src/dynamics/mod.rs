@@ -1,3 +1,4 @@
+pub mod joints;
 pub use self::joints::{
     JointType, JointDef, JointDefBase, Joint, JointEdge, UnknownJoint,
     DistanceJointDef, DistanceJoint,
@@ -19,15 +20,12 @@ use std::collections::HashMap;
 use { ffi, settings };
 use wrap::*;
 use handle::*;
-use common::{ Draw, DrawFlags };
-use common::private::DrawLink;
+use common::{ Draw, DrawFlags, Color };
 use math::{ Vec2, Transform };
 use collision::{
     RayCastInput, RayCastOutput, AABB,
     Shape, ShapeType, UnknownShape, MassData
 };
-
-pub mod joints;
 
 #[repr(C)]
 #[derive(Clone)]
@@ -623,25 +621,25 @@ impl Body {
         self.fixtures.iter()
     }
 
-    pub fn joints_mut(&mut self) -> Option<&mut JointEdge> {
+    pub fn joints_mut<'a>(&'a mut self) -> Option<&'a mut JointEdge> {
         unsafe {
             ffi::Body_get_joint_list(self.mut_ptr()).as_mut()
         }
     }
 
-    pub fn joints(&self) -> Option<&JointEdge> {
+    pub fn joints<'a>(&'a self) -> Option<&'a JointEdge> {
         unsafe {
             ffi::Body_get_joint_list_const(self.ptr()).as_ref()
         }
     }
 
-    pub fn contacts_mut(&mut self) -> Option<&mut ContactEdge> {
+    pub fn contacts_mut<'a>(&'a mut self) -> Option<&'a mut ContactEdge> {
         unsafe {
             ffi::Body_get_contact_list(self.mut_ptr()).as_mut()
         }
     }
 
-    pub fn contacts(&self) -> Option<&ContactEdge> {
+    pub fn contacts<'a>(&'a self) -> Option<&'a ContactEdge> {
         unsafe {
             ffi::Body_get_contact_list_const(self.ptr()).as_ref()
         }
@@ -952,7 +950,7 @@ impl Fixture {
         ffi::Fixture_get_user_data(self.ptr()) as *mut T
     }
 
-    pub fn shape_mut(&mut self) -> RefMut<UnknownShape> {
+    pub fn shape_mut<'a>(&'a mut self) -> RefMut<'a, UnknownShape> {
         unsafe {
             RefMut::new(UnknownShape::from_ffi(
                 ffi::Fixture_get_shape(self.mut_ptr())
@@ -960,7 +958,7 @@ impl Fixture {
         }
     }
 
-    pub fn shape(&self) -> Ref<UnknownShape> {
+    pub fn shape<'a>(&'a self) -> Ref<'a, UnknownShape> {
         unsafe {
             Ref::new(UnknownShape::from_ffi(
                 ffi::Fixture_get_shape_const(self.ptr()) as *mut ffi::Shape
@@ -1062,37 +1060,37 @@ impl ContactEdge {
         self.other as usize
     }
 
-    pub fn contact_mut(&mut self) -> RefMut<Contact> {
+    pub fn contact_mut<'a>(&'a mut self) -> RefMut<'a, Contact> {
         unsafe {
             RefMut::new(Contact::from_ffi(self.contact))
         }
     }
 
-    pub fn contact(&self) -> Ref<Contact> {
+    pub fn contact<'a>(&'a self) -> Ref<'a, Contact> {
         unsafe {
             Ref::new(Contact::from_ffi(self.contact))
         }
     }
 
-    pub fn prev_mut(&mut self) -> Option<&mut ContactEdge> {
+    pub fn prev_mut<'a>(&'a mut self) -> Option<&'a mut ContactEdge> {
         unsafe {
             self.prev.as_mut()
         }
     }
 
-    pub fn prev(&self) -> Option<&ContactEdge> {
+    pub fn prev<'a>(&'a self) -> Option<&'a ContactEdge> {
         unsafe {
             self.prev.as_ref()
         }
     }
 
-    pub fn next_mut(&mut self) -> Option<&mut ContactEdge> {
+    pub fn next_mut<'a>(&'a mut self) -> Option<&'a mut ContactEdge> {
         unsafe {
             self.next.as_mut()
         }
     }
 
-    pub fn next(&self) -> Option<&ContactEdge> {
+    pub fn next<'a>(&'a self) -> Option<&'a ContactEdge> {
         unsafe {
             self.next.as_ref()
         }
@@ -1100,7 +1098,7 @@ impl ContactEdge {
 }
 
 pub trait DestructionListener {
-    fn goodbye_joint(&mut self, joint: RefMut<UnknownJoint>);
+    fn goodbye_joint(&mut self, joint: &mut UnknownJoint);
     fn goodbye_fixture(&mut self, fixture: &mut Fixture);
 }
 
@@ -1127,53 +1125,57 @@ pub trait RayCastCallback {
 
 unsafe extern fn goodbye_joint(any: ffi::FatAny, joint: *mut ffi::Joint) {
     let listener = mem::transmute::<_, &mut DestructionListener>(any);
-    let joint = RefMut::new(UnknownJoint::from_ffi(joint));
-    listener.goodbye_joint(joint)
+    let mut joint = RefMut::new(UnknownJoint::from_ffi(joint));
+    listener.goodbye_joint(&mut joint)
 }
+
 unsafe extern fn goodbye_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture) {
     let listener = mem::transmute::<_, &mut DestructionListener>(any);
-    let fixture = &mut Fixture::from_ffi(fixture);
-    listener.goodbye_fixture(fixture)
+    let mut fixture = RefMut::new(Fixture::from_ffi(fixture));
+    listener.goodbye_fixture(&mut fixture)
 }
 
 unsafe extern fn should_collide(any: ffi::FatAny, fixture_a: *mut ffi::Fixture,
                                 fixture_b: *mut ffi::Fixture) -> bool {
     let filter = mem::transmute::<_, &mut ContactFilter>(any);
-    let fixture_a = &mut Fixture::from_ffi(fixture_a);
-    let fixture_b = &mut Fixture::from_ffi(fixture_b);
-    filter.should_collide(fixture_a, fixture_b)
+    let mut fixture_a = RefMut::new(Fixture::from_ffi(fixture_a));
+    let mut fixture_b = RefMut::new(Fixture::from_ffi(fixture_b));
+    filter.should_collide(&mut fixture_a, &mut fixture_b)
 }
 
 unsafe extern fn begin_contact(any: ffi::FatAny, contact: *mut ffi::Contact) {
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    let contact = &mut Contact::from_ffi(contact);
-    listener.begin_contact(contact)
+    let mut contact = RefMut::new(Contact::from_ffi(contact));
+    listener.begin_contact(&mut contact)
 }
+
 unsafe extern fn end_contact(any: ffi::FatAny, contact: *mut ffi::Contact) {
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    let contact = &mut Contact::from_ffi(contact);
-    listener.end_contact(contact)
+    let mut contact = RefMut::new(Contact::from_ffi(contact));
+    listener.end_contact(&mut contact)
 }
+
 unsafe extern fn pre_solve(any: ffi::FatAny, contact: *mut ffi::Contact,
                            old_manifold: *const Manifold) {
     assert!(!old_manifold.is_null());
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    let contact = &mut Contact::from_ffi(contact);
-    listener.pre_solve(contact, &*old_manifold)
+    let mut contact = RefMut::new(Contact::from_ffi(contact));
+    listener.pre_solve(&mut contact, &*old_manifold)
 }
+
 unsafe extern fn post_solve(any: ffi::FatAny, contact: *mut ffi::Contact,
                             impulse: *const ContactImpulse) {
     assert!(!impulse.is_null());
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    let contact = &mut Contact::from_ffi(contact);
-    listener.post_solve(contact, &*impulse)
+    let mut contact = RefMut::new(Contact::from_ffi(contact));
+    listener.post_solve(&mut contact, &*impulse)
 }
 
 unsafe extern fn qc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                                    ) -> bool {
     let callback = mem::transmute::<_, &mut QueryCallback>(any);
-    let fixture = &mut Fixture::from_ffi(fixture);
-    callback.report_fixture(fixture)
+    let mut fixture = RefMut::new(Fixture::from_ffi(fixture));
+    callback.report_fixture(&mut fixture)
 }
 
 unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture,
@@ -1181,21 +1183,21 @@ unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                                     fraction: f32) -> f32 {
     // point and normal are coming from C++ &s
     let callback = mem::transmute::<_, &mut RayCastCallback>(any);
-    let fixture = &mut Fixture::from_ffi(fixture);
-    callback.report_fixture(fixture, &*point, &*normal, fraction)
+    let mut fixture = RefMut::new(Fixture::from_ffi(fixture));
+    callback.report_fixture(&mut fixture, &*point, &*normal, fraction)
 }
 
-pub struct DestructionListenerLink {
+struct DestructionListenerLink {
     ptr: *mut ffi::DestructionListenerLink,
     object: Option<Box<DestructionListener>>,
 }
 
-pub struct ContactFilterLink {
+struct ContactFilterLink {
     ptr: *mut ffi::ContactFilterLink,
     object: Option<Box<ContactFilter>>,
 }
 
-pub struct ContactListenerLink {
+struct ContactListenerLink {
     ptr: *mut ffi::ContactListenerLink,
     object: Option<Box<ContactListener>>,
 }
@@ -1222,7 +1224,7 @@ impl DestructionListenerLink {
             ffi::DestructionListenerLink_set_object(
                 self.mut_ptr(),
                 mem::transmute::<&mut DestructionListener, _>(
-                    self.object.as_mut().unwrap()
+                    &mut **self.object.as_mut().unwrap()
                 )
             )
         }
@@ -1243,7 +1245,7 @@ impl ContactFilterLink {
         ffi::ContactFilterLink_set_object(
             self.mut_ptr(),
             mem::transmute::<&mut ContactFilter, _>(
-                self.object.as_mut().unwrap()
+                &mut **self.object.as_mut().unwrap()
             )
         )
     }
@@ -1266,14 +1268,14 @@ impl ContactListenerLink {
         ffi::ContactListenerLink_set_object(
             self.mut_ptr(),
             mem::transmute::<&mut ContactListener, _>(
-                self.object.as_mut().unwrap()
+                &mut **self.object.as_mut().unwrap()
             )
         )
     }
 }
 
-wrap! { ffi::QueryCallbackLink: QueryCallbackLink }
-wrap! { ffi::RayCastCallbackLink: RayCastCallbackLink }
+wrap! { ffi::QueryCallbackLink: private QueryCallbackLink }
+wrap! { ffi::RayCastCallbackLink: private RayCastCallbackLink }
 
 impl QueryCallbackLink {
     unsafe fn new(object: &mut QueryCallback) -> QueryCallbackLink {
@@ -1329,6 +1331,104 @@ impl Drop for RayCastCallbackLink {
     fn drop(&mut self) {
         unsafe  {
             ffi::RayCastCallbackLink_drop(self.mut_ptr())
+        }
+    }
+}
+
+unsafe extern fn draw_polygon(any: ffi::FatAny, vertices: *const Vec2,
+                              count: i32, color: *const Color) {
+     // color comes from a C++ &
+    let draw = mem::transmute::<_, &mut Draw>(any);
+    let vertices = ::std::slice::from_raw_parts(vertices, count as usize);
+    draw.draw_polygon(vertices, &*color)
+}
+
+unsafe extern fn draw_solid_polygon(any: ffi::FatAny, vertices: *const Vec2,
+                                    count: i32, color: *const Color) {
+     // color comes from a C++ &
+    let draw = mem::transmute::<_, &mut Draw>(any);
+    let vertices = ::std::slice::from_raw_parts(vertices, count as usize);
+    draw.draw_solid_polygon(vertices, &*color)
+}
+
+unsafe extern fn draw_circle(any: ffi::FatAny, center: *const Vec2,
+                             radius: f32, color: *const Color) {
+    // center and color are coming from C++ &s
+    let draw = mem::transmute::<_, &mut Draw>(any);
+    draw.draw_circle(&*center, radius, &*color)
+}
+
+unsafe extern fn draw_solid_circle(any: ffi::FatAny, center: *const Vec2,
+                                   radius: f32, axis: *const Vec2,
+                                   color: *const Color) {
+    // center, axis and color are coming from C++ &s
+    let draw = mem::transmute::<_, &mut Draw>(any);
+    draw.draw_solid_circle(&*center, radius, &*axis, &*color)
+}
+
+unsafe extern fn draw_segment(any: ffi::FatAny, p1: *const Vec2,
+                              p2: *const Vec2, color: *const Color) {
+    // p1, p2 and color are coming from C++ &s
+    let draw = mem::transmute::<_, &mut Draw>(any);
+    draw.draw_segment(&*p1, &*p2, &*color)
+}
+
+unsafe extern fn draw_transform(any: ffi::FatAny, xf: *const Transform) {
+    // xf comes from a C++ &
+    let draw = mem::transmute::<_, &mut Draw>(any);
+    draw.draw_transform(&*xf)
+}
+
+wrap! { ffi::DrawLink: private DrawLink }
+
+impl DrawLink {
+    fn new() -> DrawLink {
+        unsafe {
+            DrawLink::from_ffi(
+                ffi::DrawLink_new(ffi::FatAny::null(),
+                                  draw_polygon,
+                                  draw_solid_polygon,
+                                  draw_circle,
+                                  draw_solid_circle,
+                                  draw_segment,
+                                  draw_transform)
+            )
+        }
+    }
+
+    unsafe fn set_object(&mut self, object: ffi::FatAny) {
+        ffi::DrawLink_set_object(self.mut_ptr(), object)
+    }
+
+    fn set_flags(&mut self, flags: DrawFlags) {
+        unsafe {
+            ffi::DrawLink_set_flags(self.mut_ptr(), flags)
+        }
+    }
+
+    fn flags(&self) -> DrawFlags {
+        unsafe {
+            ffi::DrawLink_get_flags(self.ptr())
+        }
+    }
+
+    fn insert_flags(&mut self, flags: DrawFlags) {
+        unsafe {
+            ffi::DrawLink_append_flags(self.mut_ptr(), flags)
+        }
+    }
+
+    fn remove_flags(&mut self, flags: DrawFlags) {
+        unsafe {
+            ffi::DrawLink_clear_flags(self.mut_ptr(), flags)
+        }
+    }
+}
+
+impl Drop for DrawLink {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::DrawLink_drop(self.mut_ptr())
         }
     }
 }

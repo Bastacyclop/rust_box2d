@@ -28,6 +28,23 @@ macro_rules! wrap {
         }
     );
 
+    ($wrapped:ty: private $wrap:ident) => (
+        wrap!{ $wrapped: custom $wrap }
+
+        struct $wrap {
+            ptr: *mut $wrapped,
+        }
+
+        impl FromFFI<$wrapped> for $wrap {
+            unsafe fn from_ffi(ptr: *mut $wrapped) -> $wrap {
+                assert!(!ptr.is_null());
+                $wrap {
+                    ptr: ptr,
+                }
+            }
+        }
+    );
+
     ($wrapped:ty: custom $wrap:ident with base $base:ty
      > $as_base:path
     ) => (

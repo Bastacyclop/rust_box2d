@@ -8,34 +8,34 @@ typedef void (*DrawTransformCB)(RustFatObject, const b2Transform*);
 
 struct DrawLink: public b2Draw {
     DrawLink(): b2Draw() {}
-    ~DrawLink() override {}
+    ~DrawLink() {}
 
     void DrawPolygon(const b2Vec2* vertices, i32 count,
-                     const b2Color& color) override {
+                     const b2Color& color) {
         draw_polygon(object, vertices, count, &color);
     }
 
     void DrawSolidPolygon(const b2Vec2* vertices, i32 count,
-                          const b2Color& color) override {
+                          const b2Color& color) {
         draw_solid_polygon(object, vertices, count, &color);
     }
 
     void DrawCircle(const b2Vec2& center, f32 radius,
-                    const b2Color& color) override {
+                    const b2Color& color) {
         draw_circle(object, &center, radius, &color);
     }
 
     void DrawSolidCircle(const b2Vec2& center, f32 radius,
-                         const b2Vec2& axis, const b2Color& color) override {
+                         const b2Vec2& axis, const b2Color& color) {
         draw_solid_circle(object, &center, radius, &axis, &color);
     }
 
     void DrawSegment(const b2Vec2& p1, const b2Vec2& p2,
-                     const b2Color& color) override {
+                     const b2Color& color) {
         draw_segment(object, &p1, &p2, &color);
     }
 
-    void DrawTransform(const b2Transform& xf) override {
+    void DrawTransform(const b2Transform& xf) {
         draw_transform(object, &xf);
     }
 
@@ -93,4 +93,3 @@ void DrawLink_append_flags(DrawLink* self, u32 flags) {
 void DrawLink_clear_flags(DrawLink* self, u32 flags) {
     self->ClearFlags(flags);
 }
-

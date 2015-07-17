@@ -3,12 +3,12 @@ typedef void (*SayGoodbyeToFixtureCB)(RustFatObject, b2Fixture*);
 
 struct DestructionListenerLink: public b2DestructionListener {
     DestructionListenerLink() {}
-    ~DestructionListenerLink() override {}
+    ~DestructionListenerLink() {}
     
-    void SayGoodbye(b2Joint* joint) override {
+    void SayGoodbye(b2Joint* joint) {
         say_goodbye_to_joint(object, joint);
     }
-    void SayGoodbye(b2Fixture* fixture) override {
+    void SayGoodbye(b2Fixture* fixture) {
         say_goodbye_to_fixture(object, fixture);
     }
     
@@ -43,9 +43,9 @@ typedef bool (*ShouldCollideCB)(RustFatObject, b2Fixture*, b2Fixture*);
 
 struct ContactFilterLink: public b2ContactFilter {
     ContactFilterLink() {}
-    ~ContactFilterLink() override {}
+    ~ContactFilterLink() {}
     
-    bool ShouldCollide(b2Fixture* fixture_a, b2Fixture* fixture_b) override {
+    bool ShouldCollide(b2Fixture* fixture_a, b2Fixture* fixture_b) {
         return should_collide(object, fixture_a, fixture_b);
     }
     
@@ -79,12 +79,12 @@ typedef void (*PostSolveCB)(RustFatObject, b2Contact*, const b2ContactImpulse*);
 
 struct ContactListenerLink: public b2ContactListener {
     ContactListenerLink() {}
-    ~ContactListenerLink() override {}
+    ~ContactListenerLink() {}
     
-    void BeginContact(b2Contact* contact) override {
+    void BeginContact(b2Contact* contact) {
         begin_contact(object, contact);
     }
-    void EndContact(b2Contact* contact) override {
+    void EndContact(b2Contact* contact) {
         end_contact(object, contact);
     }
     void PreSolve(b2Contact* contact, const b2Manifold* old_manifold) {
@@ -131,9 +131,9 @@ typedef bool (*QCReportFixtureCB)(RustFatObject, b2Fixture*);
 
 struct QueryCallbackLink: public b2QueryCallback {
     QueryCallbackLink() {}
-    ~QueryCallbackLink() override {}
+    ~QueryCallbackLink() {}
     
-    bool ReportFixture(b2Fixture* fixture) override {
+    bool ReportFixture(b2Fixture* fixture) {
         return report_fixture(object, fixture);
     }
     
@@ -165,12 +165,12 @@ typedef f32 (*RCCReportFixtureCB)(RustFatObject, b2Fixture*, const b2Vec2*,
 
 struct RayCastCallbackLink: public b2RayCastCallback {
     RayCastCallbackLink() {}
-    ~RayCastCallbackLink() override {}
+    ~RayCastCallbackLink() {}
     
     f32 ReportFixture(b2Fixture* fixture,
                       const b2Vec2& point,
                       const b2Vec2& normal,
-                      f32 fraction) override {
+                      f32 fraction) {
         return report_fixture(object, fixture, &point, &normal, fraction);
     }
     

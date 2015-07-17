@@ -28,7 +28,6 @@ use collision::{
 #[repr(C)] pub struct DrawLink;
 
 #[repr(C)] pub struct Contact;
-#[repr(C)] pub struct ContactManager;
 
 #[repr(C)] pub struct World;
 #[repr(C)] pub struct Body;

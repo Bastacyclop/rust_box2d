@@ -25,8 +25,8 @@ macro_rules! joint_def {
     ($name:ident {
         $(($($visibility:ident)*) $field:ident: $typ:ty),+
     }) => {
-        #[repr(C)]      
-        #[allow(dead_code)]  
+        #[repr(C)]
+        #[allow(dead_code)]
         pub struct $name {
             pub base: JointDefBase,
             $(
@@ -110,7 +110,7 @@ impl JointDefBase {
 
 pub trait Joint: WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
     fn assumed_joint_type() -> JointType where Self: Sized;
-    
+
     fn get_type(&self) -> JointType {
         unsafe {
             ffi::Joint_get_type(self.base_ptr())
@@ -141,10 +141,16 @@ pub trait Joint: WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
         }
     }
 
-    unsafe fn next<'a>(&'a self) -> Ref<'a, UnknownJoint> {
-        Ref::new(BuildWrappedBase::with(
+    unsafe fn next_mut(&mut self) -> UnknownJoint {
+        BuildWrappedBase::with(
+            ffi::Joint_get_next(self.mut_base_ptr()), ()
+        )
+    }
+
+    unsafe fn next(&self) -> Const<UnknownJoint> {
+        Const::new(BuildWrappedBase::with(
             ffi::Joint_get_next_const(self.base_ptr()) as *mut ffi::Joint, ()
-            ))
+        ))
     }
 
     fn is_active(&self) -> bool {
@@ -157,16 +163,22 @@ pub trait Joint: WrappedBase<ffi::Joint>+BuildWrappedBase<ffi::Joint, ()> {
         ffi::Joint_get_user_data(self.base_ptr()) as *mut T
     }
 
-    unsafe fn body_a<'a>(&'a mut self) -> RefMut<'a, Body> {
-        RefMut::new(BuildWrapped::with(ffi::Joint_get_body_a(self.mut_base_ptr()), ()))
+    unsafe fn body_a(&mut self) -> Option<Body> {
+        let ptr = ffi::Joint_get_body_a(self.mut_base_ptr());
+        if ptr.is_null() {
+            None
+        } else {
+            Some(BuildWrapped::with(ptr, ()))
+        }
     }
 
-    unsafe fn body_b<'a>(&'a mut self) -> RefMut<'a, Body> {
-        RefMut::new(BuildWrapped::with(ffi::Joint_get_body_b(self.mut_base_ptr()), ()))
-    }
-
-    unsafe fn mut_next<'a>(&'a mut self) -> RefMut<'a, UnknownJoint> {
-        RefMut::new(BuildWrappedBase::with(ffi::Joint_get_next(self.mut_base_ptr()), ()))
+    unsafe fn body_b(&mut self) -> Option<Body> {
+        let ptr = ffi::Joint_get_body_b(self.mut_base_ptr());
+        if ptr.is_null() {
+            None
+        } else {
+            Some(BuildWrapped::with(ptr, ()))
+        }
     }
 
     unsafe fn set_user_data<T>(&mut self, data: *mut T) {
@@ -195,36 +207,36 @@ pub struct JointEdge {
 }
 
 impl JointEdge {
-    pub unsafe fn mut_other<'a>(&'a mut self) -> RefMut<'a, Body> {
-        RefMut::new(BuildWrapped::with(self.other, ()))
+    pub unsafe fn other_mut(&mut self) -> Body {
+        BuildWrapped::with(self.other, ())
     }
 
-    pub unsafe fn other<'a>(&'a self) -> Ref<'a, Body> {
-        Ref::new(BuildWrapped::with(self.other, ()))
+    pub unsafe fn other(&self) -> Const<Body> {
+        Const::new(BuildWrapped::with(self.other, ()))
     }
 
-    pub unsafe fn mut_joint<'a>(&'a mut self) -> RefMut<'a, UnknownJoint> {
-        RefMut::new(BuildWrappedBase::with(self.joint, ()))
+    pub unsafe fn joint_mut(&mut self) -> UnknownJoint {
+        BuildWrappedBase::with(self.joint, ())
     }
 
-    pub unsafe fn joint<'a>(&'a self) -> Ref<'a, UnknownJoint> {
-        Ref::new(BuildWrappedBase::with(self.joint, ()))
+    pub unsafe fn joint(&self) -> Const<UnknownJoint> {
+        Const::new(BuildWrappedBase::with(self.joint, ()))
     }
 
-    pub unsafe fn mut_prev(&mut self) -> *mut JointEdge {
-        self.prev
+    pub unsafe fn prev_mut(&mut self) -> Option<&mut JointEdge> {
+        self.prev.as_mut()
     }
 
-    pub unsafe fn prev(&self) -> *const JointEdge {
-        self.prev as *const JointEdge
+    pub unsafe fn prev(&self) -> Option<&JointEdge> {
+        self.prev.as_ref()
     }
 
-    pub unsafe fn mut_next(&mut self) -> *mut JointEdge {
-        self.next
+    pub unsafe fn next_mut(&mut self) -> Option<&mut JointEdge> {
+        self.next.as_mut()
     }
 
-    pub unsafe fn next(&self) -> *const JointEdge {
-        self.next as *const JointEdge
+    pub unsafe fn next(&self) -> Option<&JointEdge> {
+        self.next.as_ref()
     }
 }
 
@@ -426,10 +438,10 @@ joint_def! {
 }
 
 impl DistanceJointDef {
-    pub fn new<'a>(mut body_a: RefMut<'a, Body>,
-                   mut body_b: RefMut<'a, Body>,
-                   anchor_a: &Vec2,
-                   anchor_b: &Vec2) -> RefMut<'a, DistanceJointDef> {
+    pub fn new(mut body_a: Body,
+               mut body_b: Body,
+               anchor_a: &Vec2,
+               anchor_b: &Vec2) -> DistanceJointDef {
         unsafe {
             let mut joint =
                 DistanceJointDef {
@@ -444,15 +456,15 @@ impl DistanceJointDef {
                                              body_a.mut_ptr(),
                                              body_b.mut_ptr(),
                                              anchor_a, anchor_b);
-            RefMut::new(joint)
+            joint
         }
     }
 }
 
 impl FrictionJointDef {
-    pub fn new<'a>(mut body_a: RefMut<'a, Body>,
-                   mut body_b: RefMut<'a, Body>,
-                   anchor: &Vec2) -> RefMut<'a, FrictionJointDef> {
+    pub fn new(mut body_a: Body,
+               mut body_b: Body,
+               anchor: &Vec2) -> FrictionJointDef {
         unsafe {
             let mut joint =
                 FrictionJointDef {
@@ -466,29 +478,29 @@ impl FrictionJointDef {
                                              body_a.mut_ptr(),
                                              body_b.mut_ptr(),
                                              anchor);
-            RefMut::new(joint)
+            joint
         }
     }
 }
 
 impl GearJointDef {
-    pub fn new<'a, Ja: Joint, Jb: Joint>(mut joint_a: RefMut<'a, Ja>,
-                                         mut joint_b: RefMut<'a, Jb>
-                                         ) -> RefMut<'a, GearJointDef> {
+    pub fn new<Ja: Joint, Jb: Joint>(mut joint_a: Ja,
+                                     mut joint_b: Jb
+                                     ) -> GearJointDef {
         unsafe {
-            RefMut::new(GearJointDef {
+            GearJointDef {
                 base: JointDefBase::new(JointType::Gear),
                 joint_a: joint_a.mut_base_ptr(),
                 joint_b: joint_b.mut_base_ptr(),
                 ratio: 1.
-            })
+            }
         }
     }
 }
 
 impl MotorJointDef {
-    pub fn new<'a>(mut body_a: RefMut<'a, Body>,
-                   mut body_b: RefMut<'a, Body>) -> RefMut<'a, MotorJointDef> {
+    pub fn new(mut body_a: Body,
+               mut body_b: Body) -> MotorJointDef {
         unsafe {
             let mut joint =
                 MotorJointDef {
@@ -502,7 +514,7 @@ impl MotorJointDef {
             ffi::MotorJointDef_initialize(&mut joint,
                                           body_a.mut_ptr(),
                                           body_b.mut_ptr());
-            RefMut::new(joint)
+            joint
         }
     }
 }
@@ -520,10 +532,10 @@ impl MouseJointDef {
 }
 
 impl PrismaticJointDef {
-    pub fn new<'a>(mut body_a: RefMut<'a, Body>,
-                   mut body_b: RefMut<'a, Body>,
-                   anchor: &Vec2,
-                   axis: &Vec2) -> RefMut<'a, PrismaticJointDef> {
+    pub fn new(mut body_a: Body,
+               mut body_b: Body,
+               anchor: &Vec2,
+               axis: &Vec2) -> PrismaticJointDef {
         unsafe {
             let mut joint =
                 PrismaticJointDef {
@@ -543,19 +555,19 @@ impl PrismaticJointDef {
                                               body_a.mut_ptr(),
                                               body_b.mut_ptr(),
                                               anchor, axis);
-            RefMut::new(joint)
+            joint
         }
     }
 }
 
 impl PulleyJointDef {
-    pub fn new<'a>(mut body_a: RefMut<'a, Body>,
-                   mut body_b: RefMut<'a, Body>,
-                   ground_anchor_a: &Vec2,
-                   ground_anchor_b: &Vec2,
-                   anchor_a: &Vec2,
-                   anchor_b: &Vec2,
-                   ratio: f32) -> RefMut<'a, PulleyJointDef> {
+    pub fn new(mut body_a: Body,
+               mut body_b: Body,
+               ground_anchor_a: &Vec2,
+               ground_anchor_b: &Vec2,
+               anchor_a: &Vec2,
+               anchor_b: &Vec2,
+               ratio: f32) -> PulleyJointDef {
         unsafe {
             let mut joint =
                 PulleyJointDef {
@@ -576,15 +588,15 @@ impl PulleyJointDef {
                                            ground_anchor_b,
                                            anchor_a, anchor_b,
                                            ratio);
-            RefMut::new(joint)
+            joint
         }
     }
 }
 
 impl RevoluteJointDef {
-    pub fn new<'a>(mut body_a: RefMut<'a, Body>,
-                   mut body_b: RefMut<'a, Body>,
-                   anchor: &Vec2) -> RefMut<'a, RevoluteJointDef> {
+    pub fn new(mut body_a: Body,
+               mut body_b: Body,
+               anchor: &Vec2) -> RevoluteJointDef {
         unsafe {
             let mut joint =
                 RevoluteJointDef {
@@ -603,7 +615,7 @@ impl RevoluteJointDef {
                                              body_a.mut_ptr(),
                                              body_b.mut_ptr(),
                                              anchor);
-            RefMut::new(joint)
+            joint
         }
     }
 }
@@ -620,9 +632,9 @@ impl RopeJointDef {
 }
 
 impl WeldJointDef {
-    pub fn new<'a>(mut body_a: RefMut<'a, Body>,
-                   mut body_b: RefMut<'a, Body>,
-                   anchor: &Vec2) -> RefMut<'a, WeldJointDef> {
+    pub fn new(mut body_a: Body,
+               mut body_b: Body,
+               anchor: &Vec2) -> WeldJointDef {
         unsafe {
             let mut joint =
                 WeldJointDef {
@@ -637,16 +649,16 @@ impl WeldJointDef {
                                          body_a.mut_ptr(),
                                          body_b.mut_ptr(),
                                          anchor);
-            RefMut::new(joint)
+            joint
         }
     }
 }
 
 impl WheelJointDef {
-    pub fn new<'a>(mut body_a: RefMut<'a, Body>,
-                   mut body_b: RefMut<'a, Body>,
-                   anchor: &Vec2,
-                   axis: &Vec2) -> RefMut<'a, WheelJointDef> {
+    pub fn new(mut body_a: Body,
+               mut body_b: Body,
+               anchor: &Vec2,
+               axis: &Vec2) -> WheelJointDef {
         unsafe {
             let mut joint =
                 WheelJointDef {
@@ -664,7 +676,7 @@ impl WheelJointDef {
                                           body_a.mut_ptr(),
                                           body_b.mut_ptr(),
                                           anchor, axis);
-            RefMut::new(joint)
+            joint
         }
     }
 }
@@ -830,12 +842,16 @@ impl GearJoint {
         }
     }
 
-    pub unsafe fn joint_a<'a>(&'a mut self) -> RefMut<'a, UnknownJoint> {
-        RefMut::new(BuildWrappedBase::with(ffi::GearJoint_get_joint_1(self.mut_ptr()), ()))
+    pub unsafe fn joint_1(&mut self) -> UnknownJoint {
+        BuildWrappedBase::with(
+            ffi::GearJoint_get_joint_1(self.mut_ptr()), ()
+        )
     }
 
-    pub unsafe fn joint_b<'a>(&'a mut self) -> RefMut<'a, UnknownJoint> {
-        RefMut::new(BuildWrappedBase::with(ffi::GearJoint_get_joint_2(self.mut_ptr()), ()))
+    pub unsafe fn joint_2(&mut self) -> UnknownJoint {
+        BuildWrappedBase::with(
+            ffi::GearJoint_get_joint_2(self.mut_ptr()), ()
+        )
     }
 
     pub fn set_ratio(&mut self, ratio: f32) {
@@ -1000,10 +1016,15 @@ impl PrismaticJoint {
         }
     }
 
-    pub fn limits(&self) -> (f32, f32) {
+    pub fn lower_limit(&self) -> f32 {
         unsafe {
-            (ffi::PrismaticJoint_get_lower_limit(self.ptr()),
-             ffi::PrismaticJoint_get_upper_limit(self.ptr()))
+            ffi::PrismaticJoint_get_lower_limit(self.ptr())
+        }
+    }
+
+    pub fn upper_limit(&self) -> f32 {
+        unsafe {
+             ffi::PrismaticJoint_get_upper_limit(self.ptr())
         }
     }
 
@@ -1143,10 +1164,15 @@ impl RevoluteJoint {
         }
     }
 
-    pub fn limits(&self) -> (f32, f32) {
+    pub fn lower_limit(&self) -> f32 {
         unsafe {
-            (ffi::RevoluteJoint_get_lower_limit(self.ptr()),
-             ffi::RevoluteJoint_get_upper_limit(self.ptr()))
+            ffi::RevoluteJoint_get_lower_limit(self.ptr())
+        }
+    }
+
+    pub fn upper_limit(&self) -> f32 {
+        unsafe {
+             ffi::RevoluteJoint_get_upper_limit(self.ptr())
         }
     }
 

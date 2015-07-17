@@ -64,13 +64,16 @@ pub trait Shape: WrappedBase<ffi::Shape> {
         }
     }
 
-    fn ray_cast(&self, input: &RayCastInput, transform: &Transform,
-                child_index: i32) -> RayCastOutput {
+    fn ray_cast(&self, input: &RayCastInput,
+                       transform: &Transform,
+                       child_index: i32) -> RayCastOutput {
         unsafe {
             let mut output = RayCastOutput::new();
             ffi::Shape_ray_cast_virtual(self.base_ptr(),
-                                        &mut output, input,
-                                        transform, child_index);
+                                        &mut output,
+                                        input,
+                                        transform,
+                                        child_index);
             output
         }
     }
@@ -78,8 +81,10 @@ pub trait Shape: WrappedBase<ffi::Shape> {
     fn compute_aabb(&self, xf: &Transform, child_index: i32) -> AABB {
         unsafe {
             let mut aabb = AABB::new();
-            ffi::Shape_compute_aabb_virtual(self.base_ptr(), &mut aabb,
-                                            xf, child_index);
+            ffi::Shape_compute_aabb_virtual(self.base_ptr(),
+                                            &mut aabb,
+                                            xf,
+                                            child_index);
             aabb
         }
     }
@@ -88,7 +93,8 @@ pub trait Shape: WrappedBase<ffi::Shape> {
         unsafe {
             let mut mass_data = MassData::new();
             ffi::Shape_compute_mass_virtual(self.base_ptr(),
-                                            &mut mass_data, density);
+                                            &mut mass_data,
+                                            density);
             mass_data
         }
     }
@@ -132,18 +138,10 @@ impl BuildWrappedBase<ffi::Shape, MaybeOwned> for UnknownShape {
         assert!(!ptr.is_null());
         let shape_type = ffi::Shape_get_type(ptr as *const ffi::Shape);
         match shape_type {
-            ShapeType::Circle => Circle(
-                BuildWrappedBase::with(ptr, mb_owned)
-                ),
-            ShapeType::Edge => Edge(
-                BuildWrappedBase::with(ptr, mb_owned)
-                ),
-            ShapeType::Polygon => Polygon(
-                BuildWrappedBase::with(ptr, mb_owned)
-                ),
-            ShapeType::Chain => Chain(
-                BuildWrappedBase::with(ptr, mb_owned)
-                ),
+            ShapeType::Circle => Circle(BuildWrappedBase::with(ptr, mb_owned)),
+            ShapeType::Edge => Edge(BuildWrappedBase::with(ptr, mb_owned)),
+            ShapeType::Polygon => Polygon(BuildWrappedBase::with(ptr, mb_owned)),
+            ShapeType::Chain => Chain(BuildWrappedBase::with(ptr, mb_owned)),
             _ => Unknown,
         }
     }
@@ -189,21 +187,19 @@ impl ChainShape {
         }
     }
 
-    pub fn create_loop(&mut self, vertices: Vec<Vec2>) {
+    pub fn create_loop(&mut self, vertices: &[Vec2]) {
         unsafe {
             ffi::ChainShape_create_loop(self.mut_ptr(),
                                         vertices.as_ptr(),
-                                        vertices.len() as i32
-                                        )
+                                        vertices.len() as i32)
         }
     }
 
-    pub fn create_chain(&mut self, vertices: Vec<Vec2>) {
+    pub fn create_chain(&mut self, vertices: &[Vec2]) {
         unsafe {
             ffi::ChainShape_create_chain(self.mut_ptr(),
                                          vertices.as_ptr(),
-                                         vertices.len() as i32
-                                         )
+                                         vertices.len() as i32)
         }
     }
 
@@ -219,12 +215,10 @@ impl ChainShape {
         }
     }
 
-    pub fn child_edge<'a>(&'a self, index: i32) -> Ref<'a, EdgeShape> {
-        unsafe {
-            let edge = ffi::EdgeShape_new();
-            ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
-            Ref::new(BuildWrapped::with(edge, NotOwned))
-        }
+    pub unsafe fn child_edge(&self, index: i32) -> Const<EdgeShape> {
+        let edge = ffi::EdgeShape_new();
+        ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
+        Const::new(BuildWrapped::with(edge, NotOwned))
     }
 }
 
@@ -305,7 +299,7 @@ impl PolygonShape {
         }
     }
 
-    pub fn set(&mut self, points: Vec<Vec2>) {
+    pub fn set(&mut self, points: &[Vec2]) {
         unsafe {
             ffi::PolygonShape_set(self.mut_ptr(),
                                   points.as_ptr(),

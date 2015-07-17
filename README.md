@@ -9,8 +9,6 @@ instead.
 
 You will need the native Box2D library. And also Piston [dependencies](https://github.com/PistonDevelopers/Piston-Tutorials/tree/master/getting-started) for the examples.
 
-### Box2D header files
-
 If necessary, you can specify the Box2D header files location when compiling:
 
 ~~~~sh

@@ -120,8 +120,7 @@ macro_rules! wrap {
     );
 }
 
-use std::marker::PhantomData;
-use std::ops::{ Deref, DerefMut };
+use std::ops::{ Deref };
 
 pub use self::MaybeOwned::{ Owned, NotOwned };
 #[derive(PartialEq)]
@@ -148,43 +147,17 @@ pub trait BuildWrappedBase<B, A> {
     unsafe fn with(ptr: *mut B, a: A) -> Self;
 }
 
-pub struct RefMut<'l, T> {
-    phantom: PhantomData<&'l ()>,
+pub struct Const<T> {
     object: T
 }
 
-impl<'l, T> RefMut<'l, T> {
-    pub fn new(t: T) -> RefMut<'l, T> {
-        RefMut { phantom: PhantomData, object: t }
+impl<T> Const<T> {
+    pub fn new(t: T) -> Const<T> {
+        Const { object: t }
     }
 }
 
-impl<'l, T> Deref for RefMut<'l, T> {
-    type Target = T;
-
-    fn deref<'a>(&'a self) -> &'a T {
-        &self.object
-    }
-}
-
-impl<'l, T> DerefMut for RefMut<'l, T> {
-    fn deref_mut<'a>(&'a mut self) -> &'a mut T {
-        &mut self.object
-    }
-}
-
-pub struct Ref<'l, T> {
-    phantom: PhantomData<&'l ()>,
-    object: T
-}
-
-impl<'l, T> Ref<'l, T> {
-    pub fn new(t: T) -> Ref<'l, T> {
-        Ref { phantom: PhantomData, object: t }
-    }
-}
-
-impl<'l, T> Deref for Ref<'l, T> {
+impl<T> Deref for Const<T> {
     type Target = T;
 
     fn deref<'a>(&'a self) -> &'a T {

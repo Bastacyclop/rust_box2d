@@ -3,8 +3,6 @@ extern crate box2d;
 use box2d::b2;
 
 fn main () {
-    println!("rust_box2d example");
-
     let time_step = 1./60.;
     let velocity_iterations = 6;
     let position_iterations = 2;

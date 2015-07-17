@@ -8,9 +8,6 @@ fn main() {
     let mut config = gcc::Config::new();
     let config = config
         .cpp(true)
-        .flag("-c")
-        .flag("-std=c++11")
-        //.flag("-fPIC")
         .flag("-Wall")
         .file("src/box2d_frontend.cpp")
         .include("src");

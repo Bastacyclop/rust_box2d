@@ -1,4 +1,5 @@
 #include <Box2D/Box2D.h>
+#include <stdint.h>
 
 extern "C" {
 

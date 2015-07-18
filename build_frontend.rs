@@ -3,13 +3,11 @@ extern crate gcc;
 use std::env;
 
 fn main() {
-    let out_dir = env::var("OUT_DIR").unwrap();
-
     let mut config = gcc::Config::new();
     let config = config
         .cpp(true)
         .flag("-Wall")
-        .file("src/box2d_frontend.cpp")
+        .file("frontend/lib.cpp")
         .include("src");
 
     let config = match env::var("BOX2D_INCLUDE_PATH") {
@@ -18,7 +16,4 @@ fn main() {
     };
 
     config.compile("libbox2d_frontend.a");
-
-    println!("cargo:rustc-link-search=native={}", out_dir);
-    println!("cargo:rustc-link-lib=static=box2d_frontend");
 }

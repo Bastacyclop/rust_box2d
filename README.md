@@ -5,6 +5,8 @@ Box2D for Rust.
 You won't find a lot of information about Box2D here, look at [the official website](http://box2d.org/)
 instead.
 
+## [Documentation](https://bastacyclop.github.io/rust_box2d/rust_box2d/index.html)
+
 ## Dependencies
 
 You will need the native Box2D library. And also Piston [dependencies](https://github.com/PistonDevelopers/Piston-Tutorials/tree/master/getting-started) for the examples.

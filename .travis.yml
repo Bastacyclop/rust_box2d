@@ -1,20 +1,34 @@
+sudo: false
+
 language: rust
-rust: nightly
+
+rust:
+    - nightly
+
 env:
   global:
     - secure: KDv4raQZLGs2Z5+xjeMIyf1B8J2S/0BRQMumiSoKd9YzB5yZNmJxiuYytZmO85mqUisXxLbZ+1sDdf8cQoH5IfOaVN8IE8V96C0T1SiQq4aN9JZzlplejelIdNIy4Agnfz8RqD3pgInq3YaexQe7xCD5WGQ3SFk0nTL/xWdAx1rv6IxOjhz8kQv7KXTWWSEQBMxN1ZCAFQQZ+FavCudgxeEBLEnUV0sQ6L9cvMva0seKwdPFddRh7w1LyYoD2OjXvS3dnWo6xQlLUaCO+effu9EfD13tnLOh5AZ3pwxmD7tqGCBxvCh+yTrIzxyDnS36yak44xSbRSnOoa9Bg/7qTz6o6zn8X+vir5wFaLJmYNPqmp5wGywZS6aTco+rDWkYW/kr/Gj3H4AIvzSQxHP08fyzu4rUaGfRa3CLBigA/uh4fZNY47DC5EBs6dUsSr9u3YYWa6PghB45gdsTUkI2VpU7pulMh+kXT3daJ+m5NDtJKbDfV6VpW9YVwIERsp+lxngrArYD+mcOcXpJSxGkvBcuatNmFldB6MevF2IKRgVuE7IVKWuU1P30mltvAqfE5IhB+H9/1BUtzv4SNEJImeAbIeMf3YjM9w1NHzG+Bzy+SEkqC57r0DkabVWMKBakZ4sQgotwNoHaewIXb1LZQAoiahNusPOISpCOMhxtxak=
+
+addons:
+    apt:
+        packages:
+            - cmake
+
 before_install:
-    - sudo apt-get update -qqy
-    - sudo apt-get install -y g++ cmake
     - git clone https://github.com/erincatto/Box2D
     - cd Box2D/Box2D/Build
     - cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DBOX2D_BUILD_EXAMPLES=OFF ..
-    - make
-    - sudo make install
+    - make && make install
+
 script:
     - cargo build --verbose
 #    - cargo test --verbose
-    - cargo doc --verbose
-after_script:
-    - ln target/doc doc
-    - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
+
+after_success:
+    - |
+        [ $TRAVIS_BRANCH = master ] &&
+        [ $TRAVIS_PULL_REQUEST = false] &&
+        cargo doc &&
+        git clone https://github.com/davisp/ghp-import &&
+        ./ghp-import/ghp-import -n target/doc &&
+        git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages

@@ -5,7 +5,7 @@ Box2D for Rust.
 You won't find a lot of information about Box2D here, look at [the official website](http://box2d.org/)
 instead.
 
-## [Documentation](https://bastacyclop.github.io/rust_box2d/rust_box2d/index.html)
+## [Documentation](https://bastacyclop.github.io/rust_box2d/box2d/index.html)
 
 ## Dependencies
 

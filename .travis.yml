@@ -21,6 +21,7 @@ before_install:
     - cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DBOX2D_BUILD_EXAMPLES=OFF ..
     - make
     - export PATH=$PATH:$PWD/Box2D/Box2D/Build
+    - cd ../../..
 
 script:
     - cargo build --verbose
@@ -30,7 +31,7 @@ after_success:
     - |
         [ $TRAVIS_BRANCH = master ] &&
         [ $TRAVIS_PULL_REQUEST = false ] &&
-        cargo doc &&
+        cargo doc --verbose &&
         git clone https://github.com/davisp/ghp-import &&
         ./ghp-import/ghp-import -n target/doc &&
         git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages

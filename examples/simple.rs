@@ -50,7 +50,7 @@ fn main() {
                 }
                 let body = world.create_body(&body_def);
                 world.get_body_mut(body).unwrap()
-                     .create_fixture(shape, &mut fixture_def);
+                     .create_fixture(shape, fixture_def.clone());
             };
             match input {
                 Input::Press(Button::Keyboard(Key::A)) => create_body(&cube_shape),

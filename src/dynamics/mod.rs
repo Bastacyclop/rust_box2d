@@ -120,10 +120,14 @@ impl World {
                 user_data: mem::uninitialized()
             });
             let body = self.get_body_mut(handle).unwrap();
-            body.user_data = Box::new(meta::InternalUserData {
-                handle: handle,
-                custom: None
-            });
+            let junk = mem::replace(
+                &mut body.user_data,
+                Box::new(meta::InternalUserData {
+                    handle: handle,
+                    custom: None
+                })
+            );
+            mem::forget(junk);
             let data_ptr: *mut meta::InternalUserData<Body> = &mut *body.user_data;
             ffi::Body_set_user_data(body.mut_ptr(), data_ptr as ffi::Any);
             handle
@@ -156,16 +160,20 @@ impl World {
                 user_data: mem::uninitialized()
             });
             let meta_joint = self.get_joint_mut(handle).unwrap();
-            meta_joint.user_data = Box::new(meta::InternalUserData {
-                handle: handle,
-                custom: None
-            });
+            let junk = mem::replace(
+                &mut meta_joint.user_data,
+                Box::new(meta::InternalUserData {
+                    handle: handle,
+                    custom: None
+                })
+            );
+            mem::forget(junk);
             let data_ptr: *mut meta::InternalUserData<Meta<UnknownJoint>> =  &mut *meta_joint.user_data;
             ffi::Joint_set_user_data(meta_joint.mut_base_ptr(), data_ptr as ffi::Any);
             handle
         }
     }
-    
+
     pub fn get_joint(&self, handle: JointHandle) -> Option<&Meta<UnknownJoint>> {
         self.joints.get(handle)
     }
@@ -648,17 +656,21 @@ impl Body {
             ffi::Body_get_contact_list_const(self.ptr()).as_ref()
         }
     }
-    
+
     unsafe fn insert_fixture(&mut self, fixture: *mut ffi::Fixture) -> FixtureHandle {
         let handle = self.fixtures.insert(Meta {
             object: Fixture::from_ffi(fixture),
             user_data: mem::uninitialized()
         });
         let meta_fixture = self.get_fixture_mut(handle).unwrap();
-        meta_fixture.user_data = Box::new(meta::InternalUserData {
-            handle: handle,
-            custom: None
-        });
+        let junk = mem::replace(
+            &mut meta_fixture.user_data,
+            Box::new(meta::InternalUserData {
+                handle: handle,
+                custom: None
+            })
+        );
+        mem::forget(junk);
         let data_ptr: *mut meta::InternalUserData<Meta<Fixture>> =  &mut *meta_fixture.user_data;
         ffi::Fixture_set_user_data(meta_fixture.mut_ptr(), data_ptr as ffi::Any);
         handle
@@ -679,7 +691,7 @@ impl Body {
                                density: f32) -> FixtureHandle {
         unsafe {
             let fixture = ffi::Body_create_fast_fixture(
-                self.mut_ptr(), 
+                self.mut_ptr(),
                 shape.base_ptr(),
                 density
             );
@@ -845,7 +857,8 @@ impl Filter {
 }
 
 #[repr(C)]
-#[allow(dead_code)]
+#[derive(Clone)]
+#[allow(dead_code, raw_pointer_derive)]
 pub struct FixtureDef {
     shape: *const ffi::Shape,
     user_data: ffi::Any,

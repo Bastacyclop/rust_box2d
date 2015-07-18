@@ -44,7 +44,7 @@ fn main () {
     fixture_def.density = 1.;
     fixture_def.friction = 0.3;
     world.get_body_mut(body).unwrap()
-         .create_fixture(&body_box, &mut fixture_def);
+         .create_fixture(&body_box, fixture_def);
 
     println!("(x, y) angle");
     for _ in 0..60 {

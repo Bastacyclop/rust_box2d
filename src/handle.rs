@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
-use std::ops::{Index, IndexMut};
-use std::iter::{Iterator, DoubleEndedIterator};
+use std::ops::{ Index, IndexMut };
+use std::iter::{ Iterator, DoubleEndedIterator };
 use vec_map::{ self, VecMap };
 use std::mem;
 

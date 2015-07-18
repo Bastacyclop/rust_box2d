@@ -156,8 +156,8 @@ extern {
         object: FatAny,
         report_fixture: unsafe extern fn(FatAny, *mut Fixture) -> bool,
         ) -> *mut QueryCallbackLink;
-    pub fn QueryCallbackLink_set_object(slf: *mut QueryCallbackLink,
-                                        object: FatAny);
+    //pub fn QueryCallbackLink_set_object(slf: *mut QueryCallbackLink,
+    //                                    object: FatAny);
     pub fn QueryCallbackLink_as_base(slf: *mut QueryCallbackLink
                                   ) -> *mut QueryCallback;
     pub fn QueryCallbackLink_drop(slf: *mut QueryCallbackLink);
@@ -166,8 +166,8 @@ extern {
         hit_fixture: unsafe extern fn(FatAny, *mut Fixture, *const Vec2,
                                       *const Vec2, f32) -> f32,
         ) -> *mut RayCastCallbackLink;
-    pub fn RayCastCallbackLink_set_object(slf: *mut RayCastCallbackLink,
-                                          object: FatAny);
+    //pub fn RayCastCallbackLink_set_object(slf: *mut RayCastCallbackLink,
+    //                                      object: FatAny);
     pub fn RayCastCallbackLink_as_base(slf: *mut RayCastCallbackLink
                                     ) -> *mut RayCastCallback;
     pub fn RayCastCallbackLink_drop(slf: *mut RayCastCallbackLink);
@@ -187,9 +187,9 @@ extern {
     pub fn DrawLink_drop(slf: *mut DrawLink);
     pub fn DrawLink_set_object(slf: *mut DrawLink, object: FatAny);
     pub fn DrawLink_set_flags(slf: *mut DrawLink, flags: DrawFlags);
-    pub fn DrawLink_get_flags(slf: *const DrawLink) -> DrawFlags;
-    pub fn DrawLink_append_flags(slf: *mut DrawLink, flags: DrawFlags);
-    pub fn DrawLink_clear_flags(slf: *mut DrawLink, flags: DrawFlags);
+    //pub fn DrawLink_get_flags(slf: *const DrawLink) -> DrawFlags;
+    //pub fn DrawLink_append_flags(slf: *mut DrawLink, flags: DrawFlags);
+    //pub fn DrawLink_clear_flags(slf: *mut DrawLink, flags: DrawFlags);
 
     pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef
                                ) -> *mut Fixture;

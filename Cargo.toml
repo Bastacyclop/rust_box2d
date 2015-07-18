@@ -1,12 +1,13 @@
 [package]
 
 name = "box2d"
-description = "Rust binding for Box2D"
 version = "0.2.2"
+description = "Rust binding for Box2D"
+keywords = ["physics", "bindings", "box2d"]
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
-
-repository = "https://github.com/Bastacyclop/rust_box2d.git"
 license = "zlib"
+readme = "README.md"
+repository = "https://github.com/Bastacyclop/rust_box2d.git"
 
 build = "build_frontend.rs"
 
@@ -17,6 +18,8 @@ name = "box2d"
 gcc = "*"
 
 [dependencies]
+libc = "*"
+vec_map = "*"
 bitflags = "*"
 
 [dev_dependencies.box2d_testbed]

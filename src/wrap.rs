@@ -105,7 +105,7 @@ pub trait WrappedBase<B> {
 }
 
 pub trait FromFFI<T> {
-    unsafe fn from_ffi(ptr: *mut T) -> Self;
+    unsafe fn from_ffi(ptr: *mut T) -> Self where Self: Sized;
 }
 
 pub struct RefMut<'a, T> {

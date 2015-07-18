@@ -1,8 +1,7 @@
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
 use std::iter::{Iterator, DoubleEndedIterator};
-use std::collections::VecMap;
-use std::collections::vec_map;
+use vec_map::{ self, VecMap };
 use std::mem;
 
 const INITIAL_CAPACITY: usize = 10;

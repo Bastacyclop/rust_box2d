@@ -1,7 +1,7 @@
 pub mod shapes;
 pub use self::shapes::{
     Shape, ShapeType, UnknownShape,
-    PolygonShape, EdgeShape,  CircleShape, ChainShape,
+    PolygonShape, EdgeShape, CircleShape, ChainShape,
     MassData
 };
 

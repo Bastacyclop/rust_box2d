@@ -1,3 +1,8 @@
+pub mod meta;
+pub use self::meta::{
+    UserData, Meta
+};
+
 pub mod joints;
 pub use self::joints::{
     JointType, JointDef, JointDefBase, Joint, JointEdge, UnknownJoint,
@@ -16,7 +21,7 @@ pub use self::joints::{
 
 use std::ptr;
 use std::mem;
-use std::collections::HashMap;
+use std::any::Any;
 use { ffi, settings };
 use wrap::*;
 use handle::*;
@@ -41,15 +46,13 @@ pub struct Profile {
 }
 
 pub type BodyHandle = TypedHandle<Body>;
-pub type JointHandle = TypedHandle<UnknownJoint>;
-pub type FixtureHandle = TypedHandle<Fixture>;
+pub type FixtureHandle = TypedHandle<Meta<Fixture>>;
+pub type JointHandle = TypedHandle<Meta<UnknownJoint>>;
 
 pub struct World {
     ptr: *mut ffi::World,
     bodies: HandleMap<Body>,
-    mem_to_body: HashMap<usize, BodyHandle>,
-    joints: HandleMap<UnknownJoint>,
-    mem_to_joint: HashMap<usize, JointHandle>,
+    joints: HandleMap<Meta<UnknownJoint>>,
     draw_link: DrawLink,
     destruction_listener_link: DestructionListenerLink,
     contact_filter_link: ContactFilterLink,
@@ -64,9 +67,7 @@ impl World {
             World {
                 ptr: ffi::World_new(gravity),
                 bodies: HandleMap::new(),
-                mem_to_body: HashMap::new(),
                 joints: HandleMap::new(),
-                mem_to_joint: HashMap::new(),
                 draw_link: DrawLink::new(),
                 destruction_listener_link: DestructionListenerLink::new(),
                 contact_filter_link: ContactFilterLink::new(),
@@ -111,19 +112,22 @@ impl World {
     }
 
     pub fn create_body(&mut self, def: &BodyDef) -> BodyHandle {
-        let body = unsafe {
-            ffi::World_create_body(self.mut_ptr(), def)
-        };
-        let handle = self.bodies.insert(Body {
-            ptr: body,
-            fixtures: HandleMap::new()
-        });
-        self.mem_to_body.insert(body as usize, handle);
-        handle
-    }
-
-    pub fn get_body_handle(&self, mem: usize) -> Option<BodyHandle> {
-        self.mem_to_body.get(&mem).map(|h| *h)
+        unsafe {
+            let body = ffi::World_create_body(self.mut_ptr(), def);
+            let handle = self.bodies.insert(Body {
+                ptr: body,
+                fixtures: HandleMap::new(),
+                user_data: mem::uninitialized()
+            });
+            let body = self.get_body_mut(handle).unwrap();
+            body.user_data = Box::new(meta::InternalUserData {
+                handle: handle,
+                custom: None
+            });
+            let data_ptr: *mut meta::InternalUserData<Body> = &mut *body.user_data;
+            ffi::Body_set_user_data(body.mut_ptr(), data_ptr as ffi::Any);
+            handle
+        }
     }
 
     pub fn get_body(&self, handle: BodyHandle) -> Option<&Body> {
@@ -137,7 +141,6 @@ impl World {
     pub fn destroy_body(&mut self, handle: BodyHandle) {
         self.bodies.remove(handle)
             .map(|mut body| { unsafe {
-                self.mem_to_body.remove(& (body.ptr() as usize));
                 ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr());
             } });
     }
@@ -148,29 +151,33 @@ impl World {
                 assumed == JointType::Unknown);
         unsafe {
             let joint = ffi::World_create_joint(self.mut_ptr(), def.base_ptr());
-            let handle = self.joints.insert(UnknownJoint::from_ffi(joint));
-            self.mem_to_joint.insert(joint as usize, handle);
+            let handle = self.joints.insert(Meta {
+                object: UnknownJoint::from_ffi(joint),
+                user_data: mem::uninitialized()
+            });
+            let meta_joint = self.get_joint_mut(handle).unwrap();
+            meta_joint.user_data = Box::new(meta::InternalUserData {
+                handle: handle,
+                custom: None
+            });
+            let data_ptr: *mut meta::InternalUserData<Meta<UnknownJoint>> =  &mut *meta_joint.user_data;
+            ffi::Joint_set_user_data(meta_joint.mut_base_ptr(), data_ptr as ffi::Any);
             handle
         }
     }
-
-    pub fn get_joint_handle(self, mem: usize) -> Option<JointHandle> {
-        self.mem_to_joint.get(&mem).map(|h| *h)
-    }
-
-    pub fn get_joint(&self, handle: JointHandle) -> Option<&UnknownJoint> {
+    
+    pub fn get_joint(&self, handle: JointHandle) -> Option<&Meta<UnknownJoint>> {
         self.joints.get(handle)
     }
 
-    pub fn get_joint_mut(&mut self, handle: JointHandle) -> Option<&mut UnknownJoint> {
+    pub fn get_joint_mut(&mut self, handle: JointHandle) -> Option<&mut Meta<UnknownJoint>> {
         self.joints.get_mut(handle)
     }
 
     pub fn destroy_joint(&mut self, handle: JointHandle) {
         self.joints.remove(handle)
-            .map(|mut joint| { unsafe {
-                self.mem_to_joint.remove(& (joint.base_ptr() as usize));
-                ffi::World_destroy_joint(self.mut_ptr(), joint.mut_base_ptr());
+            .map(|mut meta_joint| { unsafe {
+                ffi::World_destroy_joint(self.mut_ptr(), meta_joint.mut_base_ptr());
             } });
     }
 
@@ -233,11 +240,11 @@ impl World {
         self.bodies.iter()
     }
 
-    pub fn joints_mut(&mut self) -> HandleIterMut<UnknownJoint> {
+    pub fn joints_mut(&mut self) -> HandleIterMut<Meta<UnknownJoint>> {
         self.joints.iter_mut()
     }
 
-    pub fn joints(&mut self) -> HandleIter<UnknownJoint> {
+    pub fn joints(&mut self) -> HandleIter<Meta<UnknownJoint>> {
         self.joints.iter()
     }
 
@@ -410,6 +417,7 @@ pub enum BodyType {
 
 #[repr(C)]
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct BodyDef {
     pub body_type: BodyType,
     pub position: Vec2,
@@ -446,16 +454,12 @@ impl BodyDef {
             gravity_scale: 1.
         }
     }
-
-    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
-        self.user_data = data as ffi::Any
-    }
 }
-
 
 pub struct Body {
     ptr: *mut ffi::Body,
-    fixtures: HandleMap<Fixture>
+    fixtures: HandleMap<Meta<Fixture>>,
+    user_data: Box<meta::InternalUserData<Body>>
 }
 
 wrap! { ffi::Body: custom Body }
@@ -613,11 +617,11 @@ impl Body {
         }
     }
 
-    pub fn fixtures_mut(&mut self) -> HandleIterMut<Fixture> {
+    pub fn fixtures_mut(&mut self) -> HandleIterMut<Meta<Fixture>> {
         self.fixtures.iter_mut()
     }
 
-    pub fn fixtures(&self) -> HandleIter<Fixture> {
+    pub fn fixtures(&self) -> HandleIter<Meta<Fixture>> {
         self.fixtures.iter()
     }
 
@@ -644,53 +648,58 @@ impl Body {
             ffi::Body_get_contact_list_const(self.ptr()).as_ref()
         }
     }
-
-    pub unsafe fn user_data<T>(&self) -> *mut T {
-        ffi::Body_get_user_data(self.ptr()) as *mut T
+    
+    unsafe fn insert_fixture(&mut self, fixture: *mut ffi::Fixture) -> FixtureHandle {
+        let handle = self.fixtures.insert(Meta {
+            object: Fixture::from_ffi(fixture),
+            user_data: mem::uninitialized()
+        });
+        let meta_fixture = self.get_fixture_mut(handle).unwrap();
+        meta_fixture.user_data = Box::new(meta::InternalUserData {
+            handle: handle,
+            custom: None
+        });
+        let data_ptr: *mut meta::InternalUserData<Meta<Fixture>> =  &mut *meta_fixture.user_data;
+        ffi::Fixture_set_user_data(meta_fixture.mut_ptr(), data_ptr as ffi::Any);
+        handle
     }
 
     pub fn create_fixture(&mut self,
                           shape: &Shape,
-                          def: &mut FixtureDef) -> FixtureHandle {
-        let fixture;
+                          mut def: FixtureDef) -> FixtureHandle {
         unsafe {
             def.shape = shape.base_ptr();
-            fixture = Fixture::from_ffi(
-                ffi::Body_create_fixture(self.mut_ptr(), def)
-            );
-            def.shape = ptr::null();
+            let fixture = ffi::Body_create_fixture(self.mut_ptr(), &def);
+            self.insert_fixture(fixture)
         }
-        self.fixtures.insert(fixture)
     }
 
     pub fn create_fast_fixture(&mut self,
                                shape: &Shape,
                                density: f32) -> FixtureHandle {
-        let fixture = unsafe {
-            Fixture::from_ffi(
-                ffi::Body_create_fast_fixture(
-                    self.mut_ptr(),
-                    shape.base_ptr(),
-                    density
-                )
-            )
-        };
-        self.fixtures.insert(fixture)
+        unsafe {
+            let fixture = ffi::Body_create_fast_fixture(
+                self.mut_ptr(), 
+                shape.base_ptr(),
+                density
+            );
+            self.insert_fixture(fixture)
+        }
     }
 
-    pub fn get_fixture(&self, handle: FixtureHandle) -> Option<&Fixture> {
+    pub fn get_fixture(&self, handle: FixtureHandle) -> Option<&Meta<Fixture>> {
         self.fixtures.get(handle)
     }
 
-    pub fn get_fixture_mut(&mut self, handle: FixtureHandle) -> Option<&mut Fixture> {
+    pub fn get_fixture_mut(&mut self, handle: FixtureHandle) -> Option<&mut Meta<Fixture>> {
         self.fixtures.get_mut(handle)
     }
 
     pub fn destroy_fixture(&mut self, handle: FixtureHandle) {
         self.fixtures.remove(handle)
-            .map(|mut fixture| {
+            .map(|mut meta_fixture| {
                 unsafe {
-                    ffi::Body_destroy_fixture(self.mut_ptr(), fixture.mut_ptr());
+                    ffi::Body_destroy_fixture(self.mut_ptr(), meta_fixture.mut_ptr());
                 }
             });
     }
@@ -810,10 +819,6 @@ impl Body {
         }
     }
 
-    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
-        ffi::Body_set_user_data(self.mut_ptr(), data as ffi::Any)
-    }
-
     pub fn dump(&mut self) {
         unsafe {
             ffi::Body_dump(self.mut_ptr())
@@ -840,6 +845,7 @@ impl Filter {
 }
 
 #[repr(C)]
+#[allow(dead_code)]
 pub struct FixtureDef {
     shape: *const ffi::Shape,
     user_data: ffi::Any,
@@ -861,10 +867,6 @@ impl FixtureDef {
             is_sensor: false,
             filter: Filter::new()
         }
-    }
-
-    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
-        self.user_data = data as ffi::Any
     }
 }
 
@@ -889,9 +891,9 @@ impl Fixture {
         }
     }
 
-    pub fn body(&self) -> usize {
+    pub fn body(&self) -> BodyHandle {
         unsafe {
-            ffi::Fixture_get_body_const(self.ptr()) as usize
+            <Body as meta::RawUserData<_>>::get_handle(ffi::Fixture_get_body_const(self.ptr()))
         }
     }
 
@@ -946,10 +948,6 @@ impl Fixture {
         }
     }
 
-    pub unsafe fn user_data<T>(&self) -> *mut T {
-        ffi::Fixture_get_user_data(self.ptr()) as *mut T
-    }
-
     pub fn shape_mut<'a>(&'a mut self) -> RefMut<'a, UnknownShape> {
         unsafe {
             RefMut::new(UnknownShape::from_ffi(
@@ -1002,10 +1000,6 @@ impl Fixture {
         }
     }
 
-    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
-        ffi::Fixture_set_user_data(self.mut_ptr(), data as ffi::Any)
-    }
-
     pub fn dump(&mut self, child_count: i32) {
         unsafe {
             ffi::Fixture_dump(self.mut_ptr(), child_count)
@@ -1056,8 +1050,10 @@ pub struct ContactEdge {
 }
 
 impl ContactEdge {
-    pub fn other(&self) -> usize {
-        self.other as usize
+    pub fn other(&self) -> BodyHandle {
+        unsafe {
+            <Body as meta::RawUserData<_>>::get_handle(self.other)
+        }
     }
 
     pub fn contact_mut<'a>(&'a mut self) -> RefMut<'a, Contact> {
@@ -1403,24 +1399,6 @@ impl DrawLink {
     fn set_flags(&mut self, flags: DrawFlags) {
         unsafe {
             ffi::DrawLink_set_flags(self.mut_ptr(), flags)
-        }
-    }
-
-    fn flags(&self) -> DrawFlags {
-        unsafe {
-            ffi::DrawLink_get_flags(self.ptr())
-        }
-    }
-
-    fn insert_flags(&mut self, flags: DrawFlags) {
-        unsafe {
-            ffi::DrawLink_append_flags(self.mut_ptr(), flags)
-        }
-    }
-
-    fn remove_flags(&mut self, flags: DrawFlags) {
-        unsafe {
-            ffi::DrawLink_clear_flags(self.mut_ptr(), flags)
         }
     }
 }

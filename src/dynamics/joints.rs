@@ -1,8 +1,9 @@
 use std::ptr;
 use ffi;
 use wrap::*;
+use super::meta;
 use math::Vec2;
-use dynamics::Body;
+use dynamics::{ Body, BodyHandle, JointHandle };
 
 macro_rules! wrap_joint {
     ($wrapped:ty: $wrap:ident ($joint_type:path)
@@ -102,10 +103,6 @@ impl JointDefBase {
             collide_connected: false
         }
     }
-
-    pub unsafe fn set_user_data<T>(&mut self, data: *mut T) {
-        self.user_data = data as ffi::Any
-    }
 }
 
 pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
@@ -147,24 +144,16 @@ pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
         }
     }
 
-    fn body_a(&self) -> usize {
+    fn body_a(&mut self) -> BodyHandle {
         unsafe {
-            ffi::Joint_get_body_a(self.base_ptr() as *mut ffi::Joint) as usize
+            <Body as meta::RawUserData<_>>::get_handle(ffi::Joint_get_body_a(self.mut_base_ptr()))
         }
     }
 
-    fn body_b(&self) -> usize {
+    fn body_b(&mut self) -> BodyHandle {
         unsafe {
-            ffi::Joint_get_body_b(self.base_ptr() as *mut ffi::Joint) as usize
+            <Body as meta::RawUserData<_>>::get_handle(ffi::Joint_get_body_b(self.mut_base_ptr()))
         }
-    }
-
-    unsafe fn user_data<T>(&self) -> *mut T {
-        ffi::Joint_get_user_data(self.base_ptr()) as *mut T
-    }
-
-    unsafe fn set_user_data<T>(&mut self, data: *mut T) {
-        ffi::Joint_set_user_data(self.mut_base_ptr(), data as ffi::Any)
     }
 
     fn dump(&mut self) {
@@ -189,12 +178,16 @@ pub struct JointEdge {
 }
 
 impl JointEdge {
-    pub fn other(&self) -> usize {
-        self.other as usize
+    pub fn other(&self) -> BodyHandle {
+        unsafe {
+            <Body as meta::RawUserData<_>>::get_handle(self.other)
+        }
     }
 
-    pub fn joint(&self) -> usize {
-        self.joint as usize
+    pub fn joint(&self) -> JointHandle {
+        unsafe {
+            <UnknownJoint as meta::RawUserData<_>>::get_handle(self.joint)
+        }
     }
 
     pub fn prev_mut(&mut self) -> Option<&mut JointEdge> {

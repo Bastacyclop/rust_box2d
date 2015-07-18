@@ -29,7 +29,7 @@ script:
 after_success:
     - |
         [ $TRAVIS_BRANCH = master ] &&
-        [ $TRAVIS_PULL_REQUEST = false] &&
+        [ $TRAVIS_PULL_REQUEST = false ] &&
         cargo doc &&
         git clone https://github.com/davisp/ghp-import &&
         ./ghp-import/ghp-import -n target/doc &&

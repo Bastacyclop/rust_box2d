@@ -129,24 +129,22 @@ impl<T> HandleMap<T> {
         entry.version == handle.version && entry.inner.is_some()
     }
 
-    pub fn get(&self, handle: TypedHandle<T>) -> Option<Ref<T>> {
+    fn get_inner(&self, handle: TypedHandle<T>) -> Option<&RefCell<T>> {
         let entry = &self.entries[handle.index];
 
         if entry.version == handle.version {
-            entry.inner.as_ref().map(|e| e.borrow())
+            entry.inner.as_ref()
         } else {
             None
         }
     }
 
-    pub fn get_mut(&mut self, handle: TypedHandle<T>) -> Option<RefMut<T>> {
-        let entry = &mut self.entries[handle.index];
+    pub fn get(&self, handle: TypedHandle<T>) -> Option<Ref<T>> {
+        self.get_inner(handle).map(|e| e.borrow())
+    }
 
-        if entry.version == handle.version {
-            entry.inner.as_mut().map(|e| e.borrow_mut())
-        } else {
-            None
-        }
+    pub fn get_mut(&self, handle: TypedHandle<T>) -> Option<RefMut<T>> {
+        self.get_inner(handle).map(|e| e.borrow_mut())
     }
 
     pub fn iter<'a>(&'a self) -> HandleIter<'a, T> {

@@ -139,7 +139,7 @@ impl World {
         self.bodies.get(handle)
     }
 
-    pub fn get_body_mut(&mut self, handle: BodyHandle) -> Option<RefMut<Body>> {
+    pub fn get_body_mut(&self, handle: BodyHandle) -> Option<RefMut<Body>> {
         self.bodies.get_mut(handle)
     }
 
@@ -150,12 +150,10 @@ impl World {
             } });
     }
 
-    pub fn create_joint<J: Joint>(&mut self, def: &JointDef) -> JointHandle {
-        let assumed = J::assumed_joint_type();
-        assert!(def.joint_type() == assumed ||
-                assumed == JointType::Unknown);
+    pub fn create_joint<JD: JointDef>(&mut self, def: &JD) -> JointHandle {
         unsafe {
-            let joint = ffi::World_create_joint(self.mut_ptr(), def.base_ptr());
+            let raw_def = def.to_raw(&*self);
+            let joint = ffi::World_create_joint(self.mut_ptr(), raw_def.base_ptr());
             let handle = self.joints.insert(Meta {
                 object: UnknownJoint::from_ffi(joint),
                 user_data: mem::uninitialized()
@@ -179,7 +177,7 @@ impl World {
         self.joints.get(handle)
     }
 
-    pub fn get_joint_mut(&mut self, handle: JointHandle) -> Option<RefMut<Meta<UnknownJoint>>> {
+    pub fn get_joint_mut(&self, handle: JointHandle) -> Option<RefMut<Meta<UnknownJoint>>> {
         self.joints.get_mut(handle)
     }
 
@@ -704,7 +702,7 @@ impl Body {
         self.fixtures.get(handle)
     }
 
-    pub fn get_fixture_mut(&mut self, handle: FixtureHandle) -> Option<RefMut<Meta<Fixture>>> {
+    pub fn get_fixture_mut(&self, handle: FixtureHandle) -> Option<RefMut<Meta<Fixture>>> {
         self.fixtures.get_mut(handle)
     }
 

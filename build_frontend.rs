@@ -9,7 +9,6 @@ fn main() {
         .file("frontend/lib.cpp")
         .include("src");
 
-    config.compile("libbox2d_frontend.a");
     let config = match env::var("BOX2D_INCLUDE_PATH") {
         Ok(path) => config.include(path),
         Err(_) => config

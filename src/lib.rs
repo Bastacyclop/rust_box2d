@@ -7,12 +7,13 @@ extern crate libc;
 extern crate vec_map;
 #[macro_use] extern crate bitflags;
 
+mod ffi;
 #[macro_use] pub mod wrap;
 pub mod handle;
-mod ffi;
-pub mod dynamics;
-pub mod common;
+
 pub mod collision;
+pub mod common;
+pub mod dynamics;
 
 pub use common::math;
 pub use common::settings;

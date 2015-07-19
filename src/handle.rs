@@ -1,5 +1,5 @@
+use std::cell::{ RefCell, Ref, RefMut };
 use std::marker::PhantomData;
-use std::ops::{ Index, IndexMut };
 use std::iter::{ Iterator, DoubleEndedIterator };
 use vec_map::{ self, VecMap };
 use std::mem;
@@ -49,7 +49,7 @@ impl<T> PartialEq for TypedHandle<T> {
 
 struct HandleEntry<T> {
     pub version: usize,
-    pub inner: Option<T>
+    pub inner: Option<RefCell<T>>
 }
 
 impl<T> HandleEntry<T> {
@@ -98,7 +98,7 @@ impl<T> HandleMap<T> {
         }
 
         let entry = &mut self.entries[index];
-        entry.inner = Some(value);
+        entry.inner = Some(RefCell::new(value));
         TypedHandle::new(index, entry.version)
     }
 
@@ -110,7 +110,7 @@ impl<T> HandleMap<T> {
 
         entry.version += 1;
         self.availables.push(index);
-        entry.inner.take()
+        entry.inner.take().map(RefCell::into_inner)
     }
 
     pub fn clear(&mut self) {
@@ -129,22 +129,24 @@ impl<T> HandleMap<T> {
         entry.version == handle.version && entry.inner.is_some()
     }
 
-    pub fn get(&self, handle: TypedHandle<T>) -> Option<&T> {
+    pub fn get(&self, handle: TypedHandle<T>) -> Option<Ref<T>> {
         let entry = &self.entries[handle.index];
 
         if entry.version == handle.version {
-            return entry.inner.as_ref();
+            entry.inner.as_ref().map(|e| e.borrow())
+        } else {
+            None
         }
-        None
     }
 
-    pub fn get_mut(&mut self, handle: TypedHandle<T>) -> Option<&mut T> {
+    pub fn get_mut(&mut self, handle: TypedHandle<T>) -> Option<RefMut<T>> {
         let entry = &mut self.entries[handle.index];
 
         if entry.version == handle.version {
-            return entry.inner.as_mut();
+            entry.inner.as_mut().map(|e| e.borrow_mut())
+        } else {
+            None
         }
-        None
     }
 
     pub fn iter<'a>(&'a self) -> HandleIter<'a, T> {
@@ -160,24 +162,8 @@ impl<T> HandleMap<T> {
     }
 }
 
-impl<T> Index<TypedHandle<T>> for HandleMap<T> {
-    type Output = T;
-
-    #[inline]
-    fn index(&self, handle: TypedHandle<T>) -> &Self::Output {
-        self.get(handle).unwrap()
-    }
-}
-
-impl<T> IndexMut<TypedHandle<T>> for HandleMap<T> {
-    #[inline]
-    fn index_mut(&mut self, handle: TypedHandle<T>) -> &mut Self::Output {
-        self.get_mut(handle).unwrap()
-    }
-}
-
 impl<'a, T> IntoIterator for &'a HandleMap<T> {
-    type Item = (TypedHandle<T>, &'a T);
+    type Item = (TypedHandle<T>, Ref<'a, T>);
     type IntoIter = HandleIter<'a, T>;
 
     fn into_iter(self) -> HandleIter<'a, T> {
@@ -186,7 +172,7 @@ impl<'a, T> IntoIterator for &'a HandleMap<T> {
 }
 
 impl<'a, T> IntoIterator for &'a mut HandleMap<T> {
-    type Item = (TypedHandle<T>, &'a mut T);
+    type Item = (TypedHandle<T>, RefMut<'a, T>);
     type IntoIter = HandleIterMut<'a, T>;
 
     fn into_iter(self) -> HandleIterMut<'a, T> {
@@ -195,7 +181,7 @@ impl<'a, T> IntoIterator for &'a mut HandleMap<T> {
 }
 
 macro_rules! iterator {
-    (impl $name:ident -> $elem:ty, $($getter:ident),+) => {
+    (impl $name:ident -> $elem:ty, $($getter:ident),+ and then $($modifier:ident),*) => {
         impl<'a, T> Iterator for $name<'a, T> {
             type Item = $elem;
 
@@ -203,8 +189,10 @@ macro_rules! iterator {
             fn next(&mut self) -> Option<$elem> {
                 while let Some((index, entry)) = self.iter.next() {
                     if entry.inner.is_some() {
-                        return Some((TypedHandle::new(index, entry.version),
-                                entry.inner$(. $getter())+.unwrap()));
+                        return Some((
+                            TypedHandle::new(index, entry.version),
+                            entry.inner$(. $getter())+.unwrap()$(. $modifier())+
+                        ));
                     }
                 }
                 None
@@ -219,14 +207,16 @@ macro_rules! iterator {
 }
 
 macro_rules! double_ended_iterator {
-    (impl $name:ident -> $elem:ty, $($getter:ident),+) => {
+    (impl $name:ident -> $elem:ty, $($getter:ident),+ and then $($modifier:ident),+) => {
         impl<'a, T> DoubleEndedIterator for $name<'a, T> {
             #[inline]
             fn next_back(&mut self) -> Option<$elem> {
                 while let Some((index, entry)) = self.iter.next_back() {
                     if entry.inner.is_some() {
-                        return Some((TypedHandle::new(index, entry.version),
-                                entry.inner$(. $getter())+.unwrap()));
+                        return Some((
+                            TypedHandle::new(index, entry.version),
+                            entry.inner$(. $getter())+.unwrap()$(. $modifier())+
+                        ));
                     }
                 }
                 None
@@ -239,15 +229,27 @@ pub struct HandleIter<'a, T: 'a> {
     iter: vec_map::Iter<'a, HandleEntry<T>>
 }
 
-iterator! { impl HandleIter -> (TypedHandle<T>, &'a T), as_ref }
-double_ended_iterator! { impl HandleIter -> (TypedHandle<T>, &'a T), as_ref }
+iterator! {
+    impl HandleIter -> (TypedHandle<T>, Ref<'a, T>),
+    as_ref and then borrow
+}
+double_ended_iterator! {
+    impl HandleIter -> (TypedHandle<T>, Ref<'a, T>),
+    as_ref and then borrow
+}
 
 pub struct HandleIterMut<'a, T: 'a> {
     iter: vec_map::IterMut<'a, HandleEntry<T>>
 }
 
-iterator! { impl HandleIterMut -> (TypedHandle<T>, &'a mut T), as_mut }
-double_ended_iterator! { impl HandleIterMut -> (TypedHandle<T>, &'a mut T), as_mut }
+iterator! {
+    impl HandleIterMut -> (TypedHandle<T>, RefMut<'a, T>),
+    as_mut and then borrow_mut
+}
+double_ended_iterator! {
+    impl HandleIterMut -> (TypedHandle<T>, RefMut<'a, T>),
+    as_mut and then borrow_mut
+}
 
 #[cfg(test)]
 mod test {
@@ -261,7 +263,7 @@ mod test {
 
         let handle = map.insert(DUMMY_VALUE);
 
-        assert_eq!(DUMMY_VALUE, map[handle]);
+        assert_eq!(*map.get(handle).unwrap(), DUMMY_VALUE);
     }
 
     #[test]
@@ -271,7 +273,7 @@ mod test {
         let handle = map.insert(DUMMY_VALUE);
         map.remove(handle);
 
-        assert_eq!(map.is_valid(handle), false);
+        assert!(!map.is_valid(handle));
     }
 
     #[test]
@@ -281,7 +283,7 @@ mod test {
         let handle = map.insert(DUMMY_VALUE);
         map.remove(handle);
 
-        assert_eq!(map.get(handle).is_none(), true)
+        assert!(map.get(handle).is_none());
     }
 
     #[test]
@@ -292,7 +294,7 @@ mod test {
         map.remove(handle);
         map.insert(DUMMY_VALUE);
 
-        assert_eq!(map.get(handle).is_none(), true)
+        assert!(map.get(handle).is_none())
     }
 
     #[test]

@@ -22,6 +22,7 @@ pub use self::joints::{
 use std::ptr;
 use std::mem;
 use std::any::Any;
+use std::cell::{ Ref, RefMut };
 use { ffi, settings };
 use wrap::*;
 use handle::*;
@@ -119,7 +120,7 @@ impl World {
                 fixtures: HandleMap::new(),
                 user_data: mem::uninitialized()
             });
-            let body = self.get_body_mut(handle).unwrap();
+            let mut body = self.get_body_mut(handle).unwrap();
             let junk = mem::replace(
                 &mut body.user_data,
                 Box::new(meta::InternalUserData {
@@ -134,11 +135,11 @@ impl World {
         }
     }
 
-    pub fn get_body(&self, handle: BodyHandle) -> Option<&Body> {
+    pub fn get_body(&self, handle: BodyHandle) -> Option<Ref<Body>> {
         self.bodies.get(handle)
     }
 
-    pub fn get_body_mut(&mut self, handle: BodyHandle) -> Option<&mut Body> {
+    pub fn get_body_mut(&mut self, handle: BodyHandle) -> Option<RefMut<Body>> {
         self.bodies.get_mut(handle)
     }
 
@@ -159,7 +160,7 @@ impl World {
                 object: UnknownJoint::from_ffi(joint),
                 user_data: mem::uninitialized()
             });
-            let meta_joint = self.get_joint_mut(handle).unwrap();
+            let mut meta_joint = self.get_joint_mut(handle).unwrap();
             let junk = mem::replace(
                 &mut meta_joint.user_data,
                 Box::new(meta::InternalUserData {
@@ -174,11 +175,11 @@ impl World {
         }
     }
 
-    pub fn get_joint(&self, handle: JointHandle) -> Option<&Meta<UnknownJoint>> {
+    pub fn get_joint(&self, handle: JointHandle) -> Option<Ref<Meta<UnknownJoint>>> {
         self.joints.get(handle)
     }
 
-    pub fn get_joint_mut(&mut self, handle: JointHandle) -> Option<&mut Meta<UnknownJoint>> {
+    pub fn get_joint_mut(&mut self, handle: JointHandle) -> Option<RefMut<Meta<UnknownJoint>>> {
         self.joints.get_mut(handle)
     }
 
@@ -662,7 +663,7 @@ impl Body {
             object: Fixture::from_ffi(fixture),
             user_data: mem::uninitialized()
         });
-        let meta_fixture = self.get_fixture_mut(handle).unwrap();
+        let mut meta_fixture = self.get_fixture_mut(handle).unwrap();
         let junk = mem::replace(
             &mut meta_fixture.user_data,
             Box::new(meta::InternalUserData {
@@ -699,11 +700,11 @@ impl Body {
         }
     }
 
-    pub fn get_fixture(&self, handle: FixtureHandle) -> Option<&Meta<Fixture>> {
+    pub fn get_fixture(&self, handle: FixtureHandle) -> Option<Ref<Meta<Fixture>>> {
         self.fixtures.get(handle)
     }
 
-    pub fn get_fixture_mut(&mut self, handle: FixtureHandle) -> Option<&mut Meta<Fixture>> {
+    pub fn get_fixture_mut(&mut self, handle: FixtureHandle) -> Option<RefMut<Meta<Fixture>>> {
         self.fixtures.get_mut(handle)
     }
 
@@ -961,17 +962,17 @@ impl Fixture {
         }
     }
 
-    pub fn shape_mut<'a>(&'a mut self) -> RefMut<'a, UnknownShape> {
+    pub fn shape_mut<'a>(&'a mut self) -> WrappedRefMut<'a, UnknownShape> {
         unsafe {
-            RefMut::new(UnknownShape::from_ffi(
+            WrappedRefMut::new(UnknownShape::from_ffi(
                 ffi::Fixture_get_shape(self.mut_ptr())
             ))
         }
     }
 
-    pub fn shape<'a>(&'a self) -> Ref<'a, UnknownShape> {
+    pub fn shape<'a>(&'a self) -> WrappedRef<'a, UnknownShape> {
         unsafe {
-            Ref::new(UnknownShape::from_ffi(
+            WrappedRef::new(UnknownShape::from_ffi(
                 ffi::Fixture_get_shape_const(self.ptr()) as *mut ffi::Shape
             ))
         }
@@ -1069,15 +1070,15 @@ impl ContactEdge {
         }
     }
 
-    pub fn contact_mut<'a>(&'a mut self) -> RefMut<'a, Contact> {
+    pub fn contact_mut<'a>(&'a mut self) -> WrappedRefMut<'a, Contact> {
         unsafe {
-            RefMut::new(Contact::from_ffi(self.contact))
+            WrappedRefMut::new(Contact::from_ffi(self.contact))
         }
     }
 
-    pub fn contact<'a>(&'a self) -> Ref<'a, Contact> {
+    pub fn contact<'a>(&'a self) -> WrappedRef<'a, Contact> {
         unsafe {
-            Ref::new(Contact::from_ffi(self.contact))
+            WrappedRef::new(Contact::from_ffi(self.contact))
         }
     }
 
@@ -1134,33 +1135,33 @@ pub trait RayCastCallback {
 
 unsafe extern fn goodbye_joint(any: ffi::FatAny, joint: *mut ffi::Joint) {
     let listener = mem::transmute::<_, &mut DestructionListener>(any);
-    let mut joint = RefMut::new(UnknownJoint::from_ffi(joint));
+    let mut joint = WrappedRefMut::new(UnknownJoint::from_ffi(joint));
     listener.goodbye_joint(&mut joint)
 }
 
 unsafe extern fn goodbye_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture) {
     let listener = mem::transmute::<_, &mut DestructionListener>(any);
-    let mut fixture = RefMut::new(Fixture::from_ffi(fixture));
+    let mut fixture = WrappedRefMut::new(Fixture::from_ffi(fixture));
     listener.goodbye_fixture(&mut fixture)
 }
 
 unsafe extern fn should_collide(any: ffi::FatAny, fixture_a: *mut ffi::Fixture,
                                 fixture_b: *mut ffi::Fixture) -> bool {
     let filter = mem::transmute::<_, &mut ContactFilter>(any);
-    let mut fixture_a = RefMut::new(Fixture::from_ffi(fixture_a));
-    let mut fixture_b = RefMut::new(Fixture::from_ffi(fixture_b));
+    let mut fixture_a = WrappedRefMut::new(Fixture::from_ffi(fixture_a));
+    let mut fixture_b = WrappedRefMut::new(Fixture::from_ffi(fixture_b));
     filter.should_collide(&mut fixture_a, &mut fixture_b)
 }
 
 unsafe extern fn begin_contact(any: ffi::FatAny, contact: *mut ffi::Contact) {
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    let mut contact = RefMut::new(Contact::from_ffi(contact));
+    let mut contact = WrappedRefMut::new(Contact::from_ffi(contact));
     listener.begin_contact(&mut contact)
 }
 
 unsafe extern fn end_contact(any: ffi::FatAny, contact: *mut ffi::Contact) {
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    let mut contact = RefMut::new(Contact::from_ffi(contact));
+    let mut contact = WrappedRefMut::new(Contact::from_ffi(contact));
     listener.end_contact(&mut contact)
 }
 
@@ -1168,7 +1169,7 @@ unsafe extern fn pre_solve(any: ffi::FatAny, contact: *mut ffi::Contact,
                            old_manifold: *const Manifold) {
     assert!(!old_manifold.is_null());
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    let mut contact = RefMut::new(Contact::from_ffi(contact));
+    let mut contact = WrappedRefMut::new(Contact::from_ffi(contact));
     listener.pre_solve(&mut contact, &*old_manifold)
 }
 
@@ -1176,14 +1177,14 @@ unsafe extern fn post_solve(any: ffi::FatAny, contact: *mut ffi::Contact,
                             impulse: *const ContactImpulse) {
     assert!(!impulse.is_null());
     let listener = mem::transmute::<_, &mut ContactListener>(any);
-    let mut contact = RefMut::new(Contact::from_ffi(contact));
+    let mut contact = WrappedRefMut::new(Contact::from_ffi(contact));
     listener.post_solve(&mut contact, &*impulse)
 }
 
 unsafe extern fn qc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                                    ) -> bool {
     let callback = mem::transmute::<_, &mut QueryCallback>(any);
-    let mut fixture = RefMut::new(Fixture::from_ffi(fixture));
+    let mut fixture = WrappedRefMut::new(Fixture::from_ffi(fixture));
     callback.report_fixture(&mut fixture)
 }
 
@@ -1192,7 +1193,7 @@ unsafe extern fn rcc_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture
                                     fraction: f32) -> f32 {
     // point and normal are coming from C++ &s
     let callback = mem::transmute::<_, &mut RayCastCallback>(any);
-    let mut fixture = RefMut::new(Fixture::from_ffi(fixture));
+    let mut fixture = WrappedRefMut::new(Fixture::from_ffi(fixture));
     callback.report_fixture(&mut fixture, &*point, &*normal, fraction)
 }
 

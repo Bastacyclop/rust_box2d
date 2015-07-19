@@ -108,57 +108,57 @@ pub trait FromFFI<T> {
     unsafe fn from_ffi(ptr: *mut T) -> Self where Self: Sized;
 }
 
-pub struct RefMut<'a, T> {
+pub struct WrappedRefMut<'a, T> {
     object: Option<T>,
     phantom: PhantomData<&'a ()>
 }
 
-impl<'a, T> RefMut<'a, T> {
-    pub unsafe fn new(t: T) -> RefMut<'a, T> {
-        RefMut {
+impl<'a, T> WrappedRefMut<'a, T> {
+    pub unsafe fn new(t: T) -> WrappedRefMut<'a, T> {
+        WrappedRefMut {
             object: Some(t),
             phantom: PhantomData
         }
     }
 }
 
-impl<'a, T> Deref for RefMut<'a, T> {
+impl<'a, T> Deref for WrappedRefMut<'a, T> {
     type Target = T;
 
     fn deref<'b>(&'b self) -> &'b T { self.object.as_ref().unwrap() }
 }
 
-impl<'a, T> DerefMut for RefMut<'a, T> {
+impl<'a, T> DerefMut for WrappedRefMut<'a, T> {
     fn deref_mut<'b>(&'b mut self) -> &'b mut T { self.object.as_mut().unwrap() }
 }
 
-impl<'a, T> Drop for RefMut<'a, T> {
+impl<'a, T> Drop for WrappedRefMut<'a, T> {
     fn drop(&mut self) {
         mem::forget(self.object.take())
     }
 }
 
-pub struct Ref<'a, T> {
+pub struct WrappedRef<'a, T> {
     object: Option<T>,
     phantom: PhantomData<&'a ()>
 }
 
-impl<'a, T> Ref<'a, T> {
-    pub unsafe fn new(t: T) -> Ref<'a, T> {
-        Ref {
+impl<'a, T> WrappedRef<'a, T> {
+    pub unsafe fn new(t: T) -> WrappedRef<'a, T> {
+        WrappedRef {
             object: Some(t),
             phantom: PhantomData
         }
     }
 }
 
-impl<'a, T> Deref for Ref<'a, T> {
+impl<'a, T> Deref for WrappedRef<'a, T> {
     type Target = T;
 
     fn deref<'b>(&'b self) -> &'b T { self.object.as_ref().unwrap() }
 }
 
-impl<'a, T> Drop for Ref<'a, T> {
+impl<'a, T> Drop for WrappedRef<'a, T> {
     fn drop(&mut self) {
         mem::forget(self.object.take())
     }

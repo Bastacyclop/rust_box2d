@@ -21,7 +21,8 @@ before_install:
 - cd Box2D/Box2D/Build
 - cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DBOX2D_BUILD_EXAMPLES=OFF ..
 - make
-- export PATH=$PATH:$PWD
+- export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD
+- export LIBRARY_PATH=$LIBRARY_PATH:$PWD
 - cd ../../..
 
 script:

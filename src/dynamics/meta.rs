@@ -6,11 +6,13 @@ use wrap::*;
 use handle::*;
 use b2::{ Body, UnknownJoint, Joint, Fixture };
 
+#[doc(hidden)]
 pub struct InternalUserData<O> {
     pub handle: TypedHandle<O>,
     pub custom: Option<Box<Any>>
 }
 
+#[doc(hidden)]
 pub trait RawUserData<R> {
     type Internal: Sized;
 
@@ -89,7 +91,9 @@ impl UserData for Fixture {
 }
 
 pub struct Meta<T> {
+    #[doc(hidden)]
     pub object: T,
+    #[doc(hidden)]
     pub user_data: Box<InternalUserData<Meta<T>>>
 }
 

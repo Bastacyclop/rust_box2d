@@ -1,5 +1,18 @@
+macro_rules! _from_ffi {
+    { $wrap:ident <= $wrapped:ty } => {
+        impl FromFFI<$wrapped> for $wrap {
+            unsafe fn from_ffi(ptr: *mut $wrapped) -> $wrap {
+                assert!(!ptr.is_null());
+                $wrap {
+                    ptr: ptr,
+                }
+            }
+        }
+    }
+}
+
 macro_rules! wrap {
-    ($wrapped:ty: custom $wrap:ident) => (
+    { $wrapped:ty => custom $wrap:ident } => {
         impl Wrapped<$wrapped> for $wrap {
             unsafe fn ptr(&self) -> *const $wrapped {
                 self.ptr as *const $wrapped
@@ -9,48 +22,30 @@ macro_rules! wrap {
                 self.ptr
             }
         }
-    );
+    };
 
-    ($wrapped:ty: $wrap:ident) => (
-        wrap!{ $wrapped: custom $wrap }
-
+    { $wrapped:ty => pub $wrap:ident } => {
         pub struct $wrap {
             ptr: *mut $wrapped,
         }
 
-        impl FromFFI<$wrapped> for $wrap {
-            unsafe fn from_ffi(ptr: *mut $wrapped) -> $wrap {
-                assert!(!ptr.is_null());
-                $wrap {
-                    ptr: ptr,
-                }
-            }
-        }
-    );
+        wrap! { $wrapped => custom $wrap }
+        _from_ffi! { $wrap <= $wrapped }
+    };
 
-    ($wrapped:ty: private $wrap:ident) => (
-        wrap!{ $wrapped: custom $wrap }
-
+    { $wrapped:ty => $wrap:ident } => {
         struct $wrap {
             ptr: *mut $wrapped,
         }
 
-        impl FromFFI<$wrapped> for $wrap {
-            unsafe fn from_ffi(ptr: *mut $wrapped) -> $wrap {
-                assert!(!ptr.is_null());
-                $wrap {
-                    ptr: ptr,
-                }
-            }
-        }
-    );
+        wrap! { $wrapped => custom $wrap }
+        _from_ffi! { $wrap <= $wrapped }
+    };
 
-    ($wrapped:ty: custom $wrap:ident with base $base:ty
-     > $as_base:path
-    ) => (
-
-        wrap! { $wrapped: custom $wrap }
-
+    {
+        base $base:ty => custom $wrap:ident
+        < $as_base:path
+    } => {
         impl WrappedBase<$base> for $wrap {
             unsafe fn base_ptr(&self) -> *const $base {
                 $as_base(self.ptr) as *const $base
@@ -60,23 +55,29 @@ macro_rules! wrap {
                 $as_base(self.ptr)
             }
         }
-    );
+    };
 
-    ($wrapped:ty: $wrap:ident with base $base:ty
-     > $as_base:path,
-     < $base_as:path
-    ) => (
+    {
+        $wrapped:ty (base $base:ty) => custom $wrap:ident
+        < $as_base:path
+        > $base_as:path
+    } => {
+        wrap! { $wrapped => custom $wrap }
+        wrap! {
+            base $base => custom $wrap
+            < $as_base
+        }
+    };
 
-        wrap! { $wrapped: $wrap }
-
-        impl WrappedBase<$base> for $wrap {
-            unsafe fn base_ptr(&self) -> *const $base {
-                $as_base(self.ptr) as *const $base
-            }
-
-            unsafe fn mut_base_ptr(&mut self) -> *mut $base {
-                $as_base(self.ptr)
-            }
+    {
+        $wrapped:ty (base $base:ty) => pub $wrap:ident
+        < $as_base:path
+        > $base_as:path
+    } => {
+        wrap! { $wrapped => pub $wrap }
+        wrap! {
+            base $base => custom $wrap
+            < $as_base
         }
 
         impl FromFFI<$base> for $wrap {
@@ -87,23 +88,26 @@ macro_rules! wrap {
                 }
             }
         }
-    );
+    };
 }
 
 use std::mem;
 use std::marker::PhantomData;
 use std::ops::{ Deref, DerefMut };
 
+#[doc(hidden)]
 pub trait Wrapped<T> {
     unsafe fn ptr(&self) -> *const T;
     unsafe fn mut_ptr(&mut self) -> *mut T;
 }
 
+#[doc(hidden)]
 pub trait WrappedBase<B> {
     unsafe fn base_ptr(&self) -> *const B;
     unsafe fn mut_base_ptr(&mut self) -> *mut B;
 }
 
+#[doc(hidden)]
 pub trait FromFFI<T> {
     unsafe fn from_ffi(ptr: *mut T) -> Self where Self: Sized;
 }
@@ -114,6 +118,7 @@ pub struct WrappedRefMut<'a, T> {
 }
 
 impl<'a, T> WrappedRefMut<'a, T> {
+    #[doc(hidden)]
     pub unsafe fn new(t: T) -> WrappedRefMut<'a, T> {
         WrappedRefMut {
             object: Some(t),
@@ -144,6 +149,7 @@ pub struct WrappedRef<'a, T> {
 }
 
 impl<'a, T> WrappedRef<'a, T> {
+    #[doc(hidden)]
     pub unsafe fn new(t: T) -> WrappedRef<'a, T> {
         WrappedRef {
             object: Some(t),

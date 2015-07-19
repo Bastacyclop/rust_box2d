@@ -1,4 +1,4 @@
-#![feature(associated_consts, ptr_as_ref, log_syntax, trace_macros)]
+#![feature(associated_consts, ptr_as_ref)]
 
 #[link(name = "Box2D")] extern {}
 #[link(name = "stdc++")] extern {}

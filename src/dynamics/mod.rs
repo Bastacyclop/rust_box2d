@@ -60,7 +60,7 @@ pub struct World {
     contact_listener_link: ContactListenerLink,
 }
 
-wrap! { ffi::World: custom World }
+wrap! { ffi::World => custom World }
 
 impl World {
     pub fn new(gravity: &Vec2) -> World {
@@ -469,7 +469,7 @@ pub struct Body {
     user_data: Box<meta::InternalUserData<Body>>
 }
 
-wrap! { ffi::Body: custom Body }
+wrap! { ffi::Body => custom Body }
 
 impl Body {
     pub fn transform<'a>(&'a self) -> &'a Transform {
@@ -882,7 +882,7 @@ impl FixtureDef {
     }
 }
 
-wrap! { ffi::Fixture: Fixture }
+wrap! { ffi::Fixture => pub Fixture }
 
 impl Fixture {
     pub fn shape_type(&self) -> ShapeType {
@@ -1051,7 +1051,7 @@ pub struct ManifoldPoint {
     pub id: u32
 }
 
-wrap! { ffi::Contact: Contact }
+wrap! { ffi::Contact => pub Contact }
 
 #[repr(C)]
 pub struct ContactEdge {
@@ -1210,9 +1210,9 @@ struct ContactListenerLink {
     object: Option<Box<ContactListener>>,
 }
 
-wrap! { ffi::DestructionListenerLink: custom DestructionListenerLink }
-wrap! { ffi::ContactFilterLink: custom ContactFilterLink }
-wrap! { ffi::ContactListenerLink: custom ContactListenerLink }
+wrap! { ffi::DestructionListenerLink => custom DestructionListenerLink }
+wrap! { ffi::ContactFilterLink => custom ContactFilterLink }
+wrap! { ffi::ContactListenerLink => custom ContactListenerLink }
 
 impl DestructionListenerLink {
     fn new() -> DestructionListenerLink {
@@ -1282,8 +1282,8 @@ impl ContactListenerLink {
     }
 }
 
-wrap! { ffi::QueryCallbackLink: private QueryCallbackLink }
-wrap! { ffi::RayCastCallbackLink: private RayCastCallbackLink }
+wrap! { ffi::QueryCallbackLink => QueryCallbackLink }
+wrap! { ffi::RayCastCallbackLink => RayCastCallbackLink }
 
 impl QueryCallbackLink {
     unsafe fn new(object: &mut QueryCallback) -> QueryCallbackLink {
@@ -1387,7 +1387,7 @@ unsafe extern fn draw_transform(any: ffi::FatAny, xf: *const Transform) {
     draw.draw_transform(&*xf)
 }
 
-wrap! { ffi::DrawLink: private DrawLink }
+wrap! { ffi::DrawLink => DrawLink }
 
 impl DrawLink {
     fn new() -> DrawLink {

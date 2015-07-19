@@ -14,9 +14,7 @@ addons:
 
 before_install:
 - git clone https://github.com/erincatto/Box2D
-- cd Box2D/Box2D
-#- export BOX2D_INCLUDE_PATH=$PWD
-- cd Build
+- cd Box2D/Box2D/Build
 - cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DBOX2D_BUILD_EXAMPLES=OFF ..
 - make && sudo make install
 - sudo ldconfig

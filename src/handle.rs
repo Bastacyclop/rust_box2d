@@ -14,6 +14,7 @@ pub struct TypedHandle<T> {
 }
 
 impl<T> TypedHandle<T> {
+    #[doc(hidden)]
     pub fn new(index: usize, version: usize) -> TypedHandle<T> {
         TypedHandle {
             index: index,
@@ -23,11 +24,13 @@ impl<T> TypedHandle<T> {
     }
 
     #[inline]
+    #[doc(hidden)]
     pub fn index(&self) -> usize {
         self.index
     }
 
     #[inline]
+    #[doc(hidden)]
     pub fn version(&self) -> usize {
         self.version
     }
@@ -61,6 +64,7 @@ impl<T> HandleEntry<T> {
     }
 }
 
+#[doc(hidden)]
 pub struct HandleMap<T> {
     next_index: usize,
     availables: Vec<usize>,

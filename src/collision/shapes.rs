@@ -4,17 +4,19 @@ use math::{ Vec2, Transform };
 use collision::{ RayCastInput, RayCastOutput, AABB };
 
 macro_rules! wrap_shape {
-    ($wrapped:ty: $wrap:ident
-     > $as_base:path,
-     < $base_as:path
-    ) => (
+    {
+        $wrapped:ty => $wrap:ident
+        < $as_base:path
+        > $base_as:path
+    } => {
         wrap! {
-            $wrapped: $wrap with base ffi::Shape
-            > $as_base, < $base_as
+            $wrapped (base ffi::Shape) => pub $wrap
+            < $as_base
+            > $base_as
         }
 
         impl Shape for $wrap {}
-    );
+    };
 }
 
 #[repr(C)]
@@ -151,27 +153,27 @@ impl FromFFI<ffi::Shape> for UnknownShape {
 impl Shape for UnknownShape {}
 
 wrap_shape! {
-    ffi::ChainShape: ChainShape
-    > ffi::ChainShape_as_shape,
-    < ffi::Shape_as_chain_shape
+    ffi::ChainShape => ChainShape
+    < ffi::ChainShape_as_shape
+    > ffi::Shape_as_chain_shape
 }
 
 wrap_shape! {
-    ffi::CircleShape: CircleShape
-    > ffi::CircleShape_as_shape,
-    < ffi::Shape_as_circle_shape
+    ffi::CircleShape => CircleShape
+    < ffi::CircleShape_as_shape
+    > ffi::Shape_as_circle_shape
 }
 
 wrap_shape! {
-    ffi::EdgeShape: EdgeShape
-    > ffi::EdgeShape_as_shape,
-    < ffi::Shape_as_edge_shape
+    ffi::EdgeShape => EdgeShape
+    < ffi::EdgeShape_as_shape
+    > ffi::Shape_as_edge_shape
 }
 
 wrap_shape! {
-    ffi::PolygonShape: PolygonShape
-    > ffi::PolygonShape_as_shape,
-    < ffi::Shape_as_polygon_shape
+    ffi::PolygonShape => PolygonShape
+    < ffi::PolygonShape_as_shape
+    > ffi::Shape_as_polygon_shape
 }
 
 impl ChainShape {

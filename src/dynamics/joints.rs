@@ -6,20 +6,21 @@ use math::Vec2;
 use dynamics::{ World, Body, BodyHandle, JointHandle };
 
 macro_rules! wrap_joint {
-    ($wrapped:ty: $wrap:ident ($joint_type:path)
-     > $as_base:path,
-     < $base_as:path
-    ) => (
+    {
+        $wrapped:ty => $wrap:ident ($joint_type:path)
+        < $as_base:path
+        > $base_as:path
+    } => {
         wrap! {
-            $wrapped: $wrap with base ffi::Joint
-            > $as_base,
-            < $base_as
+            $wrapped (base ffi::Joint) => pub $wrap
+            < $as_base
+            > $base_as
         }
 
         impl Joint for $wrap {
-            fn assumed_joint_type() -> JointType { $joint_type }
+            fn assumed_type() -> JointType { $joint_type }
         }
-    );
+    };
 }
 
 trait ToRaw {
@@ -44,25 +45,29 @@ macro_rules! impl_to_raw_identity {
             unsafe fn to_raw(&self, _: &World) -> $raw_type { *self }
         }
     };
+
     ($($raw_type:ty),+) => {
         $(
             impl_to_raw_identity! { $raw_type }
         )+
-    }
+    };
 }
 
 impl_to_raw_identity! { bool, f32, Vec2 }
 
 macro_rules! joint_def {
-    ($raw_name:ident => $name:ident ($joint_type:path) {
-        $(($($visibility:ident)*) $field:ident: $raw_type:ty => $t:ty),+
-    }) => {
+    {
+        $raw_name:ident => $name:ident ($joint_type:path) {
+            $(($($visibility:ident)*) $field:ident: $raw_type:ty => $t:ty),+
+        }
+    } => {
         #[repr(C)]
         #[allow(dead_code)]
+        #[doc(hidden)]
         pub struct $raw_name {
-            pub base: RawJointDefBase,
+            base: RawJointDefBase,
             $(
-                $($visibility)* $field: $raw_type
+                $field: $raw_type
             ),+
         }
 
@@ -84,9 +89,9 @@ macro_rules! joint_def {
         }
 
         impl JointDef for $name {
-            type Raw = $raw_name;
-
             fn joint_type() -> JointType where Self: Sized { $joint_type }
+
+            type Raw = $raw_name;
 
             unsafe fn to_raw(&self, world: &World) -> $raw_name {
                 $raw_name {
@@ -127,14 +132,18 @@ pub enum LimitState {
 }
 
 pub trait JointDef {
+    fn joint_type() -> JointType where Self: Sized;
+
+    #[doc(hidden)]
     type Raw: WrappedBase<RawJointDefBase>;
 
-    fn joint_type() -> JointType where Self: Sized;
+    #[doc(hidden)]
     unsafe fn to_raw(&self, world: &World) -> Self::Raw;
 }
 
 #[repr(C)]
 #[allow(dead_code)]
+#[doc(hidden)]
 pub struct RawJointDefBase {
     pub joint_type: JointType,
     user_data: ffi::Any,
@@ -151,7 +160,7 @@ pub struct JointDefBase {
 }
 
 impl JointDefBase {
-    fn new(joint_type: JointType) -> JointDefBase {
+    pub fn new(joint_type: JointType) -> JointDefBase {
         JointDefBase {
             joint_type: joint_type,
             body_a: None,
@@ -178,7 +187,7 @@ impl ToRaw for JointDefBase {
 }
 
 pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
-    fn assumed_joint_type() -> JointType where Self: Sized;
+    fn assumed_type() -> JointType where Self: Sized;
 
     fn get_type(&self) -> JointType {
         unsafe {
@@ -363,7 +372,7 @@ impl FromFFI<ffi::Joint> for UnknownJoint {
 }
 
 impl Joint for UnknownJoint {
-    fn assumed_joint_type() -> JointType { JointType::Unknown }
+    fn assumed_type() -> JointType { JointType::Unknown }
 }
 
 joint_def! {
@@ -757,69 +766,69 @@ impl WheelJointDef {
 }
 
 wrap_joint! {
-    ffi::DistanceJoint: DistanceJoint (JointType::Distance)
-    > ffi::DistanceJoint_as_joint,
-    < ffi::Joint_as_distance_joint
+    ffi::DistanceJoint => DistanceJoint (JointType::Distance)
+    < ffi::DistanceJoint_as_joint
+    > ffi::Joint_as_distance_joint
 }
 
 wrap_joint! {
-    ffi::FrictionJoint: FrictionJoint (JointType::Friction)
-    > ffi::FrictionJoint_as_joint,
-    < ffi::Joint_as_friction_joint
+    ffi::FrictionJoint => FrictionJoint (JointType::Friction)
+    < ffi::FrictionJoint_as_joint
+    > ffi::Joint_as_friction_joint
 }
 
 wrap_joint! {
-    ffi::GearJoint: GearJoint (JointType::Gear)
-    > ffi::GearJoint_as_joint,
-    < ffi::Joint_as_gear_joint
+    ffi::GearJoint => GearJoint (JointType::Gear)
+    < ffi::GearJoint_as_joint
+    > ffi::Joint_as_gear_joint
 }
 
 wrap_joint! {
-    ffi::MotorJoint: MotorJoint (JointType::Motor)
-    > ffi::MotorJoint_as_joint,
-    < ffi::Joint_as_motor_joint
+    ffi::MotorJoint => MotorJoint (JointType::Motor)
+    < ffi::MotorJoint_as_joint
+    > ffi::Joint_as_motor_joint
 }
 
 wrap_joint! {
-    ffi::MouseJoint: MouseJoint (JointType::Mouse)
-    > ffi::MouseJoint_as_joint,
-    < ffi::Joint_as_mouse_joint
+    ffi::MouseJoint => MouseJoint (JointType::Mouse)
+    < ffi::MouseJoint_as_joint
+    > ffi::Joint_as_mouse_joint
 }
 
 wrap_joint! {
-    ffi::PrismaticJoint: PrismaticJoint (JointType::Prismatic)
-    > ffi::PrismaticJoint_as_joint,
-    < ffi::Joint_as_prismatic_joint
+    ffi::PrismaticJoint => PrismaticJoint (JointType::Prismatic)
+    < ffi::PrismaticJoint_as_joint
+    > ffi::Joint_as_prismatic_joint
 }
 
 wrap_joint! {
-    ffi::PulleyJoint: PulleyJoint (JointType::Pulley)
-    > ffi::PulleyJoint_as_joint,
-    < ffi::Joint_as_pulley_joint
+    ffi::PulleyJoint => PulleyJoint (JointType::Pulley)
+    < ffi::PulleyJoint_as_joint
+    > ffi::Joint_as_pulley_joint
 }
 
 wrap_joint! {
-    ffi::RevoluteJoint: RevoluteJoint (JointType::Revolute)
-    > ffi::RevoluteJoint_as_joint,
-    < ffi::Joint_as_revolute_joint
+    ffi::RevoluteJoint => RevoluteJoint (JointType::Revolute)
+    < ffi::RevoluteJoint_as_joint
+    > ffi::Joint_as_revolute_joint
 }
 
 wrap_joint! {
-    ffi::RopeJoint: RopeJoint (JointType::Rope)
-    > ffi::RopeJoint_as_joint,
-    < ffi::Joint_as_rope_joint
+    ffi::RopeJoint => RopeJoint (JointType::Rope)
+    < ffi::RopeJoint_as_joint
+    > ffi::Joint_as_rope_joint
 }
 
 wrap_joint! {
-    ffi::WeldJoint: WeldJoint (JointType::Weld)
-    > ffi::WeldJoint_as_joint,
-    < ffi::Joint_as_weld_joint
+    ffi::WeldJoint => WeldJoint (JointType::Weld)
+    < ffi::WeldJoint_as_joint
+    > ffi::Joint_as_weld_joint
 }
 
 wrap_joint! {
-    ffi::WheelJoint: WheelJoint (JointType::Wheel)
-    > ffi::WheelJoint_as_joint,
-    < ffi::Joint_as_wheel_joint
+    ffi::WheelJoint => WheelJoint (JointType::Wheel)
+    < ffi::WheelJoint_as_joint
+    > ffi::Joint_as_wheel_joint
 }
 
 impl DistanceJoint {

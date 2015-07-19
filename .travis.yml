@@ -5,7 +5,6 @@ rust:
 
 env:
   global:
-  - secure: KDv4raQZLGs2Z5+xjeMIyf1B8J2S/0BRQMumiSoKd9YzB5yZNmJxiuYytZmO85mqUisXxLbZ+1sDdf8cQoH5IfOaVN8IE8V96C0T1SiQq4aN9JZzlplejelIdNIy4Agnfz8RqD3pgInq3YaexQe7xCD5WGQ3SFk0nTL/xWdAx1rv6IxOjhz8kQv7KXTWWSEQBMxN1ZCAFQQZ+FavCudgxeEBLEnUV0sQ6L9cvMva0seKwdPFddRh7w1LyYoD2OjXvS3dnWo6xQlLUaCO+effu9EfD13tnLOh5AZ3pwxmD7tqGCBxvCh+yTrIzxyDnS36yak44xSbRSnOoa9Bg/7qTz6o6zn8X+vir5wFaLJmYNPqmp5wGywZS6aTco+rDWkYW/kr/Gj3H4AIvzSQxHP08fyzu4rUaGfRa3CLBigA/uh4fZNY47DC5EBs6dUsSr9u3YYWa6PghB45gdsTUkI2VpU7pulMh+kXT3daJ+m5NDtJKbDfV6VpW9YVwIERsp+lxngrArYD+mcOcXpJSxGkvBcuatNmFldB6MevF2IKRgVuE7IVKWuU1P30mltvAqfE5IhB+H9/1BUtzv4SNEJImeAbIeMf3YjM9w1NHzG+Bzy+SEkqC57r0DkabVWMKBakZ4sQgotwNoHaewIXb1LZQAoiahNusPOISpCOMhxtxak=
   - secure: dPnlbtp/I74TtNHkQJM7G+fn80RkIaWOqXvI/byYKfjfB5ZOC6gPc77GJ0+A+ZJXZEoFct4Tt1eUKs+hz0jLfs0kcPb8XArTj+nJbgnLeBREdGU5r+NN4D005zOJJR5VOuVViUxfJooQOI+ug6v8tRXE4cfXipy9QFUGJmJL+HyJNBtJyjqkZAvI9l3oWQBxbhnO2cdvg2oOzqZhM/xMSzPzLCW6fA0pBs5ifkMIHsS5zLbt2nFue7b84OdnYvgUNc9mFgpKVoTm27ypEnIGysGDBOa8ZaSVwW8VRabRftDVP5Ht0JYZ4R/P1LcHjXR8x/zR15BPxqAjEf9AKam6kC1o/t9wgBokCvYuQGbmeq45MPyIlJmZ8kcH7qejnAHOF8UyJTFZk1SfIJ7JXm/wLnicBQuVHNywPDv7zQ0vICnV6i0dvrcjFUxewT/E8ErLCK7NoKmxtm6RRkkG8Hcbfc4rRvIoxIK30FV03hT7G0lYLIvwEBtFCC+FtCKrOun9wnEanTjMBmmCqG26mJZOdztGlFFlEwO22DaBolSjwrvwXOieUlZ+hiC183qsivD2zb8NS/CAnxmwybhMEAPOVVlqzlVgKLYP0Zyf+8vFR0RvLe7M0jGX8eJekNETegt9SNJ6PkVpqwgPuMDA0Og9JuONDJnDkFvxh9Z5Tkrq/eE=
 
 addons:
@@ -16,10 +15,11 @@ addons:
 before_install:
 - git clone https://github.com/erincatto/Box2D
 - cd Box2D/Box2D
-- export BOX2D_INCLUDE_PATH=$PWD
+#- export BOX2D_INCLUDE_PATH=$PWD
 - cd Build
 - cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DBOX2D_BUILD_EXAMPLES=OFF ..
 - make && sudo make install
+- sudo ldconfig
 - cd ../../..
 
 script:

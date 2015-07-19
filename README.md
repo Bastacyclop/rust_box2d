@@ -20,6 +20,5 @@ BOX2D_INCLUDE_PATH="path/to/Box2D/Box2D" cargo run --example simple
 ### TODO
 
 - make joint defs usable
-- fix multiple definitions error (with `cargo test`)
 - access multiple handles with only one borrow
-- test everything and track bugs
+- test everything, track bugs and missing features

@@ -2,7 +2,8 @@ extern crate box2d;
 
 use box2d::b2;
 
-fn main () {
+#[test]
+fn fall () {
     let time_step = 1./60.;
     let velocity_iterations = 6;
     let position_iterations = 2;
@@ -55,6 +56,6 @@ fn main () {
         println!("({}, {}) {}", pos.x, pos.y, angle);
     }
 
-    world.destroy_body(body); // Unecessary
+    world.destroy_body(body);
     assert_eq!(world.body_count(), 1);
 }

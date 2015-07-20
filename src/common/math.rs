@@ -144,3 +144,14 @@ impl Transform {
         }
     }
 }
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct Sweep {
+    pub local_center: Vec2,
+    pub c0: Vec2,
+    pub c: Vec2,
+    pub a0: f32,
+    pub a: f32,
+    pub alpha0: f32
+}

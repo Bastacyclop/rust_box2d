@@ -31,7 +31,7 @@ impl MassData {
     pub fn new() -> MassData {
         MassData {
             mass: 0.,
-            center: Vec2 { x:0., y:0. },
+            center: Vec2 { x: 0., y: 0. },
             inertia: 0.,
         }
     }
@@ -40,11 +40,11 @@ impl MassData {
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ShapeType {
-    Circle = 0,
-    Edge = 1,
-    Polygon = 2,
-    Chain = 3,
-    Count = 4
+    Circle,
+    Edge,
+    Polygon,
+    Chain,
+    Count
 }
 
 pub trait Shape: WrappedBase<ffi::Shape> {

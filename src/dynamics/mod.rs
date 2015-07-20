@@ -22,6 +22,7 @@ pub use self::joints::{
 use std::ptr;
 use std::mem;
 use std::any::Any;
+use std::marker::PhantomData;
 use std::cell::{ Ref, RefMut };
 use { ffi, settings };
 use wrap::*;
@@ -29,6 +30,7 @@ use handle::*;
 use common::{ Draw, DrawFlags, Color };
 use math::{ Vec2, Transform };
 use collision::{
+    Manifold, WorldManifold,
     RayCastInput, RayCastOutput, AABB,
     Shape, ShapeType, UnknownShape, MassData
 };
@@ -145,9 +147,27 @@ impl World {
 
     pub fn destroy_body(&mut self, handle: BodyHandle) {
         self.bodies.remove(handle)
-            .map(|mut body| { unsafe {
-                ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr());
-            } });
+            .map(|mut body| {
+                // __ Use the DestructionListener instead ?
+                World::remove_body_joint_handles(&mut body, &mut self.joints);
+                unsafe {
+                    ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr());
+                }
+            });
+    }
+
+    fn remove_body_joint_handles(body: &mut Body,
+                                 joints: &mut HandleMap<Meta<UnknownJoint>>) {
+        let mut joint_edge = body.joints();
+        loop {
+            match joint_edge {
+                None => break,
+                Some(je) => {
+                    joints.remove(je.joint());
+                    joint_edge = je.next();
+                }
+            }
+        }
     }
 
     pub fn create_joint<JD: JointDef>(&mut self, def: &JD) -> JointHandle {
@@ -255,15 +275,21 @@ impl World {
         self.joints.iter()
     }
 
-    pub fn contact_list_mut(&mut self) -> Option<&mut ContactEdge> {
-        unsafe {
-            ffi::World_get_contact_list(self.mut_ptr()).as_mut()
+    pub fn contact_list_mut(&mut self) -> ContactIterMut {
+        ContactIterMut {
+            ptr: unsafe {
+                ffi::World_get_contact_list(self.mut_ptr())
+            },
+            phantom: PhantomData
         }
     }
 
-    pub fn contact_list(&self) -> Option<&ContactEdge> {
-        unsafe {
-            ffi::World_get_contact_list_const(self.ptr()).as_ref()
+    pub fn contact_list(&self) -> ContactIter {
+        ContactIter {
+            ptr: unsafe {
+                ffi::World_get_contact_list_const(self.ptr())
+            },
+            phantom: PhantomData
         }
     }
 
@@ -413,6 +439,47 @@ impl Drop for World {
         }
     }
 }
+
+pub struct ContactIterMut<'a> {
+    ptr: *mut ffi::Contact,
+    phantom: PhantomData<&'a ()>
+}
+
+impl<'a> Iterator for ContactIterMut<'a> {
+    type Item = WrappedRefMut<'a, Contact>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.ptr.is_null() {
+            None
+        } else { unsafe {
+            let next = ffi::Contact_get_next(self.ptr);
+            Some(WrappedRefMut::new(Contact::from_ffi(
+                mem::replace(&mut self.ptr, next)
+            )))
+        } }
+    }
+}
+
+pub struct ContactIter<'a> {
+    ptr: *const ffi::Contact,
+    phantom: PhantomData<&'a ()>
+}
+
+impl<'a> Iterator for ContactIter<'a> {
+    type Item = WrappedRef<'a, Contact>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.ptr.is_null() {
+            None
+        } else { unsafe {
+            let next = ffi::Contact_get_next_const(self.ptr);
+            Some(WrappedRef::new(Contact::from_ffi(
+                mem::replace(&mut self.ptr, next) as *mut ffi::Contact
+            )))
+        } }
+    }
+}
+
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -656,7 +723,8 @@ impl Body {
         }
     }
 
-    unsafe fn insert_fixture(&mut self, fixture: *mut ffi::Fixture) -> FixtureHandle {
+    unsafe fn insert_fixture(&mut self,
+                             fixture: *mut ffi::Fixture) -> FixtureHandle {
         let handle = self.fixtures.insert(Meta {
             object: Fixture::from_ffi(fixture),
             user_data: mem::uninitialized()
@@ -1019,6 +1087,126 @@ impl Fixture {
     }
 }
 
+wrap! { ffi::Contact => pub Contact }
+
+impl Contact {
+    pub fn manifold<'a>(&'a self) -> &'a Manifold {
+        unsafe {
+            &*ffi::Contact_get_manifold_const(self.ptr())
+        }
+    }
+
+    pub fn manifold_mut<'a>(&'a mut self) -> &'a mut Manifold {
+        unsafe {
+            &mut *ffi::Contact_get_manifold(self.mut_ptr())
+        }
+    }
+
+    pub fn world_manifold<'a>(&'a self) -> WorldManifold {
+        unsafe {
+            let mut m = mem::uninitialized();
+            ffi::Contact_get_world_manifold(self.ptr(), &mut m);
+            m
+        }
+    }
+
+    pub fn is_touching(&self) -> bool {
+        unsafe {
+            ffi::Contact_is_touching(self.ptr())
+        }
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        unsafe {
+            ffi::Contact_is_enabled(self.ptr())
+        }
+    }
+
+    pub fn fixture_a(&self) -> FixtureHandle {
+        unsafe {
+            <Fixture as meta::RawUserData<_>>::get_handle(
+                ffi::Contact_get_fixture_a_const(self.ptr())
+            )
+        }
+    }
+
+    pub fn child_index_a(&self) -> i32 {
+        unsafe {
+            ffi::Contact_get_child_index_a(self.ptr())
+        }
+    }
+
+    pub fn fixture_b(&self) -> FixtureHandle {
+        unsafe {
+            <Fixture as meta::RawUserData<_>>::get_handle(
+                ffi::Contact_get_fixture_b_const(self.ptr())
+            )
+        }
+    }
+
+    pub fn child_index_b(&self) -> i32 {
+        unsafe {
+            ffi::Contact_get_child_index_b(self.ptr())
+        }
+    }
+
+    pub fn set_friction(&mut self, friction: f32) {
+        unsafe {
+            ffi::Contact_set_friction(self.mut_ptr(), friction)
+        }
+    }
+
+    pub fn friction(&self) -> f32 {
+        unsafe {
+            ffi::Contact_get_friction(self.ptr())
+        }
+    }
+
+    pub fn reset_friction(&mut self) {
+        unsafe {
+            ffi::Contact_reset_friction(self.mut_ptr())
+        }
+    }
+
+    pub fn set_restitution(&mut self, restitution: f32) {
+        unsafe {
+            ffi::Contact_set_restitution(self.mut_ptr(), restitution)
+        }
+    }
+
+    pub fn restitution(&self) -> f32 {
+        unsafe {
+            ffi::Contact_get_restitution(self.ptr())
+        }
+    }
+
+    pub fn reset_restitution(&mut self) {
+        unsafe {
+            ffi::Contact_reset_restitution(self.mut_ptr())
+        }
+    }
+
+    pub fn set_tangent_speed(&mut self, speed: f32) {
+        unsafe {
+            ffi::Contact_set_tangent_speed(self.mut_ptr(), speed)
+        }
+    }
+
+    pub fn tangent_speed(&self) -> f32 {
+        unsafe {
+            ffi::Contact_get_tangent_speed(self.ptr())
+        }
+    }
+
+    pub fn evaluate(&mut self, xf_a: &Transform, xf_b: &Transform) -> Manifold {
+        unsafe {
+            let mut m = mem::uninitialized();
+            ffi::Contact_evaluate_virtual(self.mut_ptr(), &mut m, xf_a, xf_b);
+            m
+        }
+    }
+}
+
 #[repr(C)]
 pub struct ContactImpulse {
     pub normal_impulses: [f32; settings::MAX_MANIFOLD_POINTS],
@@ -1026,32 +1214,6 @@ pub struct ContactImpulse {
     pub count: i32
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum ManifoldType {
-    Circles = 0,
-    FaceA = 1,
-    FaceB = 2
-}
-
-#[repr(C)]
-pub struct Manifold {
-    pub points: [ManifoldPoint; settings::MAX_MANIFOLD_POINTS],
-    pub local_normal: Vec2,
-    pub local_point: Vec2,
-    pub manifold_type: ManifoldType,
-    pub count: i32
-}
-
-#[repr(C)]
-pub struct ManifoldPoint {
-    pub local_point: Vec2,
-    pub normal_impulse: f32,
-    pub tangent_impulse: f32,
-    pub id: u32
-}
-
-wrap! { ffi::Contact => pub Contact }
 
 #[repr(C)]
 pub struct ContactEdge {

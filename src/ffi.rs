@@ -1,15 +1,20 @@
 use libc::c_void;
 use std::ptr;
-use math::{Vec2, Transform};
-use common::{Color, DrawFlags};
+use settings;
+use math::{ Vec2, Transform };
+use common::{ Color, DrawFlags };
 use dynamics::{
     BodyDef, BodyType, FixtureDef,
     JointType, JointEdge,
-    Filter, Profile, Manifold, ContactImpulse, ContactEdge
+    Filter, Profile, ContactImpulse, ContactEdge
 };
 use dynamics::joints::{ LimitState, RawJointDefBase };
 use collision::{
-    ShapeType, MassData, AABB, RayCastInput, RayCastOutput
+    ShapeType, MassData,
+    Manifold, WorldManifold, PointState,
+    RawDistanceProxy, DistanceOutput, SimplexCache, RawDistanceInput,
+    RawTOIInput, TOIOutput,
+    AABB, RayCastInput, RayCastOutput
 };
 
 #[repr(C)] pub struct DestructionListener;
@@ -92,8 +97,8 @@ extern {
     //pub fn World_get_body_list_const(slf: *const World) -> *const Body;
     //pub fn World_get_joint_list(slf: *mut World) -> *mut Joint;
     //pub fn World_get_joint_list_const(slf: *const World) -> *const Joint;
-    pub fn World_get_contact_list(slf: *mut World) -> *mut ContactEdge;
-    pub fn World_get_contact_list_const(slf: *const World) -> *const ContactEdge;
+    pub fn World_get_contact_list(slf: *mut World) -> *mut Contact;
+    pub fn World_get_contact_list_const(slf: *const World) -> *const Contact;
     pub fn World_set_allow_sleeping(slf: *mut World, flag: bool);
     pub fn World_get_allow_sleeping(slf: *const World) -> bool;
     pub fn World_set_warm_starting(slf: *mut World, flag: bool);
@@ -288,6 +293,48 @@ extern {
     pub fn Fixture_set_restitution(slf: *mut Fixture, restitution: f32);
     pub fn Fixture_get_aabb(slf: *const Fixture, child_id: i32) -> *const AABB;
     pub fn Fixture_dump(slf: *mut Fixture, body_id: i32);
+
+    pub fn WorldManifold_Initialize(slf: *mut WorldManifold,
+                                    manifold: *const Manifold,
+                                    xf_a: *const Transform, radius_a: f32,
+                                    xf_b: *const Transform, radius_b: f32);
+    pub fn get_point_states(s1: &mut [PointState; settings::MAX_MANIFOLD_POINTS],
+                            s2: &mut [PointState; settings::MAX_MANIFOLD_POINTS],
+                            m1: *const Manifold, m2: *const Manifold);
+    pub fn test_overlap(shape_a: *const Shape, index_a: i32,
+                        shape_b: *const Shape, index_b: i32,
+                        xf_a: *const Transform, xf_b: *const Transform) -> bool;
+
+    pub fn DistanceProxy_set(slf: *mut RawDistanceProxy,
+                             shape: *const Shape, index: i32);
+    pub fn distance(output: *mut DistanceOutput,
+                    cache: *mut SimplexCache,
+                    input: *const RawDistanceInput);
+    pub fn time_of_impact(output: *mut TOIOutput, input: *const RawTOIInput);
+
+    pub fn Contact_get_manifold(slf: *mut Contact) -> *mut Manifold;
+    pub fn Contact_get_manifold_const(slf: *const Contact) -> *const Manifold;
+    pub fn Contact_get_world_manifold(slf: *const Contact, wm: *mut WorldManifold);
+    pub fn Contact_is_touching(slf: *const Contact) -> bool;
+    pub fn Contact_is_enabled(slf: *const Contact) -> bool;
+    pub fn Contact_get_next(slf: *mut Contact) -> *mut Contact;
+    pub fn Contact_get_next_const(slf: *const Contact) -> *const Contact;
+    //pub fn Contact_get_fixture_a(slf: *mut Contact) -> *mut Fixture;
+    pub fn Contact_get_fixture_a_const(slf: *const Contact) -> *const Fixture;
+    pub fn Contact_get_child_index_a(slf: *const Contact) -> i32;
+    //pub fn Contact_get_fixture_b(slf: *mut Contact) -> *mut Fixture;
+    pub fn Contact_get_fixture_b_const(slf: *const Contact) -> *const Fixture;
+    pub fn Contact_get_child_index_b(slf: *const Contact) -> i32;
+    pub fn Contact_set_friction(slf: *mut Contact, friction: f32);
+    pub fn Contact_get_friction(slf: *const Contact) -> f32;
+    pub fn Contact_reset_friction(slf: *mut Contact);
+    pub fn Contact_set_restitution(slf: *mut Contact, restitution: f32);
+    pub fn Contact_get_restitution(slf: *const Contact) -> f32;
+    pub fn Contact_reset_restitution(slf: *mut Contact);
+    pub fn Contact_set_tangent_speed(slf: *mut Contact, speed: f32);
+    pub fn Contact_get_tangent_speed(slf: *const Contact) -> f32;
+    pub fn Contact_evaluate_virtual(slf: *mut Contact, m: *mut Manifold,
+                                    xf_a: *const Transform, xf_b: *const Transform);
 
     //pub fn Shape_drop_virtual(slf: *mut Shape);
     //pub fn Shape_clone_virtual(slf: *const Shape,

@@ -26,6 +26,7 @@ struct RustFatObject {
 #include "dynamics/world.cpp"
 #include "dynamics/world_callbacks.cpp"
 
+#include "collision/collision.cpp"
 #include "collision/shapes/shape.cpp"
 #include "collision/shapes/chain_shape.cpp"
 #include "collision/shapes/circle_shape.cpp"

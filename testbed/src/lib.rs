@@ -33,8 +33,8 @@ pub fn run<F>(name: &str, width: u32, height: u32,
     let mut gl = GlGraphics::new(gl_version);
 
     let time_step = 1./60.;
-    let velocity_iterations = 6;
-    let position_iterations = 2;
+    let velocity_iterations = 8;
+    let position_iterations = 3;
 
     let draw_flags = b2::DRAW_SHAPE |
                      b2::DRAW_AABB |

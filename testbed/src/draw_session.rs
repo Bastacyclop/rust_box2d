@@ -1,4 +1,4 @@
-use piston::event::RenderArgs;
+use piston::input::RenderArgs;
 use graphics::{ Context, Line, Ellipse, Polygon };
 use opengl_graphics::GlGraphics;
 use box2d::b2;

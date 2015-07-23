@@ -1,7 +1,7 @@
 [package]
 
 name = "box2d"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 
 description = "Rust binding for Box2D"

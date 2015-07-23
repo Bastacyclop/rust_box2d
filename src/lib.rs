@@ -1,3 +1,40 @@
+//! Bod2D for Rust
+//!
+//! You won't find a lot of information about Box2D itself here,
+//! look at [the official website](http://box2d.org/) instead.
+//!
+//! # World
+//!
+//! ````
+//! use box2d::b2;
+//!
+//! let gravity = b2::Vec2 { x: 0., y: -10. };
+//! let world = b2::World::new(&gravity);
+//! ````
+//!
+//! # Handles
+//!
+//! Bodies, fixtures and joints are accessed through handles and
+//! their borrowing is dynamically checked by `RefCell`s.
+//!
+//! ````
+//! # use box2d::b2;
+//! # let gravity = b2::Vec2 { x: 0., y: -10. };
+//! # let mut world = b2::World::new(&gravity);
+//! let mut def = b2::BodyDef::new();
+//! def.body_type = b2::BodyType::Dynamic;
+//! def.position = b2::Vec2 { x: 10., y: 10. };
+//!
+//! let handle = world.create_body(&def);
+//! let mut body = world.get_body_mut(handle);
+//!
+//! let mut shape = b2::PolygonShape::new();
+//! shape.set_as_box(0.5, 0.5);
+//!
+//! let handle = body.create_fast_fixture(&shape, 2.);
+//! let fixture = body.get_fixture(handle);
+//! ````
+
 #![feature(associated_consts, ptr_as_ref)]
 
 #[link(name = "Box2D")] extern {}

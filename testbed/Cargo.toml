@@ -8,10 +8,10 @@ authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 name = "testbed"
 
 [dependencies]
-piston = "*"
-pistoncore-glutin_window = "*"
+piston = "0.5"
+pistoncore-glutin_window = "0.7"
 piston2d-graphics = "*"
-piston2d-opengl_graphics = "*"
+piston2d-opengl_graphics = "0.6"
 
 [dependencies.box2d]
 path = ".."

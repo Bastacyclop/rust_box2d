@@ -2,7 +2,7 @@
 
 use std::mem;
 use std::marker::PhantomData;
-use std::cell::{ UnsafeCell, Ref, RefMut };
+use std::cell::{ RefCell, Ref, RefMut };
 use wrap::*;
 use handle::*;
 use common::{ Draw, DrawLink, DrawFlags };
@@ -27,8 +27,8 @@ pub struct World {
     draw_link: DrawLink,
     contact_filter_link: ContactFilterLink,
     contact_listener_link: ContactListenerLink,
-    query_callback_link: UnsafeCell<QueryCallbackLink>,
-    raycast_callback_link: UnsafeCell<RayCastCallbackLink>
+    query_callback_link: RefCell<QueryCallbackLink>,
+    raycast_callback_link: RefCell<RayCastCallbackLink>
 }
 
 wrap! { ffi::World => custom World }
@@ -43,8 +43,8 @@ impl World {
                 draw_link: DrawLink::new(),
                 contact_filter_link: ContactFilterLink::new(),
                 contact_listener_link: ContactListenerLink::new(),
-                query_callback_link: UnsafeCell::new(QueryCallbackLink::new()),
-                raycast_callback_link: UnsafeCell::new(RayCastCallbackLink::new())
+                query_callback_link: RefCell::new(QueryCallbackLink::new()),
+                raycast_callback_link: RefCell::new(RayCastCallbackLink::new())
             }
         }
     }
@@ -159,17 +159,15 @@ impl World {
 
     pub fn query_aabb(&self, callback: &mut QueryCallback, aabb: &AABB) {
         unsafe {
-            let callback_ptr = (&mut *self.query_callback_link.get())
-                .use_with(self, callback);
-            ffi::World_query_aabb(self.ptr(), callback_ptr, aabb);
+            let ptr = self.query_callback_link.borrow_mut().use_with(callback);
+            ffi::World_query_aabb(self.ptr(), ptr, aabb);
         }
     }
 
     pub fn ray_cast(&self, callback: &mut RayCastCallback, p1: &Vec2, p2: &Vec2) {
         unsafe {
-            let callback_ptr = (&mut *self.raycast_callback_link.get())
-                .use_with(self, callback);
-            ffi::World_ray_cast(self.ptr(), callback_ptr, p1, p2);
+            let ptr = self.raycast_callback_link.borrow_mut().use_with(callback);
+            ffi::World_ray_cast(self.ptr(), ptr, p1, p2);
         }
     }
 

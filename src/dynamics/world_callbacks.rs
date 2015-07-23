@@ -1,10 +1,9 @@
 use std::mem;
-use std::ptr;
 use wrap::*;
 use common::math::{ Vec2 };
 use common::settings::MAX_MANIFOLD_POINTS;
 use collision::Manifold;
-use dynamics::world::{ World, BodyHandle };
+use dynamics::world::BodyHandle;
 use dynamics::body::FixtureHandle;
 use dynamics::fixture::Fixture;
 use dynamics::contacts::Contact;
@@ -151,16 +150,14 @@ impl Drop for ContactListenerLink {
 }
 
 pub trait QueryCallback {
-    fn report_fixture(&mut self, world: &World,
-                      body: BodyHandle, fixture: FixtureHandle) -> bool;
+    fn report_fixture(&mut self, body: BodyHandle, fixture: FixtureHandle) -> bool;
 }
 
 impl<F> QueryCallback for F
-    where F: FnMut(&World, BodyHandle, FixtureHandle) -> bool {
+    where F: FnMut(BodyHandle, FixtureHandle) -> bool {
 
-    fn report_fixture(&mut self, world: &World,
-                      body: BodyHandle, fixture: FixtureHandle) -> bool {
-        self(world, body, fixture)
+    fn report_fixture(&mut self, body: BodyHandle, fixture: FixtureHandle) -> bool {
+        self(body, fixture)
     }
 }
 
@@ -169,28 +166,23 @@ wrap! { ffi::QueryCallbackLink => #[doc(hidden)] pub QueryCallbackLink }
 impl QueryCallbackLink {
     pub unsafe fn new() -> QueryCallbackLink {
         QueryCallbackLink::from_ffi(
-            ffi::QueryCallbackLink_new(ptr::null_mut(),
-                                       ffi::FatAny::null(),
+            ffi::QueryCallbackLink_new(ffi::FatAny::null(),
                                        qcl_report_fixture)
         )
     }
 
     pub unsafe fn use_with(&mut self,
-                           world: &World,
                            callback: &mut QueryCallback) -> *mut ffi::QueryCallback {
-        ffi::QueryCallbackLink_set_world(self.mut_ptr(), mem::transmute(world));
         ffi::QueryCallbackLink_set_object(self.mut_ptr(), mem::transmute(callback));
         ffi::QueryCallbackLink_as_base(self.mut_ptr())
     }
 }
 
-unsafe extern fn qcl_report_fixture(world: ffi::ConstAny, any: ffi::FatAny,
+unsafe extern fn qcl_report_fixture(any: ffi::FatAny,
                                     fixture: *mut ffi::Fixture) -> bool {
-    let world = mem::transmute::<_, &World>(world);
     let callback = mem::transmute::<_, &mut QueryCallback>(any);
     let body = WrappedRef::new(Fixture::from_ffi(fixture)).body();
-    let fixture = fixture.get_handle();
-    callback.report_fixture(world, body, fixture)
+    callback.report_fixture(body, fixture.get_handle())
 }
 
 impl Drop for QueryCallbackLink {
@@ -202,16 +194,16 @@ impl Drop for QueryCallbackLink {
 }
 
 pub trait RayCastCallback {
-    fn report_fixture(&mut self, world: &World, fixture: &mut Fixture,
+    fn report_fixture(&mut self, fixture: FixtureHandle,
                       p: &Vec2, normal: &Vec2, fraction: f32) -> f32;
 }
 
 impl<F> RayCastCallback for F
-    where F: FnMut(&World, &mut Fixture, &Vec2, &Vec2, f32) -> f32 {
+    where F: FnMut(FixtureHandle, &Vec2, &Vec2, f32) -> f32 {
 
-    fn report_fixture(&mut self, world: &World, fixture: &mut Fixture,
+    fn report_fixture(&mut self, fixture: FixtureHandle,
                       p: &Vec2, normal: &Vec2, fraction: f32) -> f32 {
-        self(world, fixture, p, normal, fraction)
+        self(fixture, p, normal, fraction)
     }
 }
 
@@ -220,31 +212,26 @@ wrap! { ffi::RayCastCallbackLink => #[doc(hidden)] pub RayCastCallbackLink }
 impl RayCastCallbackLink {
     pub unsafe fn new() -> RayCastCallbackLink {
         RayCastCallbackLink::from_ffi(
-            ffi::RayCastCallbackLink_new(ptr::null_mut(),
-                                         ffi::FatAny::null(),
+            ffi::RayCastCallbackLink_new(ffi::FatAny::null(),
                                          rccl_report_fixture)
         )
     }
 
     pub unsafe fn use_with(&mut self,
-                           world: &World,
                            callback: &mut RayCastCallback
                            ) -> *mut ffi::RayCastCallback {
-        ffi::RayCastCallbackLink_set_world(self.mut_ptr(), mem::transmute(world));
         ffi::RayCastCallbackLink_set_object(self.mut_ptr(), mem::transmute(callback));
         ffi::RayCastCallbackLink_as_base(self.mut_ptr())
     }
 }
 
-unsafe extern fn rccl_report_fixture(world: ffi::ConstAny, any: ffi::FatAny,
+unsafe extern fn rccl_report_fixture(any: ffi::FatAny,
                                      fixture: *mut ffi::Fixture,
                                      point: *const Vec2, normal: *const Vec2,
                                      fraction: f32) -> f32 {
     // point and normal are coming from C++ &s
-    let world = mem::transmute::<_, &World>(world);
     let callback = mem::transmute::<_, &mut RayCastCallback>(any);
-    let mut fixture = WrappedRefMut::new(Fixture::from_ffi(fixture));
-    callback.report_fixture(world, &mut fixture, &*point, &*normal, fraction)
+    callback.report_fixture(fixture.get_handle(), &*point, &*normal, fraction)
 }
 
 impl Drop for RayCastCallbackLink {
@@ -257,8 +244,7 @@ impl Drop for RayCastCallbackLink {
 
 #[doc(hidden)]
 pub mod ffi {
-    pub use ffi::{ Any, ConstAny, FatAny };
-    pub use common::ffi::Draw;
+    pub use ffi::FatAny;
     pub use collision::shapes::ffi::Shape;
     pub use dynamics::fixture::ffi::Fixture;
     pub use dynamics::joints::ffi::Joint;
@@ -304,27 +290,21 @@ pub mod ffi {
                                         ) -> *mut ContactListener;
         pub fn ContactListenerLink_drop(slf: *mut ContactListenerLink);
         pub fn QueryCallbackLink_new(
-            world: ConstAny,
             object: FatAny,
             report_fixture:
-            unsafe extern fn(ConstAny, FatAny, *mut Fixture) -> bool,
+            unsafe extern fn(FatAny, *mut Fixture) -> bool,
             ) -> *mut QueryCallbackLink;
-        pub fn QueryCallbackLink_set_world(slf: *mut QueryCallbackLink,
-                                           world: ConstAny);
         pub fn QueryCallbackLink_set_object(slf: *mut QueryCallbackLink,
                                             object: FatAny);
         pub fn QueryCallbackLink_as_base(slf: *mut QueryCallbackLink
                                       ) -> *mut QueryCallback;
         pub fn QueryCallbackLink_drop(slf: *mut QueryCallbackLink);
         pub fn RayCastCallbackLink_new(
-            world: ConstAny,
             object: FatAny,
             hit_fixture:
-            unsafe extern fn(ConstAny, FatAny,
+            unsafe extern fn(FatAny,
                              *mut Fixture, *const Vec2, *const Vec2, f32) -> f32,
             ) -> *mut RayCastCallbackLink;
-        pub fn RayCastCallbackLink_set_world(slf: *mut RayCastCallbackLink,
-                                             world: ConstAny);
         pub fn RayCastCallbackLink_set_object(slf: *mut RayCastCallbackLink,
                                               object: FatAny);
         pub fn RayCastCallbackLink_as_base(slf: *mut RayCastCallbackLink

@@ -81,15 +81,3 @@ void DrawLink_set_object(DrawLink* self, RustFatObject o) {
 void DrawLink_set_flags(DrawLink* self, u32 flags) {
     self->SetFlags(flags);
 }
-
-u32 DrawLink_get_flags(const DrawLink* self) {
-    return self->GetFlags();
-}
-
-void DrawLink_append_flags(DrawLink* self, u32 flags) {
-    self->AppendFlags(flags);
-}
-
-void DrawLink_clear_flags(DrawLink* self, u32 flags) {
-    self->ClearFlags(flags);
-}

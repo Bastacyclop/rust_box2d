@@ -1,0 +1,110 @@
+use wrap::*;
+use common::math::Vec2;
+use dynamics::world::World;
+use dynamics::joints::{
+    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
+    ToRaw
+};
+
+joint_def! {
+    RawMouseJointDef => MouseJointDef (JointType::Mouse) {
+        target: Vec2 => Vec2,
+        max_force: f32 => f32,
+        frequency: f32 => f32,
+        damping_ratio: f32 => f32
+    }
+}
+
+impl MouseJointDef {
+    pub fn new() -> MouseJointDef {
+        MouseJointDef {
+            base: JointDefBase::new(),
+            target: Vec2 { x: 0., y: 0. },
+            max_force: 0.,
+            frequency: 5.,
+            damping_ratio: 0.7
+        }
+    }
+
+    fn assert_well_formed(&self) {
+        self.base.body_a.expect("MouseJointDef expects some body_a");
+        self.base.body_b.expect("MouseJointDef expects some body_b");
+    }
+}
+
+wrap_joint! {
+    ffi::MouseJoint => MouseJoint (JointType::Mouse)
+    < ffi::MouseJoint_as_joint
+    > ffi::Joint_as_mouse_joint
+}
+
+impl MouseJoint {
+    pub fn target<'a>(&'a self) -> &'a Vec2 {
+        unsafe {
+            &*ffi::MouseJoint_get_target(self.ptr()) // Comes from a C++ &
+        }
+    }
+
+    pub fn max_force(&self) -> f32 {
+        unsafe {
+            ffi::MouseJoint_get_max_force(self.ptr())
+        }
+    }
+
+    pub fn frequency(&self) -> f32 {
+        unsafe {
+            ffi::MouseJoint_get_frequency(self.ptr())
+        }
+    }
+
+    pub fn damping_ratio(&self) -> f32 {
+        unsafe {
+            ffi::MouseJoint_get_damping_ratio(self.ptr())
+        }
+    }
+
+    pub fn set_target(&mut self, target: &Vec2) {
+        unsafe {
+            ffi::MouseJoint_set_target(self.mut_ptr(), target)
+        }
+    }
+
+    pub fn set_max_force(&mut self, force: f32) {
+        unsafe {
+            ffi::MouseJoint_set_max_force(self.mut_ptr(), force)
+        }
+    }
+
+    pub fn set_frequency(&mut self, frequency: f32) {
+        unsafe {
+            ffi::MouseJoint_set_frequency(self.mut_ptr(), frequency)
+        }
+    }
+
+    pub fn set_damping_ratio(&mut self, ratio: f32) {
+        unsafe {
+            ffi::MouseJoint_set_damping_ratio(self.mut_ptr(), ratio)
+        }
+    }
+}
+
+#[doc(hidden)]
+pub mod ffi {
+    pub use dynamics::joints::ffi::Joint;
+    use common::math::Vec2;
+
+    #[repr(C)] pub struct MouseJoint;
+
+    extern {
+        pub fn MouseJoint_as_joint(slf: *mut MouseJoint) -> *mut Joint;
+        pub fn Joint_as_mouse_joint(slf: *mut Joint) -> *mut MouseJoint;
+        pub fn MouseJoint_set_target(slf: *mut MouseJoint, target: *const Vec2);
+        pub fn MouseJoint_get_target(slf: *const MouseJoint) -> *const Vec2;
+        pub fn MouseJoint_set_max_force(slf: *mut MouseJoint, force: f32);
+        pub fn MouseJoint_get_max_force(slf: *const MouseJoint) -> f32;
+        pub fn MouseJoint_set_frequency(slf: *mut MouseJoint, hz: f32);
+        pub fn MouseJoint_get_frequency(slf: *const MouseJoint) -> f32;
+        pub fn MouseJoint_set_damping_ratio(slf: *mut MouseJoint, ratio: f32);
+        pub fn MouseJoint_get_damping_ratio(slf: *const MouseJoint) -> f32;
+    }
+}

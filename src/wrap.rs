@@ -24,7 +24,8 @@ macro_rules! wrap {
         }
     };
 
-    { $wrapped:ty => pub $wrap:ident } => {
+    { $wrapped:ty => $(#[$attr:meta])* pub $wrap:ident } => {
+        $(#[$attr])*
         pub struct $wrap {
             ptr: *mut $wrapped,
         }
@@ -33,7 +34,8 @@ macro_rules! wrap {
         _from_ffi! { $wrap <= $wrapped }
     };
 
-    { $wrapped:ty => $wrap:ident } => {
+    { $wrapped:ty => $(#[$attr:meta])* $wrap:ident } => {
+        $(#[$attr])*
         struct $wrap {
             ptr: *mut $wrapped,
         }

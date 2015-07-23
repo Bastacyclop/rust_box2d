@@ -4,8 +4,6 @@ use std::iter::{ Iterator, DoubleEndedIterator };
 use vec_map::{ self, VecMap };
 use std::mem;
 
-const INITIAL_CAPACITY: usize = 10;
-
 #[derive(PartialOrd, Ord, Hash)]
 pub struct TypedHandle<T> {
     index: usize,
@@ -23,24 +21,17 @@ impl<T> TypedHandle<T> {
         }
     }
 
-    #[inline]
-    #[doc(hidden)]
-    pub fn index(&self) -> usize {
-        self.index
-    }
+    #[inline] #[doc(hidden)]
+    pub fn index(&self) -> usize { self.index }
 
-    #[inline]
-    #[doc(hidden)]
-    pub fn version(&self) -> usize {
-        self.version
-    }
+    #[inline] #[doc(hidden)]
+    pub fn version(&self) -> usize { self.version }
 }
 
 impl<T> Copy for TypedHandle<T> {}
 impl<T> Clone for TypedHandle<T> {
     fn clone(&self) -> TypedHandle<T> { *self }
 }
-
 
 impl<T> Eq for TypedHandle<T> {}
 impl<T> PartialEq for TypedHandle<T> {
@@ -75,20 +66,39 @@ impl<T> HandleMap<T> {
     pub fn new() -> HandleMap<T> {
         HandleMap {
             next_index: 0,
-            availables: Vec::with_capacity(INITIAL_CAPACITY),
+            availables: Vec::new(),
             entries: VecMap::new()
         }
     }
 
-    pub fn with_capacity(capacity: usize) -> HandleMap<T> {
+    pub fn with_capacities(availables: usize, entries: usize) -> HandleMap<T> {
         HandleMap {
             next_index: 0,
-            availables: Vec::with_capacity(INITIAL_CAPACITY),
-            entries: VecMap::with_capacity(capacity)
+            availables: Vec::with_capacity(availables),
+            entries: VecMap::with_capacity(entries)
         }
     }
 
     pub fn insert(&mut self, value: T) -> TypedHandle<T> {
+        let index = self.find_available();
+
+        let entry = &mut self.entries[index];
+        entry.inner = Some(RefCell::new(value));
+        TypedHandle::new(index, entry.version)
+    }
+
+    pub fn insert_with<F>(&mut self, f: F) -> TypedHandle<T>
+        where F: FnOnce(TypedHandle<T>) -> T {
+
+        let index = self.find_available();
+
+        let entry = &mut self.entries[index];
+        let handle = TypedHandle::new(index, entry.version);
+        entry.inner = Some(RefCell::new(f(handle)));
+        handle
+    }
+
+    fn find_available(&mut self) -> usize {
         let index = match self.availables.pop() {
             Some(index) => index,
             None => {
@@ -101,9 +111,7 @@ impl<T> HandleMap<T> {
             self.entries.insert(index, HandleEntry::new());
         }
 
-        let entry = &mut self.entries[index];
-        entry.inner = Some(RefCell::new(value));
-        TypedHandle::new(index, entry.version)
+        index
     }
 
     pub fn remove(&mut self, handle: TypedHandle<T>) -> Option<T> {
@@ -133,6 +141,7 @@ impl<T> HandleMap<T> {
         entry.version == handle.version && entry.inner.is_some()
     }
 
+    #[inline]
     fn get_inner(&self, handle: TypedHandle<T>) -> Option<&RefCell<T>> {
         let entry = &self.entries[handle.index];
 

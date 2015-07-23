@@ -32,7 +32,7 @@ macro_rules! forward_ref_binop {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Vec2 {
     pub x: f32,
     pub y: f32,
@@ -109,13 +109,20 @@ impl<'a> Neg for &'a Vec2 {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Rot {
     pub sin: f32,
     pub cos: f32,
 }
 
 impl Rot {
+    pub fn from_angle(angle: f32) -> Rot {
+        Rot {
+            sin: angle.sin(),
+            cos: angle.cos()
+        }
+    }
+
     pub fn identity() -> Rot {
         Rot { sin: 0., cos: 1. }
     }
@@ -145,8 +152,18 @@ impl Transform {
     }
 }
 
+impl<'a> Mul<Vec2> for &'a Transform {
+    type Output = Vec2;
+
+    fn mul(self, v: Vec2) -> Vec2 {
+        let x = (self.rot.cos*v.x - self.rot.sin*v.y) + self.pos.x;
+        let y = (self.rot.sin*v.x + self.rot.cos*v.y) + self.pos.y;
+        Vec2 { x: x, y: y }
+    }
+}
+
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Sweep {
     pub local_center: Vec2,
     pub c0: Vec2,

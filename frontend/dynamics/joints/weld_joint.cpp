@@ -1,3 +1,27 @@
+b2Joint* World_create_weld_joint(
+    b2World* world,
+    b2Body* body_a,
+    b2Body* body_b,
+    bool collide_connected,
+    b2Vec2 local_anchor_a,
+    b2Vec2 local_anchor_b,
+    f32 reference_angle,
+    f32 frequency,
+    f32 damping_ratio
+) {
+    b2WeldJointDef def;
+    def.bodyA = body_a;
+    def.bodyB = body_b;
+    def.collideConnected = collide_connected;
+    def.localAnchorA = local_anchor_a;
+    def.localAnchorB = local_anchor_b;
+    def.referenceAngle = reference_angle;
+    def.frequencyHz = frequency;
+    def.dampingRatio = damping_ratio;
+
+    return world->CreateJoint(&def);
+}
+
 void WeldJointDef_initialize(b2WeldJointDef* self,
                                  b2Body* body_a, b2Body* body_b,
                                  const b2Vec2* anchor) {

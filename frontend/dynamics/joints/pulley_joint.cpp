@@ -1,3 +1,31 @@
+b2Joint* World_create_pulley_joint(
+    b2World* self,
+    b2Body* body_a,
+    b2Body* body_b,
+    bool collide_connected,
+    b2Vec2 ground_anchor_a,
+    b2Vec2 ground_anchor_b,
+    b2Vec2 local_anchor_a,
+    b2Vec2 local_anchor_b,
+    f32 length_a,
+    f32 length_b,
+    f32 ratio
+) {
+    b2PulleyJointDef def;
+    def.bodyA = body_a;
+    def.bodyB = body_b;
+    def.collideConnected = collide_connected;
+    def.groundAnchorA = ground_anchor_a;
+    def.groundAnchorB = ground_anchor_b;
+    def.localAnchorA = local_anchor_a;
+    def.localAnchorB = local_anchor_b;
+    def.lengthA = length_a;
+    def.lengthB = length_b;
+    def.ratio = ratio;
+
+    return self->CreateJoint(&def);
+}
+
 void PulleyJointDef_initialize(b2PulleyJointDef* self,
                                b2Body* body_a, b2Body* body_b,
                                const b2Vec2* ground_anchor_a,

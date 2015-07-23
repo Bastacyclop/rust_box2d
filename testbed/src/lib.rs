@@ -10,7 +10,7 @@ mod draw_session;
 use draw_session::DrawSession;
 
 use piston::event_loop::*;
-use piston::input::{ Event, Input, Button, Motion, Key };
+use piston::input::{ Event, Input, Button, Motion, Key, MouseButton };
 use piston::window::WindowSettings;
 use glutin_window::*;
 use opengl_graphics::GlGraphics;
@@ -49,17 +49,29 @@ pub fn run<F>(name: &str, mut width: u32, mut height: u32,
 
     let mut running = false;
     let mut mouse_position = b2::Vec2 { x: 0., y: 0. };
-
+    let mut grabbing = None;
     let mut accumulator = 0.;
+
+    let dummy = world.create_body(&b2::BodyDef::new());
+
     for event in window.events() {
         match event {
             Event::Input(i) => {
                 match i {
                     Input::Press(Button::Keyboard(Key::Return)) =>
                         running = !running,
+                    Input::Press(Button::Mouse(MouseButton::Left)) =>
+                        match grabbing {
+                            None => grabbing = try_grab(&mut world, mouse_position,
+                                                        dummy),
+                            Some(_) => {}
+                        },
+                    Input::Release(Button::Mouse(MouseButton::Left)) =>
+                        ungrab(&mut world, &mut grabbing),
                     Input::Move(Motion::MouseCursor(x, y)) => {
                         mouse_position = window_to_world(width, height,
                                                          &camera, x, y);
+                        update_grab(&mut world, mouse_position, grabbing);
                     }
                     Input::Resize(w, h) => {
                         width = w;
@@ -90,7 +102,6 @@ pub fn run<F>(name: &str, mut width: u32, mut height: u32,
     }
 }
 
-/*
 fn try_grab(world: &mut b2::World, p: b2::Vec2,
             dummy: b2::BodyHandle) -> Option<b2::JointHandle> {
     match query_point(world, p) {
@@ -105,9 +116,7 @@ fn try_grab(world: &mut b2::World, p: b2::Vec2,
                 body.set_awake(true);
             }
 
-            let mut j_def = b2::MouseJointDef::new();
-            j_def.base.body_a = Some(dummy);
-            j_def.base.body_b = Some(body_h);
+            let mut j_def = b2::MouseJointDef::new(dummy, body_h);
             j_def.target = center;
             j_def.max_force = 500.*mass;
             Some(world.create_joint(&j_def))
@@ -156,4 +165,3 @@ fn update_grab(world: &b2::World, target: b2::Vec2,
         }
     });
 }
-*/

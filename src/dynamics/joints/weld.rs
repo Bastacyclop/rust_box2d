@@ -1,25 +1,25 @@
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawWeldJointDef => WeldJointDef (JointType::Weld) {
-        local_anchor_a: Vec2 => Vec2,
-        local_anchor_b: Vec2 => Vec2,
-        reference_angle: f32 => f32,
-        frequency: f32 => f32,
-        damping_ratio: f32 => f32
-    }
+pub struct WeldJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub local_anchor_a: Vec2,
+    pub local_anchor_b: Vec2,
+    pub reference_angle: f32,
+    pub frequency: f32,
+    pub damping_ratio: f32
 }
 
 impl WeldJointDef {
-    pub fn new() -> WeldJointDef {
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> WeldJointDef {
         WeldJointDef {
-            base: JointDefBase::new(),
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: false,
             local_anchor_a: Vec2 { x: 0., y: 0. },
             local_anchor_b: Vec2 { x: 0., y: 0. },
             reference_angle: 0.,
@@ -33,18 +33,31 @@ impl WeldJointDef {
                 body_a: BodyHandle,
                 body_b: BodyHandle,
                 anchor: &Vec2) {
-        self.base.body_a = Some(body_a);
-        self.base.body_b = Some(body_b);
+        self.body_a = body_a;
+        self.body_b = body_b;
         let a = world.get_body(body_a);
         let b = world.get_body(body_a);
         self.local_anchor_a = a.local_point(anchor);
         self.local_anchor_b = b.local_point(anchor);
         self.reference_angle = b.angle() - a.angle();
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("WeldJointDef expects some body_a");
-        self.base.body_b.expect("WeldJointDef expects some body_b");
+impl JointDef for WeldJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Weld }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_weld_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.local_anchor_a,
+            self.local_anchor_b,
+            self.reference_angle,
+            self.frequency,
+            self.damping_ratio
+        )
     }
 }
 
@@ -100,16 +113,25 @@ impl WeldJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
     #[repr(C)] pub struct WeldJoint;
 
     extern {
-        /*pub fn WeldJointDef_initialize(slf: *mut WeldJointDef,
-                                       body_a: *mut Body,
-                                       body_b: *mut Body,
-                                       anchor: *const Vec2);*/
+        pub fn World_create_weld_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            local_anchor_a: Vec2,
+            local_anchor_b: Vec2,
+            reference_angle: f32,
+            frequency: f32,
+            damping_ratio: f32
+        ) -> *mut Joint;
         pub fn WeldJoint_as_joint(slf: *mut WeldJoint) -> *mut Joint;
         pub fn Joint_as_weld_joint(slf: *mut Joint) -> *mut WeldJoint;
         pub fn WeldJoint_get_local_anchor_a(slf: *const WeldJoint) -> *const Vec2;

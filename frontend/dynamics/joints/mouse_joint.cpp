@@ -1,3 +1,25 @@
+b2Joint* World_create_mouse_joint(
+    b2World* self,
+    b2Body* body_a,
+    b2Body* body_b,
+    bool collide_connected,
+    b2Vec2 target,
+    f32 max_force,
+    f32 frequency,
+    f32 damping_ratio
+) {
+    b2MouseJointDef def;
+    def.bodyA = body_a;
+    def.bodyB = body_b;
+    def.collideConnected = collide_connected;
+    def.target = target;
+    def.maxForce = max_force;
+    def.frequencyHz = frequency;
+    def.dampingRatio = damping_ratio;
+
+    return self->CreateJoint(&def);
+}
+
 b2Joint* MouseJoint_as_joint(b2MouseJoint* self) {
     return static_cast<b2Joint*>(self);
 }

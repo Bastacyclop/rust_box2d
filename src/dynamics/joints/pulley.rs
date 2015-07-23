@@ -1,27 +1,27 @@
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawPulleyJointDef => PulleyJointDef (JointType::Pulley) {
-        ground_anchor_a: Vec2 => Vec2,
-        ground_anchor_b: Vec2 => Vec2,
-        local_anchor_a: Vec2 => Vec2,
-        local_anchor_b: Vec2 => Vec2,
-        length_a: f32 => f32,
-        length_b: f32 => f32,
-        ratio: f32 => f32
-    }
+pub struct PulleyJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub ground_anchor_a: Vec2,
+    pub ground_anchor_b: Vec2,
+    pub local_anchor_a: Vec2,
+    pub local_anchor_b: Vec2,
+    pub length_a: f32,
+    pub length_b: f32,
+    pub ratio: f32
 }
 
 impl PulleyJointDef {
-    pub fn new() -> PulleyJointDef {
-        let mut j = PulleyJointDef {
-            base: JointDefBase::new(),
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> PulleyJointDef {
+        PulleyJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: true,
             ground_anchor_a: Vec2 { x: -1., y: 1. },
             ground_anchor_b: Vec2 { x: 1., y: 1. },
             local_anchor_a: Vec2 { x: -1., y: 0. },
@@ -29,9 +29,7 @@ impl PulleyJointDef {
             length_a: 0.,
             length_b: 0.,
             ratio: 1.
-        };
-        j.base.collide_connected = true;
-        j
+        }
     }
 
     pub fn init(&mut self,
@@ -42,20 +40,34 @@ impl PulleyJointDef {
                 anchor_a: &Vec2,
                 anchor_b: &Vec2,
                 ratio: f32) {
-
-        self.base.body_a = Some(body_a);
-        self.base.body_b = Some(body_b);
+        assert!(ratio > ::std::f32::EPSILON);
+        self.body_a = body_a;
+        self.body_b = body_b;
         self.ground_anchor_a = ground_a;
         self.ground_anchor_b = ground_b;
         self.length_a = (anchor_a - ground_a).norm();
         self.length_b = (anchor_b - ground_b).norm();
         self.ratio = ratio;
-        assert!(ratio > ::std::f32::EPSILON);
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("PulleyJointDef expects some body_a");
-        self.base.body_b.expect("PulleyJointDef expects some body_b");
+impl JointDef for PulleyJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Pulley }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_pulley_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.ground_anchor_a,
+            self.ground_anchor_b,
+            self.local_anchor_a,
+            self.local_anchor_b,
+            self.length_a,
+            self.length_b,
+            self.ratio
+        )
     }
 }
 
@@ -111,12 +123,27 @@ impl PulleyJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
     #[repr(C)] pub struct PulleyJoint;
 
     extern {
+        pub fn World_create_pulley_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            ground_anchor_a: Vec2,
+            ground_anchor_b: Vec2,
+            local_anchor_a: Vec2,
+            local_anchor_b: Vec2,
+            length_a: f32,
+            length_b: f32,
+            ratio: f32
+        ) -> *mut Joint;
         /*pub fn PulleyJointDef_initialize(slf: *mut PulleyJointDef,
                                          body_a: *mut Body,
                                          body_b: *mut Body,

@@ -1,30 +1,37 @@
 use wrap::*;
 use dynamics::world::{ World, JointHandle };
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawGearJointDef => GearJointDef (JointType::Gear) {
-        joint_a: *mut ffi::Joint => JointHandle,
-        joint_b: *mut ffi::Joint => JointHandle,
-        ratio: f32 => f32
-    }
+pub struct GearJointDef {
+    pub collide_connected: bool,
+    pub joint_a: JointHandle,
+    pub joint_b: JointHandle,
+    pub ratio: f32
 }
 
 impl GearJointDef {
-    pub fn new(joint_a: JointHandle,
-               joint_b: JointHandle) -> GearJointDef {
+    pub fn new(joint_a: JointHandle, joint_b: JointHandle) -> GearJointDef {
         GearJointDef {
-            base: JointDefBase::new(),
+            collide_connected: false,
             joint_a: joint_a,
             joint_b: joint_b,
             ratio: 1.
         }
     }
+}
 
-    fn assert_well_formed(&self) { }
+impl JointDef for GearJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Gear }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_gear_joint(
+            world.mut_ptr(),
+            self.collide_connected,
+            world.get_joint_mut(self.joint_a).mut_base_ptr(),
+            world.get_joint_mut(self.joint_b).mut_base_ptr(),
+            self.ratio
+        )
+    }
 }
 
 wrap_joint! {
@@ -61,11 +68,19 @@ impl GearJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
     pub use dynamics::joints::ffi::Joint;
 
     #[repr(C)] pub struct GearJoint;
 
     extern {
+        pub fn World_create_gear_joint(
+            world: *mut World,
+            collide_connected: bool,
+            joint_a: *mut Joint,
+            joint_b: *mut Joint,
+            ratio: f32
+        ) -> *mut Joint;
         pub fn GearJoint_as_joint(slf: *mut GearJoint) -> *mut Joint;
         pub fn Joint_as_gear_joint(slf: *mut Joint) -> *mut GearJoint;
         pub fn GearJoint_get_joint_1(slf: *mut GearJoint) -> *mut Joint;

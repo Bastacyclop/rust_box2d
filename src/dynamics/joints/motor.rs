@@ -1,25 +1,26 @@
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawMotorJointDef => MotorJointDef (JointType::Motor) {
-        linear_offset: Vec2 => Vec2,
-        angular_offset: f32 => f32,
-        max_force: f32 => f32,
-        max_torque: f32 => f32,
-        correction_factor: f32 => f32
-    }
+pub struct MotorJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub linear_offset: Vec2,
+    pub angular_offset: f32,
+    pub max_force: f32,
+    pub max_torque: f32,
+    pub correction_factor: f32
 }
 
 impl MotorJointDef {
-    pub fn new() -> MotorJointDef {
+    pub fn new(body_a: BodyHandle,
+               body_b: BodyHandle) -> MotorJointDef {
         MotorJointDef {
-            base: JointDefBase::new(),
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: false,
             linear_offset: Vec2 { x: 0., y: 0. },
             angular_offset: 0.,
             max_force: 1.,
@@ -32,17 +33,30 @@ impl MotorJointDef {
                 world: &World,
                 body_a: BodyHandle,
                 body_b: BodyHandle) {
-        self.base.body_a = Some(body_a);
-        self.base.body_b = Some(body_b);
+        self.body_a = body_a;
+        self.body_b = body_b;
         let a = world.get_body(body_a);
         let b = world.get_body(body_a);
         self.linear_offset = a.local_point(b.position());
         self.angular_offset = b.angle() - a.angle();
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("MotorJointDef expects some body_a");
-        self.base.body_b.expect("MotorJointDef expects some body_b");
+impl JointDef for MotorJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Motor }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_motor_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.linear_offset,
+            self.angular_offset,
+            self.max_force,
+            self.max_torque,
+            self.correction_factor
+        )
     }
 }
 
@@ -116,15 +130,25 @@ impl MotorJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
     #[repr(C)] pub struct MotorJoint;
 
     extern {
-        /*pub fn MotorJointDef_initialize(slf: *mut MotorJointDef,
-                                        body_a: *mut Body,
-                                        body_b: *mut Body);*/
+        pub fn World_create_motor_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            linear_offset: Vec2,
+            angular_offset: f32,
+            max_force: f32,
+            max_torque: f32,
+            correction_factor: f32
+        ) -> *mut Joint;
         pub fn MotorJoint_as_joint(slf: *mut MotorJoint) -> *mut Joint;
         pub fn Joint_as_motor_joint(slf: *mut Joint) -> *mut MotorJoint;
         pub fn MotorJoint_set_linear_offset(slf: *mut MotorJoint,

@@ -1,3 +1,33 @@
+b2Joint* World_create_wheel_joint(
+    b2World* world,
+    b2Body* body_a,
+    b2Body* body_b,
+    bool collide_connected,
+    b2Vec2 local_anchor_a,
+    b2Vec2 local_anchor_b,
+    b2Vec2 local_axis_a,
+    bool enable_motor,
+    f32 max_motor_torque,
+    f32 motor_speed,
+    f32 frequency,
+    f32 damping_ratio
+) {
+    b2WheelJointDef def;
+    def.bodyA = body_a;
+    def.bodyB = body_b;
+    def.collideConnected = collide_connected;
+    def.localAnchorA = local_anchor_a;
+    def.localAnchorB = local_anchor_b;
+    def.localAxisA = local_axis_a;
+    def.enableMotor = enable_motor;
+    def.maxMotorTorque = max_motor_torque;
+    def.motorSpeed = motor_speed;
+    def.frequencyHz = frequency;
+    def.dampingRatio = damping_ratio;
+
+    return world->CreateJoint(&def);
+}
+
 void WheelJointDef_initialize(b2WheelJointDef* self,
                               b2Body* body_a, b2Body* body_b,
                               const b2Vec2* anchor,

@@ -1,38 +1,38 @@
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawRevoluteJointDef => RevoluteJointDef (JointType::Revolute) {
-        local_anchor_a: Vec2 => Vec2,
-        local_anchor_b: Vec2 => Vec2,
-        reference_angle: f32 => f32,
-        enable_limit: bool => bool,
-        lower_angle: f32 => f32,
-        upper_angle: f32 => f32,
-        enable_motor: bool => bool,
-        motor_speed: f32 => f32,
-        max_motor_torque: f32 => f32
-    }
+pub struct RevoluteJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub local_anchor_a: Vec2,
+    pub local_anchor_b: Vec2,
+    pub reference_angle: f32,
+    pub enable_limit: bool,
+    pub lower_angle: f32,
+    pub upper_angle: f32,
+    pub enable_motor: bool,
+    pub motor_speed: f32,
+    pub max_motor_torque: f32
 }
 
 impl RevoluteJointDef {
-    pub fn new() -> RevoluteJointDef {
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> RevoluteJointDef {
         RevoluteJointDef {
-            base: JointDefBase::new(),
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: false,
             local_anchor_a: Vec2 { x: 0., y: 0. },
             local_anchor_b: Vec2 { x: 0., y: 0. },
             reference_angle: 0.,
+            enable_limit: false,
             lower_angle: 0.,
             upper_angle: 0.,
-            max_motor_torque: 0.,
+            enable_motor: false,
             motor_speed: 0.,
-            enable_limit: false,
-            enable_motor: false
+            max_motor_torque: 0.,
         }
     }
 
@@ -41,18 +41,35 @@ impl RevoluteJointDef {
                 body_a: BodyHandle,
                 body_b: BodyHandle,
                 anchor: &Vec2) {
-        self.base.body_a = Some(body_a);
-        self.base.body_b = Some(body_b);
+        self.body_a = body_a;
+        self.body_b = body_b;
         let a = world.get_body(body_a);
         let b = world.get_body(body_a);
         self.local_anchor_a = a.local_point(anchor);
         self.local_anchor_b = b.local_point(anchor);
         self.reference_angle = b.angle() - a.angle();
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("RevoluteJointDef expects some body_a");
-        self.base.body_b.expect("RevoluteJointDef expects some body_b");
+impl JointDef for RevoluteJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Revolute }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_revolute_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.local_anchor_a,
+            self.local_anchor_b,
+            self.reference_angle,
+            self.enable_limit,
+            self.lower_angle,
+            self.upper_angle,
+            self.enable_motor,
+            self.motor_speed,
+            self.max_motor_torque
+        )
     }
 }
 
@@ -168,16 +185,29 @@ impl RevoluteJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
     #[repr(C)] pub struct RevoluteJoint;
 
     extern {
-        /*pub fn RevoluteJointDef_initialize(slf: *mut RevoluteJointDef,
-                                           body_a: *mut Body,
-                                           body_b: *mut Body,
-                                           anchor: *const Vec2);*/
+        pub fn World_create_revolute_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            local_anchor_a: Vec2,
+            local_anchor_b: Vec2,
+            reference_angle: f32,
+            enable_limit: bool,
+            lower_angle: f32,
+            upper_angle: f32,
+            enable_motor: bool,
+            motor_speed: f32,
+            max_motor_torque: f32
+        ) -> *mut Joint;
         pub fn RevoluteJoint_as_joint(slf: *mut RevoluteJoint) -> *mut Joint;
         pub fn Joint_as_revolute_joint(slf: *mut Joint) -> *mut RevoluteJoint;
         pub fn RevoluteJoint_get_local_anchor_a(slf: *const RevoluteJoint

@@ -110,8 +110,7 @@ impl World {
 
     pub fn create_joint<JD: JointDef>(&mut self, def: &JD) -> JointHandle {
         unsafe {
-            let raw_def = def.to_raw(&*self);
-            let joint = ffi::World_create_joint(self.mut_ptr(), raw_def.base_ptr());
+            let joint = def.create(self);
             self.joints.insert_with(|h| MetaJoint::new(joint, h))
         }
     }
@@ -407,7 +406,6 @@ pub mod ffi {
     use collision::AABB;
     use dynamics::Profile;
     use dynamics::body::BodyDef;
-    use dynamics::joints::RawJointDefBase;
 
     #[repr(C)] pub struct World;
 
@@ -419,8 +417,6 @@ pub mod ffi {
         pub fn World_set_debug_draw(slf: *mut World, dd: *mut Draw);
         pub fn World_create_body(slf: *mut World, def: *const BodyDef) -> *mut Body;
         pub fn World_destroy_body(slf: *mut World, body: *mut Body);
-        pub fn World_create_joint(slf: *mut World, def: *const RawJointDefBase
-                                  ) -> *mut Joint;
         pub fn World_destroy_joint(slf: *mut World, joint: *mut Joint);
         pub fn World_step(slf: *mut World,
                           time_step: f32,

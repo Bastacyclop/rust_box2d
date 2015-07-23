@@ -1,3 +1,23 @@
+b2Joint* World_create_rope_joint(
+    b2World* world,
+    b2Body* body_a,
+    b2Body* body_b,
+    bool collide_connected,
+    b2Vec2 local_anchor_a,
+    b2Vec2 local_anchor_b,
+    f32 max_length
+) {
+    b2RopeJointDef def;
+    def.bodyA = body_a;
+    def.bodyB = body_b;
+    def.collideConnected = collide_connected;
+    def.localAnchorA = local_anchor_a;
+    def.localAnchorB = local_anchor_b;
+    def.maxLength = max_length;
+
+    return world->CreateJoint(&def);
+}
+
 b2Joint* RopeJoint_as_joint(b2RopeJoint* self) {
     return static_cast<b2Joint*>(self);
 }

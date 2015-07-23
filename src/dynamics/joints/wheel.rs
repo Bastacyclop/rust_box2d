@@ -1,28 +1,28 @@
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawWheelJointDef => WheelJointDef (JointType::Wheel) {
-        local_anchor_a: Vec2 => Vec2,
-        local_anchor_b: Vec2 => Vec2,
-        local_axis_a: Vec2 => Vec2,
-        enable_motor: bool => bool,
-        max_motor_torque: f32 => f32,
-        motor_speed: f32 => f32,
-        frequency: f32 => f32,
-        damping_ratio: f32 => f32
-    }
+pub struct WheelJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub local_anchor_a: Vec2,
+    pub local_anchor_b: Vec2,
+    pub local_axis_a: Vec2,
+    pub enable_motor: bool,
+    pub max_motor_torque: f32,
+    pub motor_speed: f32,
+    pub frequency: f32,
+    pub damping_ratio: f32
 }
 
 impl WheelJointDef {
-    pub fn new() -> WheelJointDef {
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> WheelJointDef {
         WheelJointDef {
-            base: JointDefBase::new(),
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: false,
             local_anchor_a: Vec2 { x: 0., y: 0. },
             local_anchor_b: Vec2 { x: 0., y: 0. },
             local_axis_a: Vec2 { x: 1., y: 0. },
@@ -40,18 +40,34 @@ impl WheelJointDef {
                 body_b: BodyHandle,
                 anchor: &Vec2,
                 axis: &Vec2) {
-        self.base.body_a = Some(body_a);
-        self.base.body_b = Some(body_b);
+        self.body_a = body_a;
+        self.body_b = body_b;
         let a = world.get_body(body_a);
         let b = world.get_body(body_a);
         self.local_anchor_a = a.local_point(anchor);
         self.local_anchor_b = b.local_point(anchor);
         self.local_axis_a = a.local_vector(axis);
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("WheelJointDef expects some body_a");
-        self.base.body_b.expect("WheelJointDef expects some body_b");
+impl JointDef for WheelJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Wheel }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_wheel_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.local_anchor_a,
+            self.local_anchor_b,
+            self.local_axis_a,
+            self.enable_motor,
+            self.max_motor_torque,
+            self.motor_speed,
+            self.frequency,
+            self.damping_ratio
+        )
     }
 }
 
@@ -161,17 +177,28 @@ impl WheelJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
     #[repr(C)] pub struct WheelJoint;
 
     extern {
-        /*pub fn WheelJointDef_initialize(slf: *mut WheelJointDef,
-                                        body_a: *mut Body,
-                                        body_b: *mut Body,
-                                        anchor: *const Vec2,
-                                        axis: *const Vec2);*/
+        pub fn World_create_wheel_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            local_anchor_a: Vec2,
+            local_anchor_b: Vec2,
+            local_axis_a: Vec2,
+            enable_motor: bool,
+            max_motor_torque: f32,
+            motor_speed: f32,
+            frequency: f32,
+            damping_ratio: f32
+        ) -> *mut Joint;
         pub fn WheelJoint_as_joint(slf: *mut WheelJoint) -> *mut Joint;
         pub fn Joint_as_wheel_joint(slf: *mut Joint) -> *mut WheelJoint;
         pub fn WheelJoint_get_local_anchor_a(slf: *const WheelJoint) -> *const Vec2;

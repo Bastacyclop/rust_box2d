@@ -1,25 +1,25 @@
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawDistanceJointDef => DistanceJointDef (JointType::Distance) {
-        local_anchor_a: Vec2 => Vec2,
-        local_anchor_b: Vec2 => Vec2,
-        length: f32 => f32,
-        frequency: f32 => f32,
-        damping_ratio: f32 => f32
-    }
+pub struct DistanceJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub local_anchor_a: Vec2,
+    pub local_anchor_b: Vec2,
+    pub length: f32,
+    pub frequency: f32,
+    pub damping_ratio: f32
 }
 
 impl DistanceJointDef {
-    pub fn new() -> DistanceJointDef {
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> DistanceJointDef {
         DistanceJointDef {
-            base: JointDefBase::new(),
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: false,
             local_anchor_a: Vec2 { x: 0., y: 0. },
             local_anchor_b: Vec2 { x: 0., y: 0. },
             length: 1.,
@@ -34,18 +34,31 @@ impl DistanceJointDef {
                 body_b: BodyHandle,
                 anchor_a: &Vec2,
                 anchor_b: &Vec2) {
-        self.base.body_a = Some(body_a);
-        self.base.body_b = Some(body_b);
+        self.body_a = body_a;
+        self.body_b = body_b;
         let a = world.get_body(body_a);
         let b = world.get_body(body_a);
         self.local_anchor_a = a.local_point(anchor_a);
         self.local_anchor_b = b.local_point(anchor_b);
         self.length = (anchor_b - anchor_a).norm();
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("DistanceJointDef expects some body_a");
-        self.base.body_b.expect("DistanceJointDef expects some body_b");
+impl JointDef for DistanceJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Distance }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_distance_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.local_anchor_a,
+            self.local_anchor_b,
+            self.length,
+            self.frequency,
+            self.damping_ratio
+        )
     }
 }
 
@@ -107,17 +120,25 @@ impl DistanceJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
     #[repr(C)] pub struct DistanceJoint;
 
     extern {
-        /*pub fn DistanceJointDef_initialize(slf: *mut DistanceJointDef,
-                                           body_a: *mut Body,
-                                           body_b: *mut Body,
-                                           anchor_a: *const Vec2,
-                                           anchor_b: *const Vec2);*/
+        pub fn World_create_distance_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            local_anchor_a: Vec2,
+            local_anchor_b: Vec2,
+            length: f32,
+            frequency: f32,
+            damping_ratio: f32
+        ) -> *mut Joint;
         pub fn DistanceJoint_as_joint(slf: *mut DistanceJoint) -> *mut Joint;
         pub fn Joint_as_distance_joint(slf: *mut Joint) -> *mut DistanceJoint;
         pub fn DistanceJoint_get_local_anchor_a(slf: *const DistanceJoint

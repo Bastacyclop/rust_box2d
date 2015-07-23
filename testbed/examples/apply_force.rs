@@ -135,30 +135,30 @@ fn create_cubes(world: &mut b2::World,
     let mut b_def = b2::BodyDef::new();
     b_def.body_type = b2::BodyType::Dynamic;
 
-    let mut j_def = b2::FrictionJointDef::new();
-    j_def.local_anchor_a = b2::Vec2 { x: 0., y: 0. };
-    j_def.local_anchor_b = b2::Vec2 { x: 0., y: 0. };
-    j_def.base.body_a = Some(ground);
-    j_def.base.collide_connected = true;
-
     for i in 0..10 {
         b_def.position = b2::Vec2 { x: 0., y: 15. - 1.54*i as f32 };
 
         let handle = world.create_body(&b_def);
+        let inertia;
+        let mass;
+        let radius;
         {
             let mut body = world.get_body_mut(handle);
 
             body.create_fixture(&shape, &mut f_def);
 
-            let gravity = 10.;
-            let inertia = body.inertia();
-            let mass = body.mass();
-            let radius = (2.*inertia / mass).sqrt();
+            inertia = body.inertia();
+            mass = body.mass();
+            radius = (2.*inertia / mass).sqrt();
 
-            j_def.base.body_b = Some(handle);
-            j_def.max_force = mass * gravity;
-            j_def.max_torque = mass * radius * gravity;
         }
+        let gravity = 10.;
+        let mut j_def = b2::FrictionJointDef::new(ground, handle);
+        j_def.collide_connected = true;
+        j_def.local_anchor_a = b2::Vec2 { x: 0., y: 0. };
+        j_def.local_anchor_b = b2::Vec2 { x: 0., y: 0. };
+        j_def.max_force = mass * gravity;
+        j_def.max_torque = mass * radius * gravity;
 
         world.create_joint(&j_def);
     }

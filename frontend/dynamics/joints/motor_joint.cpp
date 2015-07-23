@@ -1,3 +1,27 @@
+b2Joint* World_create_motor_joint(
+    b2World* self,
+    b2Body* body_a,
+    b2Body* body_b,
+    bool collide_connected,
+    b2Vec2 linear_offset,
+    f32 angular_offset,
+    f32 max_force,
+    f32 max_torque,
+    f32 correction_factor
+) {
+    b2MotorJointDef def;
+    def.bodyA = body_a;
+    def.bodyB = body_b;
+    def.collideConnected = collide_connected;
+    def.linearOffset = linear_offset;
+    def.angularOffset = angular_offset;
+    def.maxForce = max_force;
+    def.maxTorque = max_torque;
+    def.correctionFactor = correction_factor;
+
+    return self->CreateJoint(&def);
+}
+
 void MotorJointDef_initialize(b2MotorJointDef* self,
                               b2Body* body_a, b2Body* body_b) {
     self->Initialize(body_a, body_b);

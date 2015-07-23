@@ -1,32 +1,43 @@
 use wrap::*;
 use common::math::Vec2;
-use dynamics::world::World;
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    LimitState, ToRaw
-};
+use dynamics::world::{ World, BodyHandle };
+use dynamics::joints::{ Joint, JointType, JointDef, LimitState };
 
-joint_def! {
-    RawRopeJointDef => RopeJointDef (JointType::Rope) {
-        local_anchor_a: Vec2 => Vec2,
-        local_anchor_b: Vec2 => Vec2,
-        max_length: f32 => f32
-    }
+pub struct RopeJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub local_anchor_a: Vec2,
+    pub local_anchor_b: Vec2,
+    pub max_length: f32
 }
 
 impl RopeJointDef {
-    pub fn new() -> RopeJointDef {
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> RopeJointDef {
         RopeJointDef {
-            base: JointDefBase::new(),
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: false,
             local_anchor_a: Vec2 { x: -1., y: 0. },
             local_anchor_b: Vec2 { x: 1., y: 0. },
             max_length: 0.
         }
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("RopeJointDef expects some body_a");
-        self.base.body_b.expect("RopeJointDef expects some body_b");
+impl JointDef for RopeJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Rope }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_rope_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.local_anchor_a,
+            self.local_anchor_b,
+            self.max_length
+        )
     }
 }
 
@@ -70,6 +81,8 @@ impl RopeJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
     use dynamics::joints::LimitState;
@@ -77,6 +90,15 @@ pub mod ffi {
     #[repr(C)] pub struct RopeJoint;
 
     extern {
+        pub fn World_create_rope_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            local_anchor_a: Vec2,
+            local_anchor_b: Vec2,
+            max_length: f32
+        ) -> *mut Joint;
         pub fn RopeJoint_as_joint(slf: *mut RopeJoint) -> *mut Joint;
         pub fn Joint_as_rope_joint(slf: *mut Joint) -> *mut RopeJoint;
         pub fn RopeJoint_get_local_anchor_a(slf: *const RopeJoint) -> *const Vec2;

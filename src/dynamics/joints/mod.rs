@@ -16,56 +16,6 @@ macro_rules! wrap_joint {
     };
 }
 
-macro_rules! joint_def {
-    {
-        $raw_name:ident => $name:ident ($joint_type:path) {
-            $($field:ident: $raw_type:ty => $t:ty),+
-        }
-    } => {
-        #[repr(C)]
-        #[doc(hidden)]
-        pub struct $raw_name {
-            base: RawJointDefBase,
-            $(
-                $field: $raw_type
-            ),+
-        }
-
-        pub struct $name {
-            pub base: JointDefBase,
-            $(
-                pub $field: $t
-            ),+
-        }
-
-        impl WrappedBase<RawJointDefBase> for $raw_name {
-            unsafe fn base_ptr(&self) -> *const RawJointDefBase {
-                self as *const $raw_name as *const RawJointDefBase
-            }
-
-            unsafe fn mut_base_ptr(&mut self) -> *mut RawJointDefBase {
-                self as *mut $raw_name as *mut RawJointDefBase
-            }
-        }
-
-        impl JointDef for $name {
-            fn joint_type() -> JointType where Self: Sized { $joint_type }
-
-            type Raw = $raw_name;
-
-            unsafe fn to_raw(&self, world: &World) -> $raw_name {
-                self.assert_well_formed();
-                $raw_name {
-                    base: self.base.to_raw(world, $name::joint_type()),
-                    $(
-                        $field: self.$field.to_raw(world)
-                    ),+
-                }
-            }
-        }
-    }
-}
-
 pub mod distance;
 pub mod friction;
 pub mod gear;
@@ -91,7 +41,6 @@ pub use self::weld::{ WeldJoint, WeldJointDef };
 pub use self::wheel::{ WheelJoint, WheelJointDef };
 
 
-use std::ptr;
 use std::ops::{ Deref, DerefMut };
 use std::any::Any;
 use wrap::*;
@@ -99,39 +48,6 @@ use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle, JointHandle };
 use dynamics::body::Body;
 use dynamics::user_data::{ UserData, RawUserData, RawUserDataMut, InternalUserData };
-
-#[doc(hidden)]
-pub trait ToRaw {
-    type Target;
-
-    unsafe fn to_raw(&self, w: &World) -> Self::Target;
-}
-
-impl ToRaw for JointHandle {
-    type Target = *mut ffi::Joint;
-
-    unsafe fn to_raw(&self, world: &World) -> *mut ffi::Joint {
-        world.get_joint_mut(*self).mut_base_ptr()
-    }
-}
-
-macro_rules! impl_to_raw_identity {
-    ($raw_type:ty) => {
-        impl ToRaw for $raw_type {
-            type Target = $raw_type;
-
-            unsafe fn to_raw(&self, _: &World) -> $raw_type { *self }
-        }
-    };
-
-    ($($raw_type:ty),+) => {
-        $(
-            impl_to_raw_identity! { $raw_type }
-        )+
-    };
-}
-
-impl_to_raw_identity! { bool, f32, Vec2 }
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -163,48 +79,7 @@ pub trait JointDef {
     fn joint_type() -> JointType where Self: Sized;
 
     #[doc(hidden)]
-    type Raw: WrappedBase<RawJointDefBase>;
-
-    #[doc(hidden)]
-    unsafe fn to_raw(&self, world: &World) -> Self::Raw;
-}
-
-#[repr(C)]
-#[doc(hidden)]
-pub struct RawJointDefBase {
-    joint_type: JointType,
-    user_data: ffi::Any,
-    body_a: *mut ffi::Body,
-    body_b: *mut ffi::Body,
-    collide_connected: bool,
-}
-
-pub struct JointDefBase {
-    pub body_a: Option<BodyHandle>,
-    pub body_b: Option<BodyHandle>,
-    pub collide_connected: bool
-}
-
-impl JointDefBase {
-    pub fn new() -> JointDefBase {
-        JointDefBase {
-            body_a: None,
-            body_b: None,
-            collide_connected: false
-        }
-    }
-
-    unsafe fn to_raw(&self, world: &World, joint_type: JointType) -> RawJointDefBase {
-        RawJointDefBase {
-            joint_type: joint_type,
-            user_data: ptr::null_mut(),
-            body_a: self.body_a.map(|a| world.get_body_mut(a).mut_ptr())
-                        .unwrap_or(ptr::null_mut()),
-            body_b: self.body_b.map(|b| world.get_body_mut(b).mut_ptr())
-                        .unwrap_or(ptr::null_mut()),
-            collide_connected: self.collide_connected
-        }
-    }
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint;
 }
 
 pub struct MetaJoint {

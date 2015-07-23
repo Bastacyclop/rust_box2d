@@ -1,3 +1,37 @@
+b2Joint* World_create_prismatic_joint(
+    b2World* self,
+    b2Body* body_a,
+    b2Body* body_b,
+    bool collide_connected,
+    b2Vec2 local_anchor_a,
+    b2Vec2 local_anchor_b,
+    b2Vec2 local_axis_a,
+    f32 reference_angle,
+    bool enable_limit,
+    f32 lower_translation,
+    f32 upper_translation,
+    bool enable_motor,
+    f32 max_motor_force,
+    f32 motor_speed
+) {
+    b2PrismaticJointDef def;
+    def.bodyA = body_a;
+    def.bodyB = body_b;
+    def.collideConnected = collide_connected;
+    def.localAnchorA = local_anchor_a;
+    def.localAnchorB = local_anchor_b;
+    def.localAxisA = local_axis_a;
+    def.referenceAngle = reference_angle;
+    def.enableLimit = enable_limit;
+    def.lowerTranslation = lower_translation;
+    def.upperTranslation = upper_translation;
+    def.enableMotor = enable_motor;
+    def.maxMotorForce = max_motor_force;
+    def.motorSpeed = motor_speed;
+
+    return self->CreateJoint(&def);
+}
+
 void PrismaticJointDef_initialize(b2PrismaticJointDef* self,
                                  b2Body* body_a, b2Body* body_b,
                                  const b2Vec2* anchor,

@@ -1,34 +1,46 @@
 use wrap::*;
 use common::math::Vec2;
-use dynamics::world::World;
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::world::{ World, BodyHandle };
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawMouseJointDef => MouseJointDef (JointType::Mouse) {
-        target: Vec2 => Vec2,
-        max_force: f32 => f32,
-        frequency: f32 => f32,
-        damping_ratio: f32 => f32
-    }
+pub struct MouseJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub target: Vec2,
+    pub max_force: f32,
+    pub frequency: f32,
+    pub damping_ratio: f32
 }
 
 impl MouseJointDef {
-    pub fn new() -> MouseJointDef {
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> MouseJointDef {
         MouseJointDef {
-            base: JointDefBase::new(),
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: false,
             target: Vec2 { x: 0., y: 0. },
             max_force: 0.,
             frequency: 5.,
             damping_ratio: 0.7
         }
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("MouseJointDef expects some body_a");
-        self.base.body_b.expect("MouseJointDef expects some body_b");
+impl JointDef for MouseJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Mouse }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_mouse_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.target,
+            self.max_force,
+            self.frequency,
+            self.damping_ratio
+        )
     }
 }
 
@@ -90,12 +102,24 @@ impl MouseJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
     #[repr(C)] pub struct MouseJoint;
 
     extern {
+        pub fn World_create_mouse_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            target: Vec2,
+            max_force: f32,
+            frequency: f32,
+            damping_ratio: f32
+        ) -> *mut Joint;
         pub fn MouseJoint_as_joint(slf: *mut MouseJoint) -> *mut Joint;
         pub fn Joint_as_mouse_joint(slf: *mut Joint) -> *mut MouseJoint;
         pub fn MouseJoint_set_target(slf: *mut MouseJoint, target: *const Vec2);

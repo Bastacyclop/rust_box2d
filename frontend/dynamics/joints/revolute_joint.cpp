@@ -1,3 +1,36 @@
+b2Joint* World_create_revolute_joint(
+    b2World* world,
+    b2Body* body_a,
+    b2Body* body_b,
+    bool collide_connected,
+    b2Vec2 local_anchor_a,
+    b2Vec2 local_anchor_b,
+    f32 reference_angle,
+    bool enable_limit,
+    f32 lower_angle,
+    f32 upper_angle,
+    bool enable_motor,
+    f32 motor_speed,
+    f32 max_motor_torque
+) {
+    b2RevoluteJointDef def;
+    def.bodyA = body_a;
+    def.bodyB = body_b;
+    def.collideConnected = collide_connected;
+    def.localAnchorA = local_anchor_a;
+    def.localAnchorB = local_anchor_b;
+    def.referenceAngle = reference_angle;
+    def.enableLimit = enable_limit;
+    def.lowerAngle = lower_angle;
+    def.upperAngle = upper_angle;
+    def.enableMotor = enable_motor;
+    def.motorSpeed = motor_speed;
+    def.maxMotorTorque = max_motor_torque;
+
+    return world->CreateJoint(&def);
+}
+
+
 void RevoluteJointDef_initialize(b2RevoluteJointDef* self,
                                  b2Body* body_a, b2Body* body_b,
                                  const b2Vec2* anchor) {

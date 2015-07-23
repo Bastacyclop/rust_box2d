@@ -1,30 +1,30 @@
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{
-    Joint, JointType, JointDefBase, RawJointDefBase, JointDef,
-    ToRaw
-};
+use dynamics::joints::{ Joint, JointType, JointDef };
 
-joint_def! {
-    RawPrismaticJointDef => PrismaticJointDef (JointType::Prismatic) {
-        local_anchor_a: Vec2 => Vec2,
-        local_anchor_b: Vec2 => Vec2,
-        local_axis_a: Vec2 => Vec2,
-        reference_angle: f32 => f32,
-        enable_limit: bool => bool,
-        lower_translation: f32 => f32,
-        upper_translation: f32 => f32,
-        enable_motor: bool => bool,
-        max_motor_force: f32 => f32,
-        motor_speed: f32 => f32
-    }
+pub struct PrismaticJointDef {
+    pub body_a: BodyHandle,
+    pub body_b: BodyHandle,
+    pub collide_connected: bool,
+    pub local_anchor_a: Vec2,
+    pub local_anchor_b: Vec2,
+    pub local_axis_a: Vec2,
+    pub reference_angle: f32,
+    pub enable_limit: bool,
+    pub lower_translation: f32,
+    pub upper_translation: f32,
+    pub enable_motor: bool,
+    pub max_motor_force: f32,
+    pub motor_speed: f32
 }
 
 impl PrismaticJointDef {
-    pub fn new() -> PrismaticJointDef {
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> PrismaticJointDef {
         PrismaticJointDef {
-            base: JointDefBase::new(),
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: false,
             local_anchor_a: Vec2 { x: 0., y: 0. },
             local_anchor_b: Vec2 { x: 0., y: 0. },
             local_axis_a: Vec2 { x: 1., y: 0. },
@@ -44,8 +44,8 @@ impl PrismaticJointDef {
                 body_b: BodyHandle,
                 anchor: &Vec2,
                 axis: &Vec2) {
-        self.base.body_a = Some(body_a);
-        self.base.body_b = Some(body_b);
+        self.body_a = body_a;
+        self.body_b = body_b;
         let a = world.get_body(body_a);
         let b = world.get_body(body_a);
         self.local_anchor_a = a.local_point(anchor);
@@ -53,10 +53,28 @@ impl PrismaticJointDef {
         self.local_axis_a = a.local_vector(axis);
         self.reference_angle = b.angle() - a.angle();
     }
+}
 
-    fn assert_well_formed(&self) {
-        self.base.body_a.expect("PrismaticJointDef expects some body_a");
-        self.base.body_b.expect("PrismaticJointDef expects some body_b");
+impl JointDef for PrismaticJointDef {
+    fn joint_type() -> JointType where Self: Sized { JointType::Prismatic }
+
+    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+        ffi::World_create_prismatic_joint(
+            world.mut_ptr(),
+            world.get_body_mut(self.body_a).mut_ptr(),
+            world.get_body_mut(self.body_b).mut_ptr(),
+            self.collide_connected,
+            self.local_anchor_a,
+            self.local_anchor_b,
+            self.local_axis_a,
+            self.reference_angle,
+            self.enable_limit,
+            self.lower_translation,
+            self.upper_translation,
+            self.enable_motor,
+            self.max_motor_force,
+            self.motor_speed
+        )
     }
 }
 
@@ -178,12 +196,30 @@ impl PrismaticJoint {
 
 #[doc(hidden)]
 pub mod ffi {
+    pub use dynamics::world::ffi::World;
+    pub use dynamics::body::ffi::Body;
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
     #[repr(C)] pub struct PrismaticJoint;
 
     extern {
+        pub fn World_create_prismatic_joint(
+            world: *mut World,
+            body_a: *mut Body,
+            body_b: *mut Body,
+            collide_connected: bool,
+            local_anchor_a: Vec2,
+            local_anchor_b: Vec2,
+            local_axis_a: Vec2,
+            reference_angle: f32,
+            enable_limit: bool,
+            lower_translation: f32,
+            upper_translation: f32,
+            enable_motor: bool,
+            max_motor_force: f32,
+            motor_speed: f32
+        ) -> *mut Joint;
         /*pub fn PrismaticJointDef_initialize(slf: *mut PrismaticJointDef,
                                             body_a: *mut Body,
                                             body_b: *mut Body,

@@ -1,6 +1,8 @@
 ## rust_box2d [![Build Status](https://travis-ci.org/Bastacyclop/rust_box2d.svg?branch=master)](https://travis-ci.org/Bastacyclop/rust_box2d)
 
-Box2D for Rust.
+A library wrapping around the Box2D physics engine. It aims to provide an idiomatic interface.
+
+> Box2D is a 2D rigid body simulation library for games. Programmers can use it in their games to make objects move in realistic ways and make the game world more interactive. From the game engine's point of view, a physics engine is just a system for procedural animation.
 
 You won't find a lot of information about Box2D itself here, look at [the official website](http://box2d.org/)
 instead.

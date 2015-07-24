@@ -127,10 +127,6 @@ impl MetaBody {
     pub fn fixtures(&self) -> HandleIter<MetaFixture> {
         self.fixtures.iter()
     }
-
-    pub fn fixtures_mut(&mut self) -> HandleIterMut<MetaFixture> {
-        self.fixtures.iter_mut()
-    }
 }
 
 impl UserData for MetaBody {

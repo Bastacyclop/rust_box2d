@@ -165,29 +165,14 @@ impl<T> HandleMap<T> {
             iter: self.entries.iter()
         }
     }
-
-    pub fn iter_mut<'a>(&'a mut self) -> HandleIterMut<'a, T> {
-        HandleIterMut {
-            iter: self.entries.iter_mut()
-        }
-    }
 }
 
 impl<'a, T> IntoIterator for &'a HandleMap<T> {
-    type Item = (TypedHandle<T>, Ref<'a, T>);
+    type Item = (TypedHandle<T>, &'a RefCell<T>);
     type IntoIter = HandleIter<'a, T>;
 
     fn into_iter(self) -> HandleIter<'a, T> {
         self.iter()
-    }
-}
-
-impl<'a, T> IntoIterator for &'a mut HandleMap<T> {
-    type Item = (TypedHandle<T>, RefMut<'a, T>);
-    type IntoIter = HandleIterMut<'a, T>;
-
-    fn into_iter(self) -> HandleIterMut<'a, T> {
-        self.iter_mut()
     }
 }
 
@@ -202,7 +187,7 @@ macro_rules! iterator {
                     if entry.inner.is_some() {
                         return Some((
                             TypedHandle::new(index, entry.version),
-                            entry.inner$(. $getter())+.unwrap()$(. $modifier())+
+                            entry.inner$(. $getter())+.unwrap()$(. $modifier())*
                         ));
                     }
                 }
@@ -218,7 +203,7 @@ macro_rules! iterator {
 }
 
 macro_rules! double_ended_iterator {
-    (impl $name:ident -> $elem:ty, $($getter:ident),+ and then $($modifier:ident),+) => {
+    (impl $name:ident -> $elem:ty, $($getter:ident),+ and then $($modifier:ident),*) => {
         impl<'a, T> DoubleEndedIterator for $name<'a, T> {
             #[inline]
             fn next_back(&mut self) -> Option<$elem> {
@@ -226,7 +211,7 @@ macro_rules! double_ended_iterator {
                     if entry.inner.is_some() {
                         return Some((
                             TypedHandle::new(index, entry.version),
-                            entry.inner$(. $getter())+.unwrap()$(. $modifier())+
+                            entry.inner$(. $getter())+.unwrap()$(. $modifier())*
                         ));
                     }
                 }
@@ -241,25 +226,13 @@ pub struct HandleIter<'a, T: 'a> {
 }
 
 iterator! {
-    impl HandleIter -> (TypedHandle<T>, Ref<'a, T>),
-    as_ref and then borrow
-}
-double_ended_iterator! {
-    impl HandleIter -> (TypedHandle<T>, Ref<'a, T>),
-    as_ref and then borrow
+    impl HandleIter -> (TypedHandle<T>, &'a RefCell<T>),
+    as_ref and then
 }
 
-pub struct HandleIterMut<'a, T: 'a> {
-    iter: vec_map::IterMut<'a, HandleEntry<T>>
-}
-
-iterator! {
-    impl HandleIterMut -> (TypedHandle<T>, RefMut<'a, T>),
-    as_mut and then borrow_mut
-}
 double_ended_iterator! {
-    impl HandleIterMut -> (TypedHandle<T>, RefMut<'a, T>),
-    as_mut and then borrow_mut
+    impl HandleIter -> (TypedHandle<T>, &'a RefCell<T>),
+    as_ref and then
 }
 
 #[cfg(test)]

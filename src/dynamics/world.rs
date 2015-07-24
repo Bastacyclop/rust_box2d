@@ -170,16 +170,8 @@ impl World {
         }
     }
 
-    pub fn bodies_mut(&mut self) -> HandleIterMut<MetaBody> {
-        self.bodies.iter_mut()
-    }
-
     pub fn bodies(&self) -> HandleIter<MetaBody> {
         self.bodies.iter()
-    }
-
-    pub fn joints_mut(&mut self) -> HandleIterMut<MetaJoint> {
-        self.joints.iter_mut()
     }
 
     pub fn joints(&mut self) -> HandleIter<MetaJoint> {

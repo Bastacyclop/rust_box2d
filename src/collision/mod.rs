@@ -3,6 +3,7 @@ pub mod distance;
 pub mod time_of_impact;
 
 use std::mem;
+#[cfg(feature = "cgmath")] use cgmath;
 use wrap::*;
 use common::settings::MAX_MANIFOLD_POINTS;
 use common::math::{ Vec2, Transform };
@@ -132,6 +133,26 @@ impl AABB {
         AABB {
             lower: Vec2 { x: 0., y: 0. },
             upper: Vec2 { x: 0., y: 0. }
+        }
+    }
+}
+
+#[cfg(feature = "cgmath")]
+impl<'a> From<&'a AABB> for cgmath::Aabb2<f32> {
+    fn from(b: &'a AABB) -> cgmath::Aabb2<f32> {
+        cgmath::Aabb2 {
+            min: b.lower.into(),
+            max: b.upper.into()
+        }
+    }
+}
+
+#[cfg(feature = "cgmath")]
+impl<'a> From<&'a cgmath::Aabb2<f32>> for AABB {
+    fn from(b: &'a cgmath::Aabb2<f32>) -> AABB {
+        AABB {
+            lower: b.min.into(),
+            upper: b.max.into()
         }
     }
 }

@@ -43,6 +43,8 @@
 extern crate libc;
 extern crate vec_map;
 #[macro_use] extern crate bitflags;
+#[cfg(feature = "nalgebra")] extern crate nalgebra;
+#[cfg(feature = "cgmath")] extern crate cgmath;
 
 mod ffi;
 #[doc(hidden)] #[macro_use] pub mod wrap;
@@ -58,6 +60,7 @@ pub mod b2 {
         DRAW_AABB, DRAW_CENTER_OF_MASS, DRAW_JOINT, DRAW_PAIR, DRAW_SHAPE
     };
     pub use common::math::{ Rot, Sweep, Transform, Vec2 };
+    pub use common::math::{ cross_vv, cross_vs, cross_sv };
     pub use common::settings::{
         ANGULAR_SLOP, LINEAR_SLOP,
         MAX_MANIFOLD_POINTS, MAX_POLYGON_VERTICES,

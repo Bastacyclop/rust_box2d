@@ -16,6 +16,9 @@ build = "build_frontend.rs"
 [lib]
 name = "box2d"
 
+[features]
+default = ["nalgebra", "cgmath"]
+
 [build-dependencies]
 gcc = "*"
 
@@ -23,3 +26,11 @@ gcc = "*"
 libc = "*"
 vec_map = "*"
 bitflags = "*"
+
+[dependencies.nalgebra]
+nalgebra = "*"
+optional = true
+
+[dependencies.cgmath]
+cgmath = "*"
+optional = true

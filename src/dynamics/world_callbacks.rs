@@ -70,10 +70,10 @@ pub struct ContactImpulse {
 }
 
 pub trait ContactListener {
-    fn begin_contact(&mut self, contact: &mut Contact);
-    fn end_contact(&mut self, contact: &mut Contact);
-    fn pre_solve(&mut self, contact: &mut Contact, manifold: &Manifold);
-    fn post_solve(&mut self, contact: &mut Contact, impulse: &ContactImpulse);
+    fn begin_contact(&mut self, _: &mut Contact) {}
+    fn end_contact(&mut self, _: &mut Contact) {}
+    fn pre_solve(&mut self, _: &mut Contact, _: &Manifold) {}
+    fn post_solve(&mut self, _: &mut Contact, _: &ContactImpulse) {}
 }
 
 #[doc(hidden)]

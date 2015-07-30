@@ -56,8 +56,8 @@ pub enum State {
 
 #[repr(C)]
 pub struct Output {
-    state: State,
-    t: f32
+    pub state: State,
+    pub t: f32
 }
 
 #[doc(hidden)]

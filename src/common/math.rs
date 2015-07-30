@@ -1,3 +1,4 @@
+use std::mem;
 use std::ops::{ Add, Sub, Mul, Div, Neg };
 #[cfg(feature = "nalgebra")] use nalgebra;
 #[cfg(feature = "cgmath")] use cgmath;
@@ -51,6 +52,24 @@ impl Vec2 {
 
     pub fn sqew(&self) -> Vec2 {
         Vec2 { x: -self.y, y: self.x }
+    }
+}
+
+impl Vec2 {
+    pub fn as_array(&self) -> &[f32; 2] {
+        unsafe { mem::transmute(self) }
+    }
+
+    pub fn as_array_mut(&mut self) -> &mut [f32; 2] {
+        unsafe { mem::transmute(self) }
+    }
+
+    pub fn from_array_ref(array: &[f32; 2]) -> &Vec2 {
+        unsafe { mem::transmute(array) }
+    }
+
+    pub fn from_array_mut(array: &mut [f32; 2]) -> &mut Vec2 {
+        unsafe { mem::transmute(array) }
     }
 }
 

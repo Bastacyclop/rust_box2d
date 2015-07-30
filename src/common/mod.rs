@@ -13,6 +13,24 @@ pub struct Color {
     pub a: f32
 }
 
+impl Color {
+    pub fn as_array(&self) -> &[f32; 4] {
+        unsafe { mem::transmute(self) }
+    }
+
+    pub fn as_array_mut(&mut self) -> &mut [f32; 4] {
+        unsafe { mem::transmute(self) }
+    }
+
+    pub fn from_array_ref(array: &[f32; 4]) -> &Vec2 {
+        unsafe { mem::transmute(array) }
+    }
+
+    pub fn from_array_mut(array: &mut [f32; 4]) -> &mut Vec2 {
+        unsafe { mem::transmute(array) }
+    }
+}
+
 bitflags! {
     #[repr(C)]
     flags DrawFlags: u32 {

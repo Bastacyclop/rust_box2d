@@ -71,7 +71,7 @@ pub mod ffi {
     pub use dynamics::world::ffi::World;
     pub use dynamics::joints::ffi::Joint;
 
-    #[repr(C)] pub struct GearJoint;
+    pub enum GearJoint {}
 
     extern {
         pub fn World_create_gear_joint(

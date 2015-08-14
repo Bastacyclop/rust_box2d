@@ -201,7 +201,7 @@ pub mod ffi {
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct PrismaticJoint;
+    pub enum PrismaticJoint {}
 
     extern {
         pub fn World_create_prismatic_joint(

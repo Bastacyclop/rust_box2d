@@ -73,7 +73,7 @@ pub mod ffi {
     pub use collision::shapes::edge::ffi::EdgeShape;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct ChainShape;
+    pub enum ChainShape {}
 
     extern {
         pub fn ChainShape_new() -> *mut ChainShape;

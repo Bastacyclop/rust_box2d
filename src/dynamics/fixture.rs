@@ -242,7 +242,7 @@ pub mod ffi {
     use collision::shapes::{ MassData, ShapeType };
     use super::Filter;
 
-    #[repr(C)] pub struct Fixture;
+    pub enum Fixture {}
 
     extern {
         pub fn Fixture_get_type(slf: *const Fixture) -> ShapeType;

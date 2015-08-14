@@ -182,7 +182,7 @@ pub mod ffi {
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct WheelJoint;
+    pub enum WheelJoint {}
 
     extern {
         pub fn World_create_wheel_joint(

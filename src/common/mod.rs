@@ -139,8 +139,8 @@ pub mod ffi {
     use common::math::{ Vec2, Transform };
     use super::{ Color, DrawFlags };
 
-    #[repr(C)] pub struct Draw;
-    #[repr(C)] pub struct DrawLink;
+    pub enum Draw {}
+    pub enum DrawLink {}
 
     extern {
         pub fn DrawLink_new(

@@ -135,7 +135,7 @@ pub mod ffi {
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct MotorJoint;
+    pub enum MotorJoint {}
 
     extern {
         pub fn World_create_motor_joint(

@@ -399,7 +399,7 @@ pub mod ffi {
     use dynamics::Profile;
     use dynamics::body::BodyDef;
 
-    #[repr(C)] pub struct World;
+    pub enum World {}
 
     extern {
         pub fn World_new(gravity: *const Vec2) -> *mut World;

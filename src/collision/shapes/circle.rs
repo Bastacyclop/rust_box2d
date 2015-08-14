@@ -78,7 +78,7 @@ pub mod ffi {
     pub use collision::shapes::ffi::{ Shape_get_radius, Shape_set_radius };
     use common::math::Vec2;
 
-    #[repr(C)] pub struct CircleShape;
+    pub enum CircleShape {}
 
     extern {
         pub fn CircleShape_new() -> *mut CircleShape;

@@ -47,7 +47,7 @@ pub mod ffi {
     pub use collision::shapes::ffi::Shape;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct EdgeShape;
+    pub enum EdgeShape {}
 
     extern {
         pub fn EdgeShape_new() -> *mut EdgeShape;

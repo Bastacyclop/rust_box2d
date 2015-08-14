@@ -319,7 +319,7 @@ pub mod ffi {
     use common::math::Vec2;
     use super::JointType;
 
-    #[repr(C)] pub struct Joint;
+    pub enum Joint {}
 
     extern {
         pub fn Joint_get_type(slf: *const Joint) -> JointType;

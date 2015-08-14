@@ -70,7 +70,7 @@ pub mod ffi {
     pub use collision::shapes::ffi::Shape;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct PolygonShape;
+    pub enum PolygonShape {}
 
     extern {
         pub fn PolygonShape_new() -> *mut PolygonShape;

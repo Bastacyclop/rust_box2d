@@ -128,7 +128,7 @@ pub mod ffi {
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct PulleyJoint;
+    pub enum PulleyJoint {}
 
     extern {
         pub fn World_create_pulley_joint(

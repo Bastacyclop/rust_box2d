@@ -253,14 +253,14 @@ pub mod ffi {
     use collision::Manifold;
     use super::ContactImpulse;
 
-    #[repr(C)] pub struct ContactFilter;
-    #[repr(C)] pub struct ContactFilterLink;
-    #[repr(C)] pub struct ContactListener;
-    #[repr(C)] pub struct ContactListenerLink;
-    #[repr(C)] pub struct QueryCallback;
-    #[repr(C)] pub struct QueryCallbackLink;
-    #[repr(C)] pub struct RayCastCallback;
-    #[repr(C)] pub struct RayCastCallbackLink;
+    pub enum ContactFilter {}
+    pub enum ContactFilterLink {}
+    pub enum ContactListener {}
+    pub enum ContactListenerLink {}
+    pub enum QueryCallback {}
+    pub enum QueryCallbackLink {}
+    pub enum RayCastCallback {}
+    pub enum RayCastCallbackLink {}
 
     extern {
         pub fn ContactFilterLink_new(

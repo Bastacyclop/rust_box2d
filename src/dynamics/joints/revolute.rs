@@ -190,7 +190,7 @@ pub mod ffi {
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct RevoluteJoint;
+    pub enum RevoluteJoint {}
 
     extern {
         pub fn World_create_revolute_joint(

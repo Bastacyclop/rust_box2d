@@ -108,7 +108,7 @@ pub mod ffi {
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct FrictionJoint;
+    pub enum FrictionJoint {}
 
     extern {
         pub fn World_create_friction_joint(

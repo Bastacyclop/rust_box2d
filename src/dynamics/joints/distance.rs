@@ -125,7 +125,7 @@ pub mod ffi {
     pub use dynamics::joints::ffi::Joint;
     use common::math::Vec2;
 
-    #[repr(C)] pub struct DistanceJoint;
+    pub enum DistanceJoint {}
 
     extern {
         pub fn World_create_distance_joint(

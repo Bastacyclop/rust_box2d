@@ -158,7 +158,7 @@ pub mod ffi {
     use collision::{ AABB, RayCastInput, RayCastOutput };
     use super::{ ShapeType, MassData };
 
-    #[repr(C)] pub struct Shape;
+    pub enum Shape {}
 
     extern {
         pub fn Shape_get_type(slf: *const Shape) -> ShapeType;

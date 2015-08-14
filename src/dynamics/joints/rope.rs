@@ -87,7 +87,7 @@ pub mod ffi {
     use common::math::Vec2;
     use dynamics::joints::LimitState;
 
-    #[repr(C)] pub struct RopeJoint;
+    pub enum RopeJoint {}
 
     extern {
         pub fn World_create_rope_joint(

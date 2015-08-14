@@ -181,7 +181,7 @@ pub mod ffi {
     use collision::{ Manifold, WorldManifold };
     use common::math::Transform;
 
-    #[repr(C)] pub struct Contact;
+    pub enum Contact {}
 
     extern {
         pub fn Contact_get_manifold(slf: *mut Contact) -> *mut Manifold;

@@ -462,7 +462,7 @@ pub mod ffi {
     use dynamics::contacts::ContactEdge;
     use super::BodyType;
 
-    #[repr(C)] pub struct Body;
+    pub enum Body {}
 
     extern {
         pub fn Body_create_fixture(slf: *mut Body, def: *const FixtureDef

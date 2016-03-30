@@ -1,36 +1,56 @@
 extern crate piston;
-extern crate glutin_window;
 extern crate graphics;
-extern crate opengl_graphics;
+extern crate gfx_graphics;
+extern crate gfx;
+extern crate gfx_device_gl;
+extern crate glutin_window;
 extern crate box2d;
 
 pub mod camera;
 pub use camera::Camera;
-mod draw_session;
-use draw_session::DrawSession;
+mod debug_draw;
+use debug_draw::debug_draw;
 
-use piston::event_loop::*;
 use piston::input::{ Event, Input, Button, Motion, Key, MouseButton };
-use piston::window::WindowSettings;
+use piston::window::{ Window, OpenGLWindow, AdvancedWindow, WindowSettings };
+use piston::event_loop::Events;
+use gfx::traits::*;
 use glutin_window::*;
-use opengl_graphics::GlGraphics;
 use box2d::b2;
+
+type GfxResources = gfx_device_gl::Resources;
+type GfxCommandBuffer = gfx_device_gl::command::CommandBuffer;
+type Gfx2d = gfx_graphics::Gfx2d<GfxResources>;
+type GfxGraphics<'a> = gfx_graphics::GfxGraphics<'a, GfxResources, GfxCommandBuffer>;
 
 pub fn run<F>(name: &str, mut width: u32, mut height: u32,
               mut world: b2::World, mut camera: Camera, draw_flags: b2::DrawFlags,
               mut process_input: F)
     where F: FnMut(&mut b2::World, &mut Camera, Input) {
 
-    let gl_version = OpenGL::V3_2;
+    let opengl = OpenGL::V3_2;
 
-    let window: GlutinWindow =
+    let mut window: GlutinWindow =
         WindowSettings::new(format!("{} Testbed", name), [width, height])
+            .opengl(opengl)
             .exit_on_esc(true)
-            .opengl(gl_version)
             .samples(4)
-            .into();
+            .build().unwrap();
+    let mut events = window.events();
 
-    let mut gl = GlGraphics::new(gl_version);
+    let (mut device, mut factory) = gfx_device_gl::create(|s| {
+        window.get_proc_address(s) as *const _
+    });
+    
+    let draw_size = window.draw_size();
+    let aa = 4u8;
+    let dim = (draw_size.width as u16,
+               draw_size.height as u16,
+               1,
+               aa.into());
+    let (output_color, output_stencil) = gfx_device_gl::create_main_targets(dim);
+    let mut gfx2d = Gfx2d::new(opengl, &mut factory);
+    let mut encoder = factory.create_encoder();
 
     let transform = camera.transform_world_to_gl();
     let window_to_gl = |w, h, x, y| {
@@ -54,7 +74,7 @@ pub fn run<F>(name: &str, mut width: u32, mut height: u32,
 
     let dummy = world.create_body(&b2::BodyDef::new());
 
-    for event in window.events() {
+    while let Some(event) = events.next(&mut window) {
         match event {
             Event::Input(i) => {
                 match i {
@@ -93,9 +113,17 @@ pub fn run<F>(name: &str, mut width: u32, mut height: u32,
                 }
             }
             Event::Render(args) => {
-                graphics::clear([0.3, 0.3, 0.3, 1.0], &mut gl);
-                DrawSession::new(&mut gl, args, transform,
-                                 &mut world, draw_flags);
+                encoder.reset();
+                gfx2d.draw(&mut encoder,
+                           &output_color,
+                           &output_stencil,
+                           args.viewport(),
+                           |c, g| {
+                               graphics::clear([0.3, 0.3, 0.3, 1.0], g);
+                               debug_draw(&mut world, draw_flags,
+                                          transform, c, g);
+                           });
+                device.submit(encoder.as_buffer());
             }
             _ => {}
         }

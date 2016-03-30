@@ -33,7 +33,7 @@ impl Color {
 
 bitflags! {
     #[repr(C)]
-    flags DrawFlags: u32 {
+    pub flags DrawFlags: u32 {
         const DRAW_SHAPE = 0x0001,
         const DRAW_JOINT = 0x0002,
         const DRAW_AABB = 0x0004,

@@ -5,7 +5,7 @@ macro_rules! wrap_joint {
         > $base_as:path
     } => {
         wrap! {
-            $wrapped (base ffi::Joint) => pub $wrap
+            ffi::Joint: $wrapped => pub $wrap
             < $as_base
             > $base_as
         }
@@ -46,7 +46,6 @@ use std::any::Any;
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{ World, BodyHandle, JointHandle };
-use dynamics::body::Body;
 use dynamics::user_data::{ UserData, RawUserData, RawUserDataMut, InternalUserData };
 
 #[repr(C)]

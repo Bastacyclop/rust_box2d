@@ -30,7 +30,6 @@ impl Filter {
 
 #[repr(C)]
 #[derive(Clone)]
-#[allow(raw_pointer_derive)]
 pub struct FixtureDef {
     #[doc(hidden)] pub shape: *const ffi::Shape,
     #[doc(hidden)] pub user_data: ffi::Any,

@@ -10,7 +10,7 @@ macro_rules! wrap_shape {
         > $base_as:path
     } => {
         wrap! {
-            $wrapped (base ffi::Shape) => pub $wrap
+            ffi::Shape: $wrapped => pub $wrap
             < $as_base
             > $base_as
         }

@@ -60,7 +60,7 @@ macro_rules! wrap {
     };
 
     {
-        $wrapped:ty (base $base:ty) => custom $wrap:ident
+        $base:ty: $wrapped:ty => custom $wrap:ident
         < $as_base:path
         > $base_as:path
     } => {
@@ -72,7 +72,7 @@ macro_rules! wrap {
     };
 
     {
-        $wrapped:ty (base $base:ty) => pub $wrap:ident
+        $base:ty: $wrapped:ty => pub $wrap:ident
         < $as_base:path
         > $base_as:path
     } => {

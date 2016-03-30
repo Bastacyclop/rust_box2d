@@ -1,14 +1,14 @@
-use std::cell::{ RefCell, Ref, RefMut };
+use std::cell::{RefCell, Ref, RefMut};
 use std::marker::PhantomData;
-use std::iter::{ Iterator, DoubleEndedIterator };
-use vec_map::{ self, VecMap };
+use std::iter::{Iterator, DoubleEndedIterator};
+use vec_map::{self, VecMap};
 use std::mem;
 
 #[derive(PartialOrd, Ord, Hash)]
 pub struct TypedHandle<T> {
     index: usize,
     version: usize,
-    phantom: PhantomData<T>
+    phantom: PhantomData<T>,
 }
 
 impl<T> TypedHandle<T> {
@@ -17,20 +17,28 @@ impl<T> TypedHandle<T> {
         TypedHandle {
             index: index,
             version: version,
-            phantom: PhantomData
+            phantom: PhantomData,
         }
     }
 
-    #[inline] #[doc(hidden)]
-    pub fn index(&self) -> usize { self.index }
+    #[inline]
+    #[doc(hidden)]
+    pub fn index(&self) -> usize {
+        self.index
+    }
 
-    #[inline] #[doc(hidden)]
-    pub fn version(&self) -> usize { self.version }
+    #[inline]
+    #[doc(hidden)]
+    pub fn version(&self) -> usize {
+        self.version
+    }
 }
 
 impl<T> Copy for TypedHandle<T> {}
 impl<T> Clone for TypedHandle<T> {
-    fn clone(&self) -> TypedHandle<T> { *self }
+    fn clone(&self) -> TypedHandle<T> {
+        *self
+    }
 }
 
 impl<T> Eq for TypedHandle<T> {}
@@ -43,14 +51,14 @@ impl<T> PartialEq for TypedHandle<T> {
 
 struct HandleEntry<T> {
     pub version: usize,
-    pub inner: Option<RefCell<T>>
+    pub inner: Option<RefCell<T>>,
 }
 
 impl<T> HandleEntry<T> {
     fn new() -> HandleEntry<T> {
         HandleEntry {
             version: 0,
-            inner: None
+            inner: None,
         }
     }
 }
@@ -59,7 +67,7 @@ impl<T> HandleEntry<T> {
 pub struct HandleMap<T> {
     next_index: usize,
     availables: Vec<usize>,
-    entries: VecMap<HandleEntry<T>>
+    entries: VecMap<HandleEntry<T>>,
 }
 
 impl<T> HandleMap<T> {
@@ -67,7 +75,7 @@ impl<T> HandleMap<T> {
         HandleMap {
             next_index: 0,
             availables: Vec::new(),
-            entries: VecMap::new()
+            entries: VecMap::new(),
         }
     }
 
@@ -75,7 +83,7 @@ impl<T> HandleMap<T> {
         HandleMap {
             next_index: 0,
             availables: Vec::with_capacity(availables),
-            entries: VecMap::with_capacity(entries)
+            entries: VecMap::with_capacity(entries),
         }
     }
 
@@ -88,7 +96,8 @@ impl<T> HandleMap<T> {
     }
 
     pub fn insert_with<F>(&mut self, f: F) -> TypedHandle<T>
-        where F: FnOnce(TypedHandle<T>) -> T {
+        where F: FnOnce(TypedHandle<T>) -> T
+    {
 
         let index = self.find_available();
 
@@ -161,9 +170,7 @@ impl<T> HandleMap<T> {
     }
 
     pub fn iter<'a>(&'a self) -> HandleIter<'a, T> {
-        HandleIter {
-            iter: self.entries.iter()
-        }
+        HandleIter { iter: self.entries.iter() }
     }
 }
 
@@ -222,7 +229,7 @@ macro_rules! double_ended_iterator {
 }
 
 pub struct HandleIter<'a, T: 'a> {
-    iter: vec_map::Iter<'a, HandleEntry<T>>
+    iter: vec_map::Iter<'a, HandleEntry<T>>,
 }
 
 iterator! {

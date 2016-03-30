@@ -1,7 +1,7 @@
 use wrap::*;
 use common::math::Vec2;
-use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{ Joint, JointType, JointDef };
+use dynamics::world::{World, BodyHandle};
+use dynamics::joints::{Joint, JointType, JointDef};
 
 pub struct PulleyJointDef {
     pub body_a: BodyHandle,
@@ -13,7 +13,7 @@ pub struct PulleyJointDef {
     pub local_anchor_b: Vec2,
     pub length_a: f32,
     pub length_b: f32,
-    pub ratio: f32
+    pub ratio: f32,
 }
 
 impl PulleyJointDef {
@@ -28,7 +28,7 @@ impl PulleyJointDef {
             local_anchor_b: Vec2 { x: 1., y: 0. },
             length_a: 0.,
             length_b: 0.,
-            ratio: 1.
+            ratio: 1.,
         }
     }
 
@@ -52,22 +52,24 @@ impl PulleyJointDef {
 }
 
 impl JointDef for PulleyJointDef {
-    fn joint_type() -> JointType where Self: Sized { JointType::Pulley }
+    fn joint_type() -> JointType
+        where Self: Sized
+    {
+        JointType::Pulley
+    }
 
     unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
-        ffi::World_create_pulley_joint(
-            world.mut_ptr(),
-            world.get_body_mut(self.body_a).mut_ptr(),
-            world.get_body_mut(self.body_b).mut_ptr(),
-            self.collide_connected,
-            self.ground_anchor_a,
-            self.ground_anchor_b,
-            self.local_anchor_a,
-            self.local_anchor_b,
-            self.length_a,
-            self.length_b,
-            self.ratio
-        )
+        ffi::World_create_pulley_joint(world.mut_ptr(),
+                                       world.get_body_mut(self.body_a).mut_ptr(),
+                                       world.get_body_mut(self.body_b).mut_ptr(),
+                                       self.collide_connected,
+                                       self.ground_anchor_a,
+                                       self.ground_anchor_b,
+                                       self.local_anchor_a,
+                                       self.local_anchor_b,
+                                       self.length_a,
+                                       self.length_b,
+                                       self.ratio)
     }
 }
 
@@ -79,45 +81,31 @@ wrap_joint! {
 
 impl PulleyJoint {
     pub fn ground_anchor_a(&self) -> Vec2 {
-        unsafe {
-            ffi::PulleyJoint_get_ground_anchor_a(self.ptr())
-        }
+        unsafe { ffi::PulleyJoint_get_ground_anchor_a(self.ptr()) }
     }
 
     pub fn ground_anchor_b(&self) -> Vec2 {
-        unsafe {
-            ffi::PulleyJoint_get_ground_anchor_b(self.ptr())
-        }
+        unsafe { ffi::PulleyJoint_get_ground_anchor_b(self.ptr()) }
     }
 
     pub fn length_a(&self) -> f32 {
-        unsafe {
-            ffi::PulleyJoint_get_length_a(self.ptr())
-        }
+        unsafe { ffi::PulleyJoint_get_length_a(self.ptr()) }
     }
 
     pub fn length_b(&self) -> f32 {
-        unsafe {
-            ffi::PulleyJoint_get_length_b(self.ptr())
-        }
+        unsafe { ffi::PulleyJoint_get_length_b(self.ptr()) }
     }
 
     pub fn ratio(&self) -> f32 {
-        unsafe {
-            ffi::PulleyJoint_get_ratio(self.ptr())
-        }
+        unsafe { ffi::PulleyJoint_get_ratio(self.ptr()) }
     }
 
     pub fn current_length_a(&self) -> f32 {
-        unsafe {
-            ffi::PulleyJoint_get_current_length_a(self.ptr())
-        }
+        unsafe { ffi::PulleyJoint_get_current_length_a(self.ptr()) }
     }
 
     pub fn current_length_b(&self) -> f32 {
-        unsafe {
-            ffi::PulleyJoint_get_current_length_b(self.ptr())
-        }
+        unsafe { ffi::PulleyJoint_get_current_length_b(self.ptr()) }
     }
 }
 
@@ -130,28 +118,27 @@ pub mod ffi {
 
     pub enum PulleyJoint {}
 
-    extern {
-        pub fn World_create_pulley_joint(
-            world: *mut World,
-            body_a: *mut Body,
-            body_b: *mut Body,
-            collide_connected: bool,
-            ground_anchor_a: Vec2,
-            ground_anchor_b: Vec2,
-            local_anchor_a: Vec2,
-            local_anchor_b: Vec2,
-            length_a: f32,
-            length_b: f32,
-            ratio: f32
-        ) -> *mut Joint;
-        /*pub fn PulleyJointDef_initialize(slf: *mut PulleyJointDef,
+    extern "C" {
+        pub fn World_create_pulley_joint(world: *mut World,
                                          body_a: *mut Body,
                                          body_b: *mut Body,
-                                         ground_anchor_a: *const Vec2,
-                                         ground_anchor_b: *const Vec2,
-                                         anchor_a: *const Vec2,
-                                         anchor_b: *const Vec2,
-                                         ratio: f32);*/
+                                         collide_connected: bool,
+                                         ground_anchor_a: Vec2,
+                                         ground_anchor_b: Vec2,
+                                         local_anchor_a: Vec2,
+                                         local_anchor_b: Vec2,
+                                         length_a: f32,
+                                         length_b: f32,
+                                         ratio: f32)
+                                         -> *mut Joint;
+        // pub fn PulleyJointDef_initialize(slf: *mut PulleyJointDef,
+        // body_a: *mut Body,
+        // body_b: *mut Body,
+        // ground_anchor_a: *const Vec2,
+        // ground_anchor_b: *const Vec2,
+        // anchor_a: *const Vec2,
+        // anchor_b: *const Vec2,
+        // ratio: f32);
         pub fn PulleyJoint_as_joint(slf: *mut PulleyJoint) -> *mut Joint;
         pub fn Joint_as_pulley_joint(slf: *mut Joint) -> *mut PulleyJoint;
         pub fn PulleyJoint_get_ground_anchor_a(slf: *const PulleyJoint) -> Vec2;

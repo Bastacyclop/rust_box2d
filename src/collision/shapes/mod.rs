@@ -1,7 +1,7 @@
 use std::mem;
 use wrap::*;
-use common::math::{ Vec2, Transform };
-use collision::{ RayCastInput, RayCastOutput, AABB };
+use common::math::{Vec2, Transform};
+use collision::{RayCastInput, RayCastOutput, AABB};
 
 macro_rules! wrap_shape {
     {
@@ -44,31 +44,27 @@ pub enum ShapeType {
     Edge,
     Polygon,
     Chain,
-    Count
+    Count,
 }
 
 pub trait Shape: WrappedBase<ffi::Shape> {
     fn shape_type(&self) -> ShapeType {
-        unsafe {
-            ffi::Shape_get_type(self.base_ptr())
-        }
+        unsafe { ffi::Shape_get_type(self.base_ptr()) }
     }
 
     fn child_count(&self) -> i32 {
-        unsafe {
-            ffi::Shape_get_child_count_virtual(self.base_ptr())
-        }
+        unsafe { ffi::Shape_get_child_count_virtual(self.base_ptr()) }
     }
 
     fn test_point(&self, xf: &Transform, p: &Vec2) -> bool {
-        unsafe {
-            ffi::Shape_test_point_virtual(self.base_ptr(), xf, p)
-        }
+        unsafe { ffi::Shape_test_point_virtual(self.base_ptr(), xf, p) }
     }
 
-    fn ray_cast(&self, input: &RayCastInput,
-                       transform: &Transform,
-                       child_index: i32) -> RayCastOutput {
+    fn ray_cast(&self,
+                input: &RayCastInput,
+                transform: &Transform,
+                child_index: i32)
+                -> RayCastOutput {
         unsafe {
             let mut output = mem::zeroed();
             ffi::Shape_ray_cast_virtual(self.base_ptr(),
@@ -83,10 +79,7 @@ pub trait Shape: WrappedBase<ffi::Shape> {
     fn compute_aabb(&self, xf: &Transform, child_index: i32) -> AABB {
         unsafe {
             let mut aabb = mem::zeroed();
-            ffi::Shape_compute_aabb_virtual(self.base_ptr(),
-                                            &mut aabb,
-                                            xf,
-                                            child_index);
+            ffi::Shape_compute_aabb_virtual(self.base_ptr(), &mut aabb, xf, child_index);
             aabb
         }
     }
@@ -94,9 +87,7 @@ pub trait Shape: WrappedBase<ffi::Shape> {
     fn compute_mass(&self, density: f32) -> MassData {
         unsafe {
             let mut mass_data = mem::zeroed();
-            ffi::Shape_compute_mass_virtual(self.base_ptr(),
-                                            &mut mass_data,
-                                            density);
+            ffi::Shape_compute_mass_virtual(self.base_ptr(), &mut mass_data, density);
             mass_data
         }
     }
@@ -118,7 +109,7 @@ impl WrappedBase<ffi::Shape> for UnknownShape {
             &Edge(ref x) => x.base_ptr(),
             &Polygon(ref x) => x.base_ptr(),
             &Chain(ref x) => x.base_ptr(),
-            _ => panic!("Truly unknown shape")
+            _ => panic!("Truly unknown shape"),
         }
     }
 
@@ -129,7 +120,7 @@ impl WrappedBase<ffi::Shape> for UnknownShape {
             &mut Edge(ref mut x) => x.mut_base_ptr(),
             &mut Polygon(ref mut x) => x.mut_base_ptr(),
             &mut Chain(ref mut x) => x.mut_base_ptr(),
-            _ => panic!("Truly unknown shape")
+            _ => panic!("Truly unknown shape"),
         }
     }
 }
@@ -147,37 +138,36 @@ impl FromFFI<ffi::Shape> for UnknownShape {
             _ => Unknown,
         }
     }
-
 }
 
 impl Shape for UnknownShape {}
 
 #[doc(hidden)]
 pub mod ffi {
-    use common::math::{ Vec2, Transform };
-    use collision::{ AABB, RayCastInput, RayCastOutput };
-    use super::{ ShapeType, MassData };
+    use common::math::{Vec2, Transform};
+    use collision::{AABB, RayCastInput, RayCastOutput};
+    use super::{ShapeType, MassData};
 
     pub enum Shape {}
 
-    extern {
+    extern "C" {
         pub fn Shape_get_type(slf: *const Shape) -> ShapeType;
         pub fn Shape_get_child_count_virtual(slf: *const Shape) -> i32;
         pub fn Shape_test_point_virtual(slf: *const Shape,
                                         xf: *const Transform,
-                                        p: *const Vec2) -> bool;
+                                        p: *const Vec2)
+                                        -> bool;
         pub fn Shape_ray_cast_virtual(slf: *const Shape,
                                       output: *mut RayCastOutput,
                                       input: *const RayCastInput,
                                       transform: *const Transform,
-                                      child_index: i32) -> bool;
+                                      child_index: i32)
+                                      -> bool;
         pub fn Shape_compute_aabb_virtual(slf: *const Shape,
                                           aabb: *mut AABB,
                                           xf: *const Transform,
                                           child_id: i32);
-        pub fn Shape_compute_mass_virtual(slf: *const Shape,
-                                          data: *mut MassData,
-                                          density: f32);
+        pub fn Shape_compute_mass_virtual(slf: *const Shape, data: *mut MassData, density: f32);
         pub fn Shape_get_radius(slf: *const Shape) -> f32;
         pub fn Shape_set_radius(slf: *mut Shape, radius: f32);
     }

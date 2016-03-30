@@ -1,7 +1,7 @@
 use wrap::*;
 use common::math::Vec2;
-use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{ Joint, JointType, JointDef };
+use dynamics::world::{World, BodyHandle};
+use dynamics::joints::{Joint, JointType, JointDef};
 
 pub struct MotorJointDef {
     pub body_a: BodyHandle,
@@ -11,12 +11,11 @@ pub struct MotorJointDef {
     pub angular_offset: f32,
     pub max_force: f32,
     pub max_torque: f32,
-    pub correction_factor: f32
+    pub correction_factor: f32,
 }
 
 impl MotorJointDef {
-    pub fn new(body_a: BodyHandle,
-               body_b: BodyHandle) -> MotorJointDef {
+    pub fn new(body_a: BodyHandle, body_b: BodyHandle) -> MotorJointDef {
         MotorJointDef {
             body_a: body_a,
             body_b: body_b,
@@ -25,14 +24,11 @@ impl MotorJointDef {
             angular_offset: 0.,
             max_force: 1.,
             max_torque: 1.,
-            correction_factor: 0.3
+            correction_factor: 0.3,
         }
     }
 
-    pub fn init(&mut self,
-                world: &World,
-                body_a: BodyHandle,
-                body_b: BodyHandle) {
+    pub fn init(&mut self, world: &World, body_a: BodyHandle, body_b: BodyHandle) {
         self.body_a = body_a;
         self.body_b = body_b;
         let a = world.get_body(body_a);
@@ -43,20 +39,22 @@ impl MotorJointDef {
 }
 
 impl JointDef for MotorJointDef {
-    fn joint_type() -> JointType where Self: Sized { JointType::Motor }
+    fn joint_type() -> JointType
+        where Self: Sized
+    {
+        JointType::Motor
+    }
 
     unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
-        ffi::World_create_motor_joint(
-            world.mut_ptr(),
-            world.get_body_mut(self.body_a).mut_ptr(),
-            world.get_body_mut(self.body_b).mut_ptr(),
-            self.collide_connected,
-            self.linear_offset,
-            self.angular_offset,
-            self.max_force,
-            self.max_torque,
-            self.correction_factor
-        )
+        ffi::World_create_motor_joint(world.mut_ptr(),
+                                      world.get_body_mut(self.body_a).mut_ptr(),
+                                      world.get_body_mut(self.body_b).mut_ptr(),
+                                      self.collide_connected,
+                                      self.linear_offset,
+                                      self.angular_offset,
+                                      self.max_force,
+                                      self.max_torque,
+                                      self.correction_factor)
     }
 }
 
@@ -74,57 +72,39 @@ impl MotorJoint {
     }
 
     pub fn angular_offset(&self) -> f32 {
-        unsafe {
-            ffi::MotorJoint_get_angular_offset(self.ptr())
-        }
+        unsafe { ffi::MotorJoint_get_angular_offset(self.ptr()) }
     }
 
     pub fn max_force(&self) -> f32 {
-        unsafe {
-            ffi::MotorJoint_get_max_force(self.ptr())
-        }
+        unsafe { ffi::MotorJoint_get_max_force(self.ptr()) }
     }
 
     pub fn max_torque(&self) -> f32 {
-        unsafe {
-            ffi::MotorJoint_get_max_torque(self.ptr())
-        }
+        unsafe { ffi::MotorJoint_get_max_torque(self.ptr()) }
     }
 
     pub fn correction_factor(&self) -> f32 {
-        unsafe {
-            ffi::MotorJoint_get_correction_factor(self.ptr())
-        }
+        unsafe { ffi::MotorJoint_get_correction_factor(self.ptr()) }
     }
 
     pub fn set_linear_offset(&mut self, offset: &Vec2) {
-        unsafe {
-            ffi::MotorJoint_set_linear_offset(self.mut_ptr(), offset)
-        }
+        unsafe { ffi::MotorJoint_set_linear_offset(self.mut_ptr(), offset) }
     }
 
     pub fn set_angular_offset(&mut self, offset: f32) {
-        unsafe {
-            ffi::MotorJoint_set_angular_offset(self.mut_ptr(), offset)
-        }
+        unsafe { ffi::MotorJoint_set_angular_offset(self.mut_ptr(), offset) }
     }
 
     pub fn set_max_force(&mut self, force: f32) {
-        unsafe {
-            ffi::MotorJoint_set_max_force(self.mut_ptr(), force)
-        }
+        unsafe { ffi::MotorJoint_set_max_force(self.mut_ptr(), force) }
     }
 
     pub fn set_max_torque(&mut self, torque: f32) {
-        unsafe {
-            ffi::MotorJoint_set_max_torque(self.mut_ptr(), torque)
-        }
+        unsafe { ffi::MotorJoint_set_max_torque(self.mut_ptr(), torque) }
     }
 
     pub fn set_correction_factor(&mut self, factor: f32) {
-        unsafe {
-            ffi::MotorJoint_set_correction_factor(self.mut_ptr(), factor)
-        }
+        unsafe { ffi::MotorJoint_set_correction_factor(self.mut_ptr(), factor) }
     }
 }
 
@@ -137,22 +117,20 @@ pub mod ffi {
 
     pub enum MotorJoint {}
 
-    extern {
-        pub fn World_create_motor_joint(
-            world: *mut World,
-            body_a: *mut Body,
-            body_b: *mut Body,
-            collide_connected: bool,
-            linear_offset: Vec2,
-            angular_offset: f32,
-            max_force: f32,
-            max_torque: f32,
-            correction_factor: f32
-        ) -> *mut Joint;
+    extern "C" {
+        pub fn World_create_motor_joint(world: *mut World,
+                                        body_a: *mut Body,
+                                        body_b: *mut Body,
+                                        collide_connected: bool,
+                                        linear_offset: Vec2,
+                                        angular_offset: f32,
+                                        max_force: f32,
+                                        max_torque: f32,
+                                        correction_factor: f32)
+                                        -> *mut Joint;
         pub fn MotorJoint_as_joint(slf: *mut MotorJoint) -> *mut Joint;
         pub fn Joint_as_motor_joint(slf: *mut Joint) -> *mut MotorJoint;
-        pub fn MotorJoint_set_linear_offset(slf: *mut MotorJoint,
-                                            offset: *const Vec2);
+        pub fn MotorJoint_set_linear_offset(slf: *mut MotorJoint, offset: *const Vec2);
         pub fn MotorJoint_get_linear_offset(slf: *const MotorJoint) -> *const Vec2;
         pub fn MotorJoint_set_angular_offset(slf: *mut MotorJoint, offset: f32);
         pub fn MotorJoint_get_angular_offset(slf: *const MotorJoint) -> f32;

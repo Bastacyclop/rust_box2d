@@ -1,6 +1,6 @@
 use std::mem;
 use std::marker::PhantomData;
-use common::math::{ Vec2, Transform };
+use common::math::{Vec2, Transform};
 use collision::shapes::Shape;
 
 #[repr(C)]
@@ -9,7 +9,7 @@ pub struct RawProxy {
     buffer: [Vec2; 2],
     vertices: *const Vec2,
     count: i32,
-    radius: f32
+    radius: f32,
 }
 
 impl RawProxy {
@@ -21,15 +21,17 @@ impl RawProxy {
 }
 
 pub struct Proxy<'a> {
-    #[doc(hidden)] pub raw: RawProxy,
-    #[doc(hidden)] pub phantom: PhantomData<&'a ()>
+    #[doc(hidden)]
+    pub raw: RawProxy,
+    #[doc(hidden)]
+    pub phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> Proxy<'a> {
     pub fn new<S: Shape>(shape: &'a S, index: i32) -> Proxy<'a> {
         Proxy {
             raw: unsafe { RawProxy::new(shape.base_ptr(), index) },
-            phantom: PhantomData
+            phantom: PhantomData,
         }
     }
 }
@@ -39,21 +41,22 @@ pub struct SimplexCache {
     pub metric: f32,
     pub count: u16,
     pub index_a: [u8; 3],
-    pub index_b: [u8; 3]
+    pub index_b: [u8; 3],
 }
 
-#[repr(C)] #[doc(hidden)]
+#[repr(C)]
+#[doc(hidden)]
 pub struct RawInput {
     proxy_a: RawProxy,
     proxy_b: RawProxy,
     transform_a: Transform,
     transform_b: Transform,
-    use_radii: bool
+    use_radii: bool,
 }
 
 pub struct Input<'a> {
     raw: RawInput,
-    phantom: PhantomData<&'a ()>
+    phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> Input<'a> {
@@ -61,16 +64,17 @@ impl<'a> Input<'a> {
                proxy_b: Proxy<'a>,
                transform_a: Transform,
                transform_b: Transform,
-               use_radii: bool) -> Input<'a> {
+               use_radii: bool)
+               -> Input<'a> {
         Input {
             raw: RawInput {
                 proxy_a: proxy_a.raw,
                 proxy_b: proxy_b.raw,
                 transform_a: transform_a,
                 transform_b: transform_b,
-                use_radii: use_radii
+                use_radii: use_radii,
             },
-            phantom: PhantomData
+            phantom: PhantomData,
         }
     }
 
@@ -88,20 +92,16 @@ pub struct Output {
     pub point_a: Vec2,
     pub point_b: Vec2,
     pub distance: f32,
-    pub iterations: i32
+    pub iterations: i32,
 }
 
 #[doc(hidden)]
 pub mod ffi {
     pub use collision::shapes::ffi::Shape;
-    use super::{ RawProxy, RawInput, SimplexCache, Output };
+    use super::{RawProxy, RawInput, SimplexCache, Output};
 
-    extern {
-        pub fn DistanceProxy_set(slf: *mut RawProxy,
-                                 shape: *const Shape,
-                                 index: i32);
-        pub fn distance(output: *mut Output,
-                        cache: *mut SimplexCache,
-                        input: *const RawInput);
+    extern "C" {
+        pub fn DistanceProxy_set(slf: *mut RawProxy, shape: *const Shape, index: i32);
+        pub fn distance(output: *mut Output, cache: *mut SimplexCache, input: *const RawInput);
     }
 }

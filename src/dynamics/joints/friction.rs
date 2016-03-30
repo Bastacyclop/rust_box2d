@@ -1,7 +1,7 @@
 use wrap::*;
 use common::math::Vec2;
-use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{ Joint, JointType, JointDef };
+use dynamics::world::{World, BodyHandle};
+use dynamics::joints::{Joint, JointType, JointDef};
 
 pub struct FrictionJointDef {
     pub body_a: BodyHandle,
@@ -10,7 +10,7 @@ pub struct FrictionJointDef {
     pub local_anchor_a: Vec2,
     pub local_anchor_b: Vec2,
     pub max_force: f32,
-    pub max_torque: f32
+    pub max_torque: f32,
 }
 
 impl FrictionJointDef {
@@ -22,15 +22,11 @@ impl FrictionJointDef {
             local_anchor_a: Vec2 { x: 0., y: 0. },
             local_anchor_b: Vec2 { x: 0., y: 0. },
             max_force: 0.,
-            max_torque: 0.
+            max_torque: 0.,
         }
     }
 
-    pub fn init(&mut self,
-                world: &World,
-                body_a: BodyHandle,
-                body_b: BodyHandle,
-                anchor: &Vec2) {
+    pub fn init(&mut self, world: &World, body_a: BodyHandle, body_b: BodyHandle, anchor: &Vec2) {
         self.body_a = body_a;
         self.body_b = body_b;
         let a = world.get_body(body_a);
@@ -41,19 +37,21 @@ impl FrictionJointDef {
 }
 
 impl JointDef for FrictionJointDef {
-    fn joint_type() -> JointType where Self: Sized { JointType::Friction }
+    fn joint_type() -> JointType
+        where Self: Sized
+    {
+        JointType::Friction
+    }
 
     unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
-        ffi::World_create_friction_joint(
-            world.mut_ptr(),
-            world.get_body_mut(self.body_a).mut_ptr(),
-            world.get_body_mut(self.body_b).mut_ptr(),
-            self.collide_connected,
-            self.local_anchor_a,
-            self.local_anchor_b,
-            self.max_force,
-            self.max_torque
-        )
+        ffi::World_create_friction_joint(world.mut_ptr(),
+                                         world.get_body_mut(self.body_a).mut_ptr(),
+                                         world.get_body_mut(self.body_b).mut_ptr(),
+                                         self.collide_connected,
+                                         self.local_anchor_a,
+                                         self.local_anchor_b,
+                                         self.max_force,
+                                         self.max_torque)
     }
 }
 
@@ -77,27 +75,19 @@ impl FrictionJoint {
     }
 
     pub fn max_force(&self) -> f32 {
-        unsafe {
-            ffi::FrictionJoint_get_max_force(self.ptr())
-        }
+        unsafe { ffi::FrictionJoint_get_max_force(self.ptr()) }
     }
 
     pub fn max_torque(&self) -> f32 {
-        unsafe {
-            ffi::FrictionJoint_get_max_torque(self.ptr())
-        }
+        unsafe { ffi::FrictionJoint_get_max_torque(self.ptr()) }
     }
 
     pub fn set_max_force(&mut self, force: f32) {
-        unsafe {
-            ffi::FrictionJoint_set_max_force(self.mut_ptr(), force)
-        }
+        unsafe { ffi::FrictionJoint_set_max_force(self.mut_ptr(), force) }
     }
 
     pub fn set_max_torque(&mut self, torque: f32) {
-        unsafe {
-            ffi::FrictionJoint_set_max_torque(self.mut_ptr(), torque)
-        }
+        unsafe { ffi::FrictionJoint_set_max_torque(self.mut_ptr(), torque) }
     }
 }
 
@@ -110,23 +100,20 @@ pub mod ffi {
 
     pub enum FrictionJoint {}
 
-    extern {
-        pub fn World_create_friction_joint(
-            world: *mut World,
-            body_a: *mut Body,
-            body_b: *mut Body,
-            collide_connected: bool,
-            local_anchor_a: Vec2,
-            local_anchor_b: Vec2,
-            max_force: f32,
-            max_torque: f32
-        ) -> *mut Joint;
+    extern "C" {
+        pub fn World_create_friction_joint(world: *mut World,
+                                           body_a: *mut Body,
+                                           body_b: *mut Body,
+                                           collide_connected: bool,
+                                           local_anchor_a: Vec2,
+                                           local_anchor_b: Vec2,
+                                           max_force: f32,
+                                           max_torque: f32)
+                                           -> *mut Joint;
         pub fn FrictionJoint_as_joint(slf: *mut FrictionJoint) -> *mut Joint;
         pub fn Joint_as_friction_joint(slf: *mut Joint) -> *mut FrictionJoint;
-        pub fn FrictionJoint_get_local_anchor_a(slf: *const FrictionJoint
-                                                ) -> *const Vec2;
-        pub fn FrictionJoint_get_local_anchor_b(slf: *const FrictionJoint
-                                                ) -> *const Vec2;
+        pub fn FrictionJoint_get_local_anchor_a(slf: *const FrictionJoint) -> *const Vec2;
+        pub fn FrictionJoint_get_local_anchor_b(slf: *const FrictionJoint) -> *const Vec2;
         pub fn FrictionJoint_set_max_force(slf: *mut FrictionJoint, force: f32);
         pub fn FrictionJoint_get_max_force(slf: *const FrictionJoint) -> f32;
         pub fn FrictionJoint_set_max_torque(slf: *mut FrictionJoint, torque: f32);

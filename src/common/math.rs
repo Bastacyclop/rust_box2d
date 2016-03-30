@@ -1,7 +1,9 @@
 use std::mem;
-use std::ops::{ Add, Sub, Mul, Div, Neg };
-#[cfg(feature = "nalgebra")] use nalgebra;
-#[cfg(feature = "cgmath")] use cgmath;
+use std::ops::{Add, Sub, Mul, Div, Neg};
+#[cfg(feature = "nalgebra")]
+use nalgebra;
+#[cfg(feature = "cgmath")]
+use cgmath;
 
 macro_rules! forward_ref_binop {
     (impl $imp:ident, $method:ident for $t:ty, $u:ty) => {
@@ -43,7 +45,7 @@ pub struct Vec2 {
 
 impl Vec2 {
     pub fn sqr_norm(&self) -> f32 {
-        self.x*self.x + self.y*self.y
+        self.x * self.x + self.y * self.y
     }
 
     pub fn norm(&self) -> f32 {
@@ -51,7 +53,10 @@ impl Vec2 {
     }
 
     pub fn sqew(&self) -> Vec2 {
-        Vec2 { x: -self.y, y: self.x }
+        Vec2 {
+            x: -self.y,
+            y: self.x,
+        }
     }
 }
 
@@ -133,7 +138,10 @@ impl Add for Vec2 {
     type Output = Vec2;
 
     fn add(self, other: Vec2) -> Vec2 {
-        Vec2 { x: self.x + other.x, y: self.y + other.y }
+        Vec2 {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
     }
 }
 
@@ -143,7 +151,10 @@ impl Sub for Vec2 {
     type Output = Vec2;
 
     fn sub(self, other: Vec2) -> Vec2 {
-        Vec2 { x: self.x - other.x, y: self.y - other.y }
+        Vec2 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
     }
 }
 
@@ -153,7 +164,10 @@ impl Mul<f32> for Vec2 {
     type Output = Vec2;
 
     fn mul(self, factor: f32) -> Vec2 {
-        Vec2 { x: self.x*factor, y: self.y*factor }
+        Vec2 {
+            x: self.x * factor,
+            y: self.y * factor,
+        }
     }
 }
 
@@ -163,7 +177,10 @@ impl Div<f32> for Vec2 {
     type Output = Vec2;
 
     fn div(self, factor: f32) -> Vec2 {
-        Vec2 { x: self.x/factor, y: self.y/factor }
+        Vec2 {
+            x: self.x / factor,
+            y: self.y / factor,
+        }
     }
 }
 
@@ -173,7 +190,10 @@ impl Neg for Vec2 {
     type Output = Vec2;
 
     fn neg(self) -> Vec2 {
-        Vec2 { x: -self.x, y: -self.y }
+        Vec2 {
+            x: -self.x,
+            y: -self.y,
+        }
     }
 }
 
@@ -181,20 +201,29 @@ impl<'a> Neg for &'a Vec2 {
     type Output = Vec2;
 
     fn neg(self) -> Vec2 {
-        Vec2 { x: -self.x, y: -self.y }
+        Vec2 {
+            x: -self.x,
+            y: -self.y,
+        }
     }
 }
 
 pub fn cross_vv(a: Vec2, b: Vec2) -> f32 {
-    a.x*b.y - a.y*b.x
+    a.x * b.y - a.y * b.x
 }
 
 pub fn cross_vs(v: Vec2, s: f32) -> Vec2 {
-    Vec2 { x: s*v.y, y: -s*v.x }
+    Vec2 {
+        x: s * v.y,
+        y: -s * v.x,
+    }
 }
 
 pub fn cross_sv(s: f32, v: Vec2) -> Vec2 {
-    Vec2 { x: -s*v.y, y: s*v.x }
+    Vec2 {
+        x: -s * v.y,
+        y: s * v.x,
+    }
 }
 
 #[repr(C)]
@@ -208,7 +237,7 @@ impl Rot {
     pub fn from_angle(angle: f32) -> Rot {
         Rot {
             sin: angle.sin(),
-            cos: angle.cos()
+            cos: angle.cos(),
         }
     }
 
@@ -217,11 +246,17 @@ impl Rot {
     }
 
     pub fn x_axis(&self) -> Vec2 {
-        Vec2 { x: self.cos, y: self.sin }
+        Vec2 {
+            x: self.cos,
+            y: self.sin,
+        }
     }
 
     pub fn y_axis(&self) -> Vec2 {
-        Vec2 { x: -self.sin, y: self.cos }
+        Vec2 {
+            x: -self.sin,
+            y: self.cos,
+        }
     }
 
     pub fn angle(&self) -> f32 {
@@ -256,7 +291,10 @@ impl From<Rot> for cgmath::Basis2<f32> {
 impl<'a> From<&'a cgmath::Basis2<f32>> for Rot {
     fn from(r: &'a cgmath::Basis2<f32>) -> Rot {
         let col = r.as_ref().y;
-        Rot { sin: col.x, cos: col.y }
+        Rot {
+            sin: col.x,
+            cos: col.y,
+        }
     }
 }
 
@@ -271,7 +309,7 @@ impl Transform {
     pub fn identity() -> Transform {
         Transform {
             pos: Vec2 { x: 0., y: 0. },
-            rot: Rot::identity()
+            rot: Rot::identity(),
         }
     }
 }
@@ -281,7 +319,7 @@ impl<'a> From<&'a Transform> for nalgebra::Iso2<f32> {
     fn from(t: &'a Transform) -> nalgebra::Iso2<f32> {
         nalgebra::Iso2 {
             rotation: t.rot.into(),
-            translation: t.pos.into()
+            translation: t.pos.into(),
         }
     }
 }
@@ -291,7 +329,7 @@ impl<'a> From<&'a nalgebra::Iso2<f32>> for Transform {
     fn from(i: &'a nalgebra::Iso2<f32>) -> Transform {
         Transform {
             pos: i.translation.into(),
-            rot: (&i.rotation).into()
+            rot: (&i.rotation).into(),
         }
     }
 }
@@ -300,8 +338,8 @@ impl<'a> Mul<Vec2> for &'a Transform {
     type Output = Vec2;
 
     fn mul(self, v: Vec2) -> Vec2 {
-        let x = (self.rot.cos*v.x - self.rot.sin*v.y) + self.pos.x;
-        let y = (self.rot.sin*v.x + self.rot.cos*v.y) + self.pos.y;
+        let x = (self.rot.cos * v.x - self.rot.sin * v.y) + self.pos.x;
+        let y = (self.rot.sin * v.x + self.rot.cos * v.y) + self.pos.y;
         Vec2 { x: x, y: y }
     }
 }
@@ -314,5 +352,5 @@ pub struct Sweep {
     pub c: Vec2,
     pub a0: f32,
     pub a: f32,
-    pub alpha0: f32
+    pub alpha0: f32,
 }

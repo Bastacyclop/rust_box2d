@@ -1,7 +1,7 @@
 use wrap::*;
 use common::math::Vec2;
-use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{ Joint, JointType, JointDef, LimitState };
+use dynamics::world::{World, BodyHandle};
+use dynamics::joints::{Joint, JointType, JointDef, LimitState};
 
 pub struct RopeJointDef {
     pub body_a: BodyHandle,
@@ -9,7 +9,7 @@ pub struct RopeJointDef {
     pub collide_connected: bool,
     pub local_anchor_a: Vec2,
     pub local_anchor_b: Vec2,
-    pub max_length: f32
+    pub max_length: f32,
 }
 
 impl RopeJointDef {
@@ -20,24 +20,26 @@ impl RopeJointDef {
             collide_connected: false,
             local_anchor_a: Vec2 { x: -1., y: 0. },
             local_anchor_b: Vec2 { x: 1., y: 0. },
-            max_length: 0.
+            max_length: 0.,
         }
     }
 }
 
 impl JointDef for RopeJointDef {
-    fn joint_type() -> JointType where Self: Sized { JointType::Rope }
+    fn joint_type() -> JointType
+        where Self: Sized
+    {
+        JointType::Rope
+    }
 
     unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
-        ffi::World_create_rope_joint(
-            world.mut_ptr(),
-            world.get_body_mut(self.body_a).mut_ptr(),
-            world.get_body_mut(self.body_b).mut_ptr(),
-            self.collide_connected,
-            self.local_anchor_a,
-            self.local_anchor_b,
-            self.max_length
-        )
+        ffi::World_create_rope_joint(world.mut_ptr(),
+                                     world.get_body_mut(self.body_a).mut_ptr(),
+                                     world.get_body_mut(self.body_b).mut_ptr(),
+                                     self.collide_connected,
+                                     self.local_anchor_a,
+                                     self.local_anchor_b,
+                                     self.max_length)
     }
 }
 
@@ -61,21 +63,15 @@ impl RopeJoint {
     }
 
     pub fn max_length(&self) -> f32 {
-        unsafe {
-            ffi::RopeJoint_get_max_length(self.ptr())
-        }
+        unsafe { ffi::RopeJoint_get_max_length(self.ptr()) }
     }
 
     pub fn limit_state(&self) -> LimitState {
-        unsafe {
-            ffi::RopeJoint_get_limit_state(self.ptr())
-        }
+        unsafe { ffi::RopeJoint_get_limit_state(self.ptr()) }
     }
 
     pub fn set_max_length(&mut self, length: f32) {
-        unsafe {
-            ffi::RopeJoint_set_max_length(self.mut_ptr(), length)
-        }
+        unsafe { ffi::RopeJoint_set_max_length(self.mut_ptr(), length) }
     }
 }
 
@@ -89,16 +85,15 @@ pub mod ffi {
 
     pub enum RopeJoint {}
 
-    extern {
-        pub fn World_create_rope_joint(
-            world: *mut World,
-            body_a: *mut Body,
-            body_b: *mut Body,
-            collide_connected: bool,
-            local_anchor_a: Vec2,
-            local_anchor_b: Vec2,
-            max_length: f32
-        ) -> *mut Joint;
+    extern "C" {
+        pub fn World_create_rope_joint(world: *mut World,
+                                       body_a: *mut Body,
+                                       body_b: *mut Body,
+                                       collide_connected: bool,
+                                       local_anchor_a: Vec2,
+                                       local_anchor_b: Vec2,
+                                       max_length: f32)
+                                       -> *mut Joint;
         pub fn RopeJoint_as_joint(slf: *mut RopeJoint) -> *mut Joint;
         pub fn Joint_as_rope_joint(slf: *mut Joint) -> *mut RopeJoint;
         pub fn RopeJoint_get_local_anchor_a(slf: *const RopeJoint) -> *const Vec2;

@@ -7,7 +7,7 @@ use dynamics::joints::MetaJoint;
 #[doc(hidden)]
 pub struct InternalUserData<O> {
     pub handle: TypedHandle<O>,
-    pub custom: Option<Box<Any>>
+    pub custom: Option<Box<Any>>,
 }
 
 #[doc(hidden)]
@@ -84,7 +84,7 @@ pub mod ffi {
     pub use dynamics::fixture::ffi::Fixture;
     pub use dynamics::joints::ffi::Joint;
 
-    extern {
+    extern "C" {
         pub fn Body_get_user_data(slf: *const Body) -> Any;
         pub fn Body_set_user_data(slf: *mut Body, data: Any);
         pub fn Fixture_get_user_data(slf: *const Fixture) -> Any;

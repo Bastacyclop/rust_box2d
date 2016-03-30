@@ -15,5 +15,5 @@ pub struct Profile {
     pub solve_velocity: f32,
     pub solve_position: f32,
     pub broad_phase: f32,
-    pub solve_toi: f32
+    pub solve_toi: f32,
 }

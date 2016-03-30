@@ -1,7 +1,7 @@
 use wrap::*;
 use common::math::Vec2;
-use dynamics::world::{ World, BodyHandle };
-use dynamics::joints::{ Joint, JointType, JointDef };
+use dynamics::world::{World, BodyHandle};
+use dynamics::joints::{Joint, JointType, JointDef};
 
 pub struct DistanceJointDef {
     pub body_a: BodyHandle,
@@ -11,7 +11,7 @@ pub struct DistanceJointDef {
     pub local_anchor_b: Vec2,
     pub length: f32,
     pub frequency: f32,
-    pub damping_ratio: f32
+    pub damping_ratio: f32,
 }
 
 impl DistanceJointDef {
@@ -24,7 +24,7 @@ impl DistanceJointDef {
             local_anchor_b: Vec2 { x: 0., y: 0. },
             length: 1.,
             frequency: 0.,
-            damping_ratio: 0.
+            damping_ratio: 0.,
         }
     }
 
@@ -45,20 +45,22 @@ impl DistanceJointDef {
 }
 
 impl JointDef for DistanceJointDef {
-    fn joint_type() -> JointType where Self: Sized { JointType::Distance }
+    fn joint_type() -> JointType
+        where Self: Sized
+    {
+        JointType::Distance
+    }
 
     unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
-        ffi::World_create_distance_joint(
-            world.mut_ptr(),
-            world.get_body_mut(self.body_a).mut_ptr(),
-            world.get_body_mut(self.body_b).mut_ptr(),
-            self.collide_connected,
-            self.local_anchor_a,
-            self.local_anchor_b,
-            self.length,
-            self.frequency,
-            self.damping_ratio
-        )
+        ffi::World_create_distance_joint(world.mut_ptr(),
+                                         world.get_body_mut(self.body_a).mut_ptr(),
+                                         world.get_body_mut(self.body_b).mut_ptr(),
+                                         self.collide_connected,
+                                         self.local_anchor_a,
+                                         self.local_anchor_b,
+                                         self.length,
+                                         self.frequency,
+                                         self.damping_ratio)
     }
 }
 
@@ -82,39 +84,27 @@ impl DistanceJoint {
     }
 
     pub fn length(&self) -> f32 {
-        unsafe {
-            ffi::DistanceJoint_get_length(self.ptr())
-        }
+        unsafe { ffi::DistanceJoint_get_length(self.ptr()) }
     }
 
     pub fn frequency(&self) -> f32 {
-        unsafe {
-            ffi::DistanceJoint_get_frequency(self.ptr())
-        }
+        unsafe { ffi::DistanceJoint_get_frequency(self.ptr()) }
     }
 
     pub fn damping_ratio(&self) -> f32 {
-        unsafe {
-            ffi::DistanceJoint_get_damping_ratio(self.ptr())
-        }
+        unsafe { ffi::DistanceJoint_get_damping_ratio(self.ptr()) }
     }
 
     pub fn set_length(&mut self, length: f32) {
-        unsafe {
-            ffi::DistanceJoint_set_length(self.mut_ptr(), length)
-        }
+        unsafe { ffi::DistanceJoint_set_length(self.mut_ptr(), length) }
     }
 
     pub fn set_frequency(&mut self, frequency: f32) {
-        unsafe {
-            ffi::DistanceJoint_set_frequency(self.mut_ptr(), frequency)
-        }
+        unsafe { ffi::DistanceJoint_set_frequency(self.mut_ptr(), frequency) }
     }
 
     pub fn set_damping_ratio(&mut self, ratio: f32) {
-        unsafe {
-            ffi::DistanceJoint_set_damping_ratio(self.mut_ptr(), ratio)
-        }
+        unsafe { ffi::DistanceJoint_set_damping_ratio(self.mut_ptr(), ratio) }
     }
 }
 
@@ -127,24 +117,21 @@ pub mod ffi {
 
     pub enum DistanceJoint {}
 
-    extern {
-        pub fn World_create_distance_joint(
-            world: *mut World,
-            body_a: *mut Body,
-            body_b: *mut Body,
-            collide_connected: bool,
-            local_anchor_a: Vec2,
-            local_anchor_b: Vec2,
-            length: f32,
-            frequency: f32,
-            damping_ratio: f32
-        ) -> *mut Joint;
+    extern "C" {
+        pub fn World_create_distance_joint(world: *mut World,
+                                           body_a: *mut Body,
+                                           body_b: *mut Body,
+                                           collide_connected: bool,
+                                           local_anchor_a: Vec2,
+                                           local_anchor_b: Vec2,
+                                           length: f32,
+                                           frequency: f32,
+                                           damping_ratio: f32)
+                                           -> *mut Joint;
         pub fn DistanceJoint_as_joint(slf: *mut DistanceJoint) -> *mut Joint;
         pub fn Joint_as_distance_joint(slf: *mut Joint) -> *mut DistanceJoint;
-        pub fn DistanceJoint_get_local_anchor_a(slf: *const DistanceJoint
-                                                ) -> *const Vec2;
-        pub fn DistanceJoint_get_local_anchor_b(slf: *const DistanceJoint
-                                                ) -> *const Vec2;
+        pub fn DistanceJoint_get_local_anchor_a(slf: *const DistanceJoint) -> *const Vec2;
+        pub fn DistanceJoint_get_local_anchor_b(slf: *const DistanceJoint) -> *const Vec2;
         pub fn DistanceJoint_set_length(slf: *mut DistanceJoint, length: f32);
         pub fn DistanceJoint_get_length(slf: *const DistanceJoint) -> f32;
         pub fn DistanceJoint_set_frequency(slf: *mut DistanceJoint, hz: f32);

@@ -10,35 +10,25 @@ wrap_shape! {
 
 impl EdgeShape {
     pub fn new() -> EdgeShape {
-        unsafe {
-            EdgeShape::from_ffi(ffi::EdgeShape_new())
-        }
+        unsafe { EdgeShape::from_ffi(ffi::EdgeShape_new()) }
     }
 
     pub fn set(&mut self, v1: &Vec2, v2: &Vec2) {
-        unsafe {
-            ffi::EdgeShape_set(self.mut_ptr(), v1, v2)
-        }
+        unsafe { ffi::EdgeShape_set(self.mut_ptr(), v1, v2) }
     }
 
     pub fn set_v0(&mut self, v0: Vec2) {
-        unsafe {
-            ffi::EdgeShape_set_v0(self.mut_ptr(), v0)
-        }
+        unsafe { ffi::EdgeShape_set_v0(self.mut_ptr(), v0) }
     }
 
     pub fn set_v3(&mut self, v3: Vec2) {
-        unsafe {
-            ffi::EdgeShape_set_v3(self.mut_ptr(), v3)
-        }
+        unsafe { ffi::EdgeShape_set_v3(self.mut_ptr(), v3) }
     }
 }
 
 impl Drop for EdgeShape {
     fn drop(&mut self) {
-        unsafe {
-            ffi::EdgeShape_drop(self.mut_ptr())
-        }
+        unsafe { ffi::EdgeShape_drop(self.mut_ptr()) }
     }
 }
 
@@ -49,7 +39,7 @@ pub mod ffi {
 
     pub enum EdgeShape {}
 
-    extern {
+    extern "C" {
         pub fn EdgeShape_new() -> *mut EdgeShape;
         pub fn EdgeShape_drop(slf: *mut EdgeShape);
         pub fn EdgeShape_as_shape(slf: *mut EdgeShape) -> *mut Shape;

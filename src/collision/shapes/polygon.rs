@@ -10,38 +10,23 @@ wrap_shape! {
 
 impl PolygonShape {
     pub fn new() -> PolygonShape {
-        unsafe {
-            PolygonShape::from_ffi(ffi::PolygonShape_new())
-        }
+        unsafe { PolygonShape::from_ffi(ffi::PolygonShape_new()) }
     }
 
     pub fn set(&mut self, points: &[Vec2]) {
-        unsafe {
-            ffi::PolygonShape_set(self.mut_ptr(),
-                                  points.as_ptr(),
-                                  points.len() as i32)
-        }
+        unsafe { ffi::PolygonShape_set(self.mut_ptr(), points.as_ptr(), points.len() as i32) }
     }
 
     pub fn set_as_box(&mut self, hw: f32, hh: f32) {
-        unsafe {
-            ffi::PolygonShape_set_as_box(self.mut_ptr(), hw, hh)
-        }
+        unsafe { ffi::PolygonShape_set_as_box(self.mut_ptr(), hw, hh) }
     }
 
-    pub fn set_as_oriented_box(&mut self, hw: f32, hh: f32,
-                               center: &Vec2, angle: f32) {
-        unsafe {
-            ffi::PolygonShape_set_as_oriented_box(self.mut_ptr(),
-                                                  hw, hh,
-                                                  center, angle)
-        }
+    pub fn set_as_oriented_box(&mut self, hw: f32, hh: f32, center: &Vec2, angle: f32) {
+        unsafe { ffi::PolygonShape_set_as_oriented_box(self.mut_ptr(), hw, hh, center, angle) }
     }
 
     pub fn vertex_count(&self) -> i32 {
-        unsafe {
-            ffi::PolygonShape_get_vertex_count(self.ptr())
-        }
+        unsafe { ffi::PolygonShape_get_vertex_count(self.ptr()) }
     }
 
     pub fn vertex<'a>(&'a self, index: i32) -> &'a Vec2 {
@@ -51,17 +36,13 @@ impl PolygonShape {
     }
 
     pub fn validate(&self) -> bool {
-        unsafe {
-            ffi::PolygonShape_validate(self.ptr())
-        }
+        unsafe { ffi::PolygonShape_validate(self.ptr()) }
     }
 }
 
 impl Drop for PolygonShape {
     fn drop(&mut self) {
-        unsafe {
-            ffi::PolygonShape_drop(self.mut_ptr())
-        }
+        unsafe { ffi::PolygonShape_drop(self.mut_ptr()) }
     }
 }
 
@@ -72,7 +53,7 @@ pub mod ffi {
 
     pub enum PolygonShape {}
 
-    extern {
+    extern "C" {
         pub fn PolygonShape_new() -> *mut PolygonShape;
         pub fn PolygonShape_drop(slf: *mut PolygonShape);
         pub fn PolygonShape_as_shape(slf: *mut PolygonShape) -> *mut Shape;
@@ -80,7 +61,8 @@ pub mod ffi {
         pub fn PolygonShape_set(slf: *mut PolygonShape, points: *const Vec2, count: i32);
         pub fn PolygonShape_set_as_box(slf: *mut PolygonShape, hw: f32, hh: f32);
         pub fn PolygonShape_set_as_oriented_box(slf: *mut PolygonShape,
-                                                hw: f32, hh: f32,
+                                                hw: f32,
+                                                hh: f32,
                                                 center: *const Vec2,
                                                 angle: f32);
         pub fn PolygonShape_get_vertex_count(slf: *const PolygonShape) -> i32;

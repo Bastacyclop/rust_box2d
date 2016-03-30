@@ -95,7 +95,7 @@ macro_rules! wrap {
 
 use std::mem;
 use std::marker::PhantomData;
-use std::ops::{ Deref, DerefMut };
+use std::ops::{Deref, DerefMut};
 
 #[doc(hidden)]
 pub trait Wrapped<T> {
@@ -116,7 +116,7 @@ pub trait FromFFI<T> {
 
 pub struct WrappedRefMut<'a, T> {
     object: Option<T>,
-    phantom: PhantomData<&'a ()>
+    phantom: PhantomData<&'a ()>,
 }
 
 impl<'a, T> WrappedRefMut<'a, T> {
@@ -124,7 +124,7 @@ impl<'a, T> WrappedRefMut<'a, T> {
     pub unsafe fn new(t: T) -> WrappedRefMut<'a, T> {
         WrappedRefMut {
             object: Some(t),
-            phantom: PhantomData
+            phantom: PhantomData,
         }
     }
 }
@@ -132,11 +132,15 @@ impl<'a, T> WrappedRefMut<'a, T> {
 impl<'a, T> Deref for WrappedRefMut<'a, T> {
     type Target = T;
 
-    fn deref<'b>(&'b self) -> &'b T { self.object.as_ref().unwrap() }
+    fn deref<'b>(&'b self) -> &'b T {
+        self.object.as_ref().unwrap()
+    }
 }
 
 impl<'a, T> DerefMut for WrappedRefMut<'a, T> {
-    fn deref_mut<'b>(&'b mut self) -> &'b mut T { self.object.as_mut().unwrap() }
+    fn deref_mut<'b>(&'b mut self) -> &'b mut T {
+        self.object.as_mut().unwrap()
+    }
 }
 
 impl<'a, T> Drop for WrappedRefMut<'a, T> {
@@ -147,7 +151,7 @@ impl<'a, T> Drop for WrappedRefMut<'a, T> {
 
 pub struct WrappedRef<'a, T> {
     object: Option<T>,
-    phantom: PhantomData<&'a ()>
+    phantom: PhantomData<&'a ()>,
 }
 
 impl<'a, T> WrappedRef<'a, T> {
@@ -155,7 +159,7 @@ impl<'a, T> WrappedRef<'a, T> {
     pub unsafe fn new(t: T) -> WrappedRef<'a, T> {
         WrappedRef {
             object: Some(t),
-            phantom: PhantomData
+            phantom: PhantomData,
         }
     }
 }
@@ -163,7 +167,9 @@ impl<'a, T> WrappedRef<'a, T> {
 impl<'a, T> Deref for WrappedRef<'a, T> {
     type Target = T;
 
-    fn deref<'b>(&'b self) -> &'b T { self.object.as_ref().unwrap() }
+    fn deref<'b>(&'b self) -> &'b T {
+        self.object.as_ref().unwrap()
+    }
 }
 
 impl<'a, T> Drop for WrappedRef<'a, T> {

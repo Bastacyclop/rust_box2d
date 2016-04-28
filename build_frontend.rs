@@ -6,8 +6,7 @@ fn main() {
     let mut config = gcc::Config::new();
     let config = config
         .cpp(true)
-        .file("frontend/lib.cpp")
-        .include("src");
+        .file("frontend/lib.cpp");
 
     let config = match env::var("BOX2D_INCLUDE_PATH") {
         Ok(path) => config.include(path),

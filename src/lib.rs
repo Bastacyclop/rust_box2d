@@ -35,7 +35,7 @@
 //! let fixture = body.get_fixture(handle);
 //! ````
 
-#![feature(associated_consts, ptr_as_ref)]
+#![feature(associated_consts)]
 
 #[link(name = "Box2D")]
 extern "C" {

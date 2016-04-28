@@ -79,29 +79,29 @@ impl Vec2 {
 }
 
 #[cfg(feature = "nalgebra")]
-impl From<Vec2> for nalgebra::Vec2<f32> {
-    fn from(v: Vec2) -> nalgebra::Vec2<f32> {
-        nalgebra::Vec2 { x: v.x, y: v.y }
+impl From<Vec2> for nalgebra::Vector2<f32> {
+    fn from(v: Vec2) -> nalgebra::Vector2<f32> {
+        nalgebra::Vector2 { x: v.x, y: v.y }
     }
 }
 
 #[cfg(feature = "nalgebra")]
-impl From<nalgebra::Vec2<f32>> for Vec2 {
-    fn from(v: nalgebra::Vec2<f32>) -> Vec2 {
+impl From<nalgebra::Vector2<f32>> for Vec2 {
+    fn from(v: nalgebra::Vector2<f32>) -> Vec2 {
         Vec2 { x: v.x, y: v.y }
     }
 }
 
 #[cfg(feature = "nalgebra")]
-impl From<Vec2> for nalgebra::Pnt2<f32> {
-    fn from(v: Vec2) -> nalgebra::Pnt2<f32> {
-        nalgebra::Pnt2 { x: v.x, y: v.y }
+impl From<Vec2> for nalgebra::Point2<f32> {
+    fn from(v: Vec2) -> nalgebra::Point2<f32> {
+        nalgebra::Point2 { x: v.x, y: v.y }
     }
 }
 
 #[cfg(feature = "nalgebra")]
-impl From<nalgebra::Pnt2<f32>> for Vec2 {
-    fn from(v: nalgebra::Pnt2<f32>) -> Vec2 {
+impl From<nalgebra::Point2<f32>> for Vec2 {
+    fn from(v: nalgebra::Point2<f32>) -> Vec2 {
         Vec2 { x: v.x, y: v.y }
     }
 }
@@ -265,15 +265,15 @@ impl Rot {
 }
 
 #[cfg(feature = "nalgebra")]
-impl From<Rot> for nalgebra::Rot2<f32> {
-    fn from(r: Rot) -> nalgebra::Rot2<f32> {
-        nalgebra::Rot2::new(nalgebra::Vec1::new(r.angle()))
+impl From<Rot> for nalgebra::Rotation2<f32> {
+    fn from(r: Rot) -> nalgebra::Rotation2<f32> {
+        nalgebra::Rotation2::new(nalgebra::Vector1::new(r.angle()))
     }
 }
 
 #[cfg(feature = "nalgebra")]
-impl<'a> From<&'a nalgebra::Rot2<f32>> for Rot {
-    fn from(r: &'a nalgebra::Rot2<f32>) -> Rot {
+impl<'a> From<&'a nalgebra::Rotation2<f32>> for Rot {
+    fn from(r: &'a nalgebra::Rotation2<f32>) -> Rot {
         use nalgebra::Rotation;
         Rot::from_angle(r.rotation().x)
     }
@@ -315,9 +315,9 @@ impl Transform {
 }
 
 #[cfg(feature = "nalgebra")]
-impl<'a> From<&'a Transform> for nalgebra::Iso2<f32> {
-    fn from(t: &'a Transform) -> nalgebra::Iso2<f32> {
-        nalgebra::Iso2 {
+impl<'a> From<&'a Transform> for nalgebra::Isometry2<f32> {
+    fn from(t: &'a Transform) -> nalgebra::Isometry2<f32> {
+        nalgebra::Isometry2 {
             rotation: t.rot.into(),
             translation: t.pos.into(),
         }
@@ -325,8 +325,8 @@ impl<'a> From<&'a Transform> for nalgebra::Iso2<f32> {
 }
 
 #[cfg(feature = "nalgebra")]
-impl<'a> From<&'a nalgebra::Iso2<f32>> for Transform {
-    fn from(i: &'a nalgebra::Iso2<f32>) -> Transform {
+impl<'a> From<&'a nalgebra::Isometry2<f32>> for Transform {
+    fn from(i: &'a nalgebra::Isometry2<f32>) -> Transform {
         Transform {
             pos: i.translation.into(),
             rot: (&i.rotation).into(),

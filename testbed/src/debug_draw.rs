@@ -1,5 +1,5 @@
 use graphics::{Graphics, Context, Line, Ellipse, Polygon};
-use box2d::b2;
+use wrapped2d::b2;
 
 pub fn debug_draw<G>(world: &mut b2::World,
                      flags: b2::DrawFlags,

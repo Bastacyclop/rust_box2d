@@ -1,4 +1,4 @@
-use box2d::b2;
+use wrapped2d::b2;
 
 pub struct Camera {
     pub position: [f64; 2],

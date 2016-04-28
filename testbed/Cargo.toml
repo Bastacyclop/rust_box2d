@@ -1,6 +1,5 @@
 [package]
-
-name = "box2d_testbed"
+name = "wrapped2d_testbed"
 version = "0.1.1"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 
@@ -15,5 +14,5 @@ gfx = "0.9.1"
 gfx_device_gl = "0.8.2"
 pistoncore-glutin_window = "0.21.0"
 
-[dependencies.box2d]
+[dependencies.wrapped2d]
 path = ".."

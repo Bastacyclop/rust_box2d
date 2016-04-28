@@ -4,7 +4,7 @@ extern crate gfx_graphics;
 extern crate gfx;
 extern crate gfx_device_gl;
 extern crate glutin_window;
-extern crate box2d;
+extern crate wrapped2d;
 
 pub mod camera;
 pub use camera::Camera;
@@ -16,7 +16,7 @@ use piston::window::{Window, OpenGLWindow, AdvancedWindow, WindowSettings};
 use piston::event_loop::Events;
 use gfx::traits::*;
 use glutin_window::*;
-use box2d::b2;
+use wrapped2d::b2;
 
 type GfxResources = gfx_device_gl::Resources;
 type GfxCommandBuffer = gfx_device_gl::command::CommandBuffer;

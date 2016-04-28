@@ -6,7 +6,7 @@
 //! # World
 //!
 //! ````
-//! use box2d::b2;
+//! use wrapped2d::b2;
 //!
 //! let gravity = b2::Vec2 { x: 0., y: -10. };
 //! let world = b2::World::new(&gravity);
@@ -18,7 +18,7 @@
 //! their borrowing is dynamically checked by `RefCell`s.
 //!
 //! ````
-//! # use box2d::b2;
+//! # use wrapped2d::b2;
 //! # let gravity = b2::Vec2 { x: 0., y: -10. };
 //! # let mut world = b2::World::new(&gravity);
 //! let mut def = b2::BodyDef::new();

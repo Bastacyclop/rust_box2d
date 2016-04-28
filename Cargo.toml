@@ -1,6 +1,5 @@
 [package]
-
-name = "box2d"
+name = "wrapped2d"
 version = "0.2.5"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 
@@ -8,13 +7,10 @@ description = "Rust binding for Box2D"
 documentation = "https://bastacyclop.github.io/rust_box2d/box2d/"
 repository = "https://github.com/Bastacyclop/rust_box2d.git"
 readme = "README.md"
-keywords = ["physics", "bindings", "box2d"]
-license = "zlib"
+keywords = ["physics", "binding", "bindings", "box2d"]
+license = "zlib-acknowledgement"
 
 build = "build_frontend.rs"
-
-[lib]
-name = "box2d"
 
 [features]
 default = ["nalgebra", "cgmath"]

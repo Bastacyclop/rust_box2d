@@ -1,8 +1,8 @@
 extern crate piston;
-extern crate box2d;
+extern crate wrapped2d;
 extern crate testbed;
 
-use box2d::b2;
+use wrapped2d::b2;
 
 fn main() {
     let mut world = b2::World::new(&b2::Vec2 { x: 0., y: -10. });

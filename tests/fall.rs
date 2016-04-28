@@ -1,6 +1,6 @@
-extern crate box2d;
+extern crate wrapped2d;
 
-use box2d::b2;
+use wrapped2d::b2;
 
 #[test]
 fn fall() {

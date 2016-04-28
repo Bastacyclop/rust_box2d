@@ -6,6 +6,7 @@ rust:
 env:
   global:
   - secure: dPnlbtp/I74TtNHkQJM7G+fn80RkIaWOqXvI/byYKfjfB5ZOC6gPc77GJ0+A+ZJXZEoFct4Tt1eUKs+hz0jLfs0kcPb8XArTj+nJbgnLeBREdGU5r+NN4D005zOJJR5VOuVViUxfJooQOI+ug6v8tRXE4cfXipy9QFUGJmJL+HyJNBtJyjqkZAvI9l3oWQBxbhnO2cdvg2oOzqZhM/xMSzPzLCW6fA0pBs5ifkMIHsS5zLbt2nFue7b84OdnYvgUNc9mFgpKVoTm27ypEnIGysGDBOa8ZaSVwW8VRabRftDVP5Ht0JYZ4R/P1LcHjXR8x/zR15BPxqAjEf9AKam6kC1o/t9wgBokCvYuQGbmeq45MPyIlJmZ8kcH7qejnAHOF8UyJTFZk1SfIJ7JXm/wLnicBQuVHNywPDv7zQ0vICnV6i0dvrcjFUxewT/E8ErLCK7NoKmxtm6RRkkG8Hcbfc4rRvIoxIK30FV03hT7G0lYLIvwEBtFCC+FtCKrOun9wnEanTjMBmmCqG26mJZOdztGlFFlEwO22DaBolSjwrvwXOieUlZ+hiC183qsivD2zb8NS/CAnxmwybhMEAPOVVlqzlVgKLYP0Zyf+8vFR0RvLe7M0jGX8eJekNETegt9SNJ6PkVpqwgPuMDA0Og9JuONDJnDkFvxh9Z5Tkrq/eE=
+  - secure: QyBX7V6QS5SnALMeKQG0PdiRotJcCP0Pailha6JVrCio+pDViqmGXGSwEmXRWZpaSSoZxr2EBG5JyNOGiu5IyXeycextVAcddtkcJou/u1As+CsAR54hiuwlMwFaiMvQJZwn09bcTMyd+hodaUOMtJwud45sMrfXH3B2nUGzs4qnEzDRRqdX8cFoliFyqQxDRshv04Gw5R4eM+Uwqvkl1EDScwzZCWzVqIwrLfl/b7Wdnr82Dxq+UdYInB1gCLR6QNyiuSnvGWuaXCNjW16gTxd/5+YS2PUIAZYdrqrsf26vjKKNwhOHQrvbeFqg6mFwQ4WS6g1hmglnlZXhdZYEoroACjZKeY8/sTPE7VXJ8udubBqvtgqu8N0Y8Scb0DaIgtLrbtqUC3C5F1OVc3ORHIdZgsiGFCnWRRkoiYeY+KZuLirK4LNebRHJJHCtlPSqhow+WgUOMT0f53EG4Nlfo5eMIFR/peEuDQ37vN+rvzmKHgqL3bS4+EMFhXhe+XcLCQ5C/Gs3DmjcztUrw/lMQon7FbxK3TnRHlLd9RK4mLeOfeYA1+bjJnGQ7rCJVGNsQ35smPPRgcFPpWSntUNK3V2BPHGyugt569qQfqdN/n30QBzqfMTOSsWDwMBdRYjzZgj0+FlDVVqdvai0COYnFh1PMYKpZmkYueaDwjkJ25w=
 
 addons:
   apt:
@@ -25,11 +26,14 @@ script:
 - cargo test --verbose
 
 after_success:
-
 - |
   [ $TRAVIS_BRANCH = master ] &&
   [ $TRAVIS_PULL_REQUEST = false ] &&
   cargo doc &&
-  git clone https://github.com/davisp/ghp-import &&
-  ./ghp-import/ghp-import -n target/doc &&
+  sudo pip install ghp-import &&
+  ghp-import -n target/doc &&
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+- |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  cargo publish --token ${CRATESIO_TOKEN}

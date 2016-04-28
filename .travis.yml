@@ -31,7 +31,7 @@ after_success:
   [ $TRAVIS_PULL_REQUEST = false ] &&
   cargo doc &&
   git clone https://github.com/davisp/ghp-import &&
-  ./ghp-import/ghp-import.py -n target/doc &&
+  ./ghp-import/ghp_import.py -n target/doc &&
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
 - |
   [ $TRAVIS_BRANCH = master ] &&

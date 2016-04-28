@@ -7,7 +7,7 @@ A library wrapping around the Box2D physics engine. It aims to provide an idioma
 You won't find a lot of information about Box2D itself here, look at [the official website](http://box2d.org/)
 instead.
 
-## [Documentation](https://bastacyclop.github.io/rust_box2d/box2d/index.html)
+## [Documentation](https://bastacyclop.github.io/rust_box2d/wrapped2d/)
 
 You can look at the [testbed](testbed) for examples.
 

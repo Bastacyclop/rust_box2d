@@ -4,7 +4,7 @@ version = "0.2.5"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 
 description = "Rust binding for Box2D"
-documentation = "https://bastacyclop.github.io/rust_box2d/box2d/"
+documentation = "https://bastacyclop.github.io/rust_box2d/wrapped2d/"
 repository = "https://github.com/Bastacyclop/rust_box2d.git"
 readme = "README.md"
 keywords = ["physics", "binding", "bindings", "box2d"]

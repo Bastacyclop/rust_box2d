@@ -15,8 +15,10 @@ addons:
 
 before_install:
 - git clone https://github.com/erincatto/Box2D
-- cd Box2D/Box2D/Build
-- cmake -DCMAKE_CXX_FLAGS="-std=c++0x" -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DBOX2D_BUILD_EXAMPLES=OFF ..
+- cd Box2D
+- git reset --hard 7e633c4
+- cd Box2D/Build
+- cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DBOX2D_BUILD_EXAMPLES=OFF ..
 - make && sudo make install
 - sudo ldconfig
 - cd ../../..

@@ -13,7 +13,7 @@ You can look at the [testbed](testbed) for examples.
 
 ## Dependencies
 
-You will need the native Box2D library (2.3.1 or more should be fine). And also Piston [dependencies](https://github.com/PistonDevelopers/Piston-Tutorials/tree/master/getting-started) for the testbed.
+You will need the native Box2D library (this is based on [version 2.3.1](https://github.com/erincatto/Box2D/releases/tag/v2.3.1)). And also Piston [dependencies](https://github.com/PistonDevelopers/Piston-Tutorials/tree/master/getting-started) for the testbed.
 
 If necessary, you can specify the Box2D header files location when compiling:
 

@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use std::iter::{Iterator, DoubleEndedIterator};
 use vec_map::{self, VecMap};
 use std::mem;
+use std::fmt;
 
 #[derive(PartialOrd, Ord, Hash)]
 pub struct TypedHandle<T> {
@@ -41,6 +42,9 @@ impl<T> Clone for TypedHandle<T> {
     }
 }
 
+unsafe impl<T> Send for TypedHandle<T> {}
+unsafe impl<T> Sync for TypedHandle<T> {}
+
 impl<T> Eq for TypedHandle<T> {}
 impl<T> PartialEq for TypedHandle<T> {
     fn eq(&self, rhs: &TypedHandle<T>) -> bool {
@@ -48,6 +52,11 @@ impl<T> PartialEq for TypedHandle<T> {
     }
 }
 
+impl<T> fmt::Debug for TypedHandle<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "TypedHandle {{ index: {}, version: {} }}", self.index, self.version)
+    }
+}
 
 struct HandleEntry<T> {
     pub version: usize,

@@ -4,9 +4,10 @@ extern crate testbed;
 
 use piston::input::{ Input, Button, Key };
 use wrapped2d::b2;
+use testbed::World;
 
 fn main() {
-    let mut world = b2::World::new(&b2::Vec2 { x: 0., y: -10. });
+    let mut world = World::new(&b2::Vec2 { x: 0., y: -10. });
 
     let mut b_def = b2::BodyDef::new();
     b_def.body_type = b2::BodyType::Static;

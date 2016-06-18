@@ -3,7 +3,6 @@ pub mod distance;
 pub mod time_of_impact;
 
 use std::mem;
-use wrap::*;
 use common::settings::MAX_MANIFOLD_POINTS;
 use common::math::{Vec2, Transform};
 use collision::shapes::Shape;

@@ -1,12 +1,14 @@
 use graphics::{Graphics, Context, Line, Ellipse, Polygon};
 use wrapped2d::b2;
+use wrapped2d::user_data::UserDataTypes;
 
-pub fn debug_draw<G>(world: &mut b2::World,
-                     flags: b2::DrawFlags,
-                     transform: [[f64; 3]; 2],
-                     c: Context,
-                     g: &mut G)
-    where G: Graphics
+pub fn debug_draw<U, G>(world: &mut b2::World<U>,
+                        flags: b2::DrawFlags,
+                        transform: [[f64; 3]; 2],
+                        c: Context,
+                        g: &mut G)
+    where U: UserDataTypes,
+          G: Graphics
 {
     let mut session = Session {
         c: c,

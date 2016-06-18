@@ -10,19 +10,20 @@ use common::{Draw, DrawLink, DrawFlags};
 use common::math::Vec2;
 use collision::AABB;
 use dynamics::Profile;
+use user_data::UserDataTypes;
 use dynamics::body::{BodyDef, MetaBody, Body};
-use dynamics::joints::{JointDef, MetaJoint};
+use dynamics::joints::{Joint, JointDef, MetaJoint};
 use dynamics::contacts::Contact;
 use self::callbacks::{ContactFilter, ContactFilterLink, ContactListener, ContactListenerLink,
                       QueryCallback, QueryCallbackLink, RayCastCallback, RayCastCallbackLink};
 
-pub type BodyHandle = TypedHandle<MetaBody>;
-pub type JointHandle = TypedHandle<MetaJoint>;
+pub type BodyHandle = TypedHandle<Body>;
+pub type JointHandle = TypedHandle<Joint>;
 
-pub struct World {
+pub struct World<U: UserDataTypes> {
     ptr: *mut ffi::World,
-    bodies: HandleMap<MetaBody>,
-    joints: HandleMap<MetaJoint>,
+    bodies: HandleMap<MetaBody<U>, Body>,
+    joints: HandleMap<MetaJoint<U>, Joint>,
     draw_link: DrawLink,
     contact_filter_link: ContactFilterLink,
     contact_listener_link: ContactListenerLink,
@@ -30,10 +31,19 @@ pub struct World {
     raycast_callback_link: RefCell<RayCastCallbackLink>,
 }
 
-wrap! { ffi::World => custom World }
 
-impl World {
-    pub fn new(gravity: &Vec2) -> World {
+impl<U: UserDataTypes> Wrapped<ffi::World> for World<U> {
+    unsafe fn ptr(&self) -> *const ffi::World {
+        self.ptr as *const ffi::World
+    }
+
+    unsafe fn mut_ptr(&mut self) -> *mut ffi::World {
+        self.ptr
+    }
+}
+
+impl<U: UserDataTypes> World<U> {
+    pub fn new(gravity: &Vec2) -> Self {
         unsafe {
             World {
                 ptr: ffi::World_new(gravity),
@@ -63,18 +73,24 @@ impl World {
         }
     }
 
-    pub fn create_body(&mut self, def: &BodyDef) -> BodyHandle {
+    pub fn create_body(&mut self, def: &BodyDef) -> BodyHandle
+        where U::BodyData: Default
+    {
+        self.create_body_with(def, U::BodyData::default())
+    }
+
+    pub fn create_body_with(&mut self, def: &BodyDef, data: U::BodyData) -> BodyHandle {
         unsafe {
             let body = ffi::World_create_body(self.mut_ptr(), def);
-            self.bodies.insert_with(|h| MetaBody::new(body, h))
+            self.bodies.insert_with(|h| MetaBody::new(body, h, data))
         }
     }
 
-    pub fn get_body(&self, handle: BodyHandle) -> Ref<MetaBody> {
+    pub fn get_body(&self, handle: BodyHandle) -> Ref<MetaBody<U>> {
         self.bodies.get(handle).expect("invalid body handle")
     }
 
-    pub fn get_body_mut(&self, handle: BodyHandle) -> RefMut<MetaBody> {
+    pub fn get_body_mut(&self, handle: BodyHandle) -> RefMut<MetaBody<U>> {
         self.bodies.get_mut(handle).expect("invalid body handle")
     }
 
@@ -89,7 +105,7 @@ impl World {
             });
     }
 
-    fn remove_body_joint_handles(body: &mut Body, joints: &mut HandleMap<MetaJoint>) {
+    fn remove_body_joint_handles(body: &mut Body, joints: &mut HandleMap<MetaJoint<U>, Joint>) {
         let mut joint_edge = body.joints();
         loop {
             match joint_edge {
@@ -102,18 +118,24 @@ impl World {
         }
     }
 
-    pub fn create_joint<JD: JointDef>(&mut self, def: &JD) -> JointHandle {
+    pub fn create_joint<JD: JointDef>(&mut self, def: &JD) -> JointHandle
+        where U::JointData: Default
+    {
+        self.create_joint_with(def, U::JointData::default())
+    }
+
+    pub fn create_joint_with<JD: JointDef>(&mut self, def: &JD, data: U::JointData) -> JointHandle {
         unsafe {
             let joint = def.create(self);
-            self.joints.insert_with(|h| MetaJoint::new(joint, h))
+            self.joints.insert_with(|h| MetaJoint::new(joint, h, data))
         }
     }
 
-    pub fn get_joint(&self, handle: JointHandle) -> Ref<MetaJoint> {
+    pub fn get_joint(&self, handle: JointHandle) -> Ref<MetaJoint<U>> {
         self.joints.get(handle).expect("invalid joint handle")
     }
 
-    pub fn get_joint_mut(&self, handle: JointHandle) -> RefMut<MetaJoint> {
+    pub fn get_joint_mut(&self, handle: JointHandle) -> RefMut<MetaJoint<U>> {
         self.joints.get_mut(handle).expect("invalid joint handle")
     }
 
@@ -162,11 +184,11 @@ impl World {
         }
     }
 
-    pub fn bodies(&self) -> HandleIter<MetaBody> {
+    pub fn bodies(&self) -> HandleIter<Body, MetaBody<U>> {
         self.bodies.iter()
     }
 
-    pub fn joints(&mut self) -> HandleIter<MetaJoint> {
+    pub fn joints(&mut self) -> HandleIter<Joint, MetaJoint<U>> {
         self.joints.iter()
     }
 
@@ -279,7 +301,7 @@ impl World {
     }
 }
 
-impl Drop for World {
+impl<U: UserDataTypes> Drop for World<U> {
     fn drop(&mut self) {
         unsafe { ffi::World_drop(self.mut_ptr()) }
     }

@@ -3,9 +3,10 @@ extern crate wrapped2d;
 extern crate testbed;
 
 use wrapped2d::b2;
+use testbed::World;
 
 fn main() {
-    let mut world = b2::World::new(&b2::Vec2 { x: 0., y: -10. });
+    let mut world = World::new(&b2::Vec2 { x: 0., y: -10. });
 
     let ground = create_ground(&mut world);
     let crank = create_crank(&mut world, ground);
@@ -29,14 +30,14 @@ fn main() {
     );
 }
 
-fn create_ground(world: &mut b2::World) -> b2::BodyHandle {
+fn create_ground(world: &mut World) -> b2::BodyHandle {
     let mut def = b2::BodyDef::new();
     def.position = b2::Vec2 { x: 0., y: 17. };
 
     world.create_body(&def)
 }
 
-fn create_crank(world: &mut b2::World, ground: b2::BodyHandle) -> b2::BodyHandle {
+fn create_crank(world: &mut World, ground: b2::BodyHandle) -> b2::BodyHandle {
     let mut shape = b2::PolygonShape::new();
     shape.set_as_box(4., 1.);
 
@@ -54,7 +55,7 @@ fn create_crank(world: &mut b2::World, ground: b2::BodyHandle) -> b2::BodyHandle
     handle
 }
 
-fn create_connecting_rod(world: &mut b2::World,
+fn create_connecting_rod(world: &mut World,
                          crank: b2::BodyHandle) -> b2::BodyHandle {
     let mut shape = b2::PolygonShape::new();
     shape.set_as_box(8., 1.);
@@ -73,7 +74,7 @@ fn create_connecting_rod(world: &mut b2::World,
     handle
 }
 
-fn create_piston(world: &mut b2::World,
+fn create_piston(world: &mut World,
                  ground: b2::BodyHandle,
                  connecting_rod: b2::BodyHandle) {
     let mut shape = b2::PolygonShape::new();

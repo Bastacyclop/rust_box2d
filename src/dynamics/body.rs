@@ -1,6 +1,5 @@
 use std::mem;
 use std::ptr;
-use std::any::Any;
 use std::ops::{Deref, DerefMut};
 use std::cell::{Ref, RefMut};
 use wrap::*;
@@ -9,9 +8,9 @@ use common::math::{Vec2, Transform};
 use collision::shapes::{MassData, Shape};
 use dynamics::world::BodyHandle;
 use dynamics::joints::JointEdge;
-use dynamics::fixture::{MetaFixture, FixtureDef};
+use dynamics::fixture::{Fixture, MetaFixture, FixtureDef};
 use dynamics::contacts::ContactEdge;
-use dynamics::user_data::{UserData, InternalUserData, RawUserDataMut};
+use user_data::{UserDataTypes, UserData, InternalUserData, RawUserDataMut};
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -62,49 +61,69 @@ impl BodyDef {
     }
 }
 
-pub type FixtureHandle = TypedHandle<MetaFixture>;
+pub type FixtureHandle = TypedHandle<Fixture>;
 
-pub struct MetaBody {
+pub struct MetaBody<U: UserDataTypes> {
     body: Body,
-    fixtures: HandleMap<MetaFixture>,
-    user_data: Box<InternalUserData<MetaBody>>,
+    fixtures: HandleMap<MetaFixture<U>, Fixture>,
+    user_data: Box<InternalUserData<Body, U::BodyData>>,
 }
 
-impl MetaBody {
+impl<U: UserDataTypes> MetaBody<U> {
     #[doc(hidden)]
-    pub unsafe fn new(ptr: *mut ffi::Body, handle: BodyHandle) -> MetaBody {
+    pub unsafe fn new(ptr: *mut ffi::Body, handle: BodyHandle, custom: U::BodyData) -> Self {
         let mut b = MetaBody {
             body: Body::from_ffi(ptr),
             fixtures: HandleMap::new(),
             user_data: Box::new(InternalUserData {
                 handle: handle,
-                custom: None,
+                custom: custom,
             }),
         };
         b.mut_ptr().set_internal_user_data(&mut *b.user_data);
         b
     }
 
-    pub fn create_fixture(&mut self, shape: &Shape, def: &mut FixtureDef) -> FixtureHandle {
+    pub fn create_fixture(&mut self, shape: &Shape, def: &mut FixtureDef) -> FixtureHandle
+        where U::FixtureData: Default
+    {
+        self.create_fixture_with(shape, def, U::FixtureData::default())
+    }
+
+    pub fn create_fixture_with(&mut self,
+                               shape: &Shape,
+                               def: &mut FixtureDef,
+                               data: U::FixtureData)
+                               -> FixtureHandle {
         unsafe {
             def.shape = shape.base_ptr();
             let fixture = ffi::Body_create_fixture(self.mut_ptr(), def);
-            self.fixtures.insert_with(|h| MetaFixture::new(fixture, h))
+            self.fixtures.insert_with(|h| MetaFixture::new(fixture, h, data))
         }
     }
 
-    pub fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> FixtureHandle {
+    pub fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> FixtureHandle
+        where U::FixtureData: Default
+    {
+        self.create_fast_fixture_with(shape, density, U::FixtureData::default())
+    }
+
+    pub fn create_fast_fixture_with(&mut self,
+                                    shape: &Shape,
+                                    density: f32,
+                                    data: U::FixtureData)
+                                    -> FixtureHandle {
         unsafe {
             let fixture = ffi::Body_create_fast_fixture(self.mut_ptr(), shape.base_ptr(), density);
-            self.fixtures.insert_with(|h| MetaFixture::new(fixture, h))
+            self.fixtures.insert_with(|h| MetaFixture::new(fixture, h, data))
         }
     }
 
-    pub fn get_fixture(&self, handle: FixtureHandle) -> Ref<MetaFixture> {
+    pub fn get_fixture(&self, handle: FixtureHandle) -> Ref<MetaFixture<U>> {
         self.fixtures.get(handle).expect("invalid fixture handle")
     }
 
-    pub fn get_fixture_mut(&self, handle: FixtureHandle) -> RefMut<MetaFixture> {
+    pub fn get_fixture_mut(&self, handle: FixtureHandle) -> RefMut<MetaFixture<U>> {
         self.fixtures.get_mut(handle).expect("invalid fixture handle")
     }
 
@@ -118,22 +137,22 @@ impl MetaBody {
             });
     }
 
-    pub fn fixtures(&self) -> HandleIter<MetaFixture> {
+    pub fn fixtures(&self) -> HandleIter<Fixture, MetaFixture<U>> {
         self.fixtures.iter()
     }
 }
 
-impl UserData for MetaBody {
-    fn get_user_data(&self) -> &Option<Box<Any>> {
+impl<U: UserDataTypes> UserData<U::BodyData> for MetaBody<U> {
+    fn get_user_data(&self) -> &U::BodyData {
         &self.user_data.custom
     }
 
-    fn get_user_data_mut(&mut self) -> &mut Option<Box<Any>> {
+    fn get_user_data_mut(&mut self) -> &mut U::BodyData {
         &mut self.user_data.custom
     }
 }
 
-impl Deref for MetaBody {
+impl<U: UserDataTypes> Deref for MetaBody<U> {
     type Target = Body;
 
     fn deref(&self) -> &Body {
@@ -141,7 +160,7 @@ impl Deref for MetaBody {
     }
 }
 
-impl DerefMut for MetaBody {
+impl<U: UserDataTypes> DerefMut for MetaBody<U> {
     fn deref_mut(&mut self) -> &mut Body {
         &mut self.body
     }

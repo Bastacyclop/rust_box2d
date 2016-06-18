@@ -4,9 +4,10 @@ extern crate testbed;
 
 use piston::input::{ Input, Button, Key };
 use wrapped2d::b2;
+use testbed::World;
 
 fn main() {
-    let mut world = b2::World::new(&b2::Vec2 { x: 0., y: 0. });
+    let mut world = World::new(&b2::Vec2 { x: 0., y: 0. });
 
     let ground = create_ground(&mut world);
     let body = create_body(&mut world);
@@ -47,7 +48,7 @@ fn main() {
     );
 }
 
-fn create_ground(world: &mut b2::World) -> b2::BodyHandle {
+fn create_ground(world: &mut World) -> b2::BodyHandle {
     let mut def = b2::BodyDef::new();
     def.position = b2::Vec2 { x: 0., y: 0. };
 
@@ -76,7 +77,7 @@ fn create_ground(world: &mut b2::World) -> b2::BodyHandle {
     handle
 }
 
-fn create_body(world: &mut b2::World) -> b2::BodyHandle {
+fn create_body(world: &mut World) -> b2::BodyHandle {
     let mut def = b2::BodyDef::new();
     def.body_type = b2::BodyType::Dynamic;
     def.angular_damping = 2.;
@@ -123,7 +124,7 @@ fn create_body(world: &mut b2::World) -> b2::BodyHandle {
     handle
 }
 
-fn create_cubes(world: &mut b2::World,
+fn create_cubes(world: &mut World,
                 ground: b2::BodyHandle) {
     let mut shape = b2::PolygonShape::new();
     shape.set_as_box(0.5, 0.5);

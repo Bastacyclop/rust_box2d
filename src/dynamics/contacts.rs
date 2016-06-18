@@ -4,7 +4,7 @@ use common::math::Transform;
 use collision::{Manifold, WorldManifold};
 use dynamics::world::BodyHandle;
 use dynamics::body::FixtureHandle;
-use dynamics::user_data::RawUserData;
+use user_data::RawUserData;
 
 #[repr(C)]
 pub struct ContactEdge {

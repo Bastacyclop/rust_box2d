@@ -1,4 +1,5 @@
 use wrap::*;
+use user_data::UserDataTypes;
 use dynamics::world::{World, JointHandle};
 use dynamics::joints::{Joint, JointType, JointDef};
 
@@ -27,7 +28,7 @@ impl JointDef for GearJointDef {
         JointType::Gear
     }
 
-    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+    unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
         ffi::World_create_gear_joint(world.mut_ptr(),
                                      self.collide_connected,
                                      world.get_joint_mut(self.joint_a).mut_base_ptr(),

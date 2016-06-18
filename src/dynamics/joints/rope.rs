@@ -1,5 +1,6 @@
 use wrap::*;
 use common::math::Vec2;
+use user_data::UserDataTypes;
 use dynamics::world::{World, BodyHandle};
 use dynamics::joints::{Joint, JointType, JointDef, LimitState};
 
@@ -32,7 +33,7 @@ impl JointDef for RopeJointDef {
         JointType::Rope
     }
 
-    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint {
+    unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
         ffi::World_create_rope_joint(world.mut_ptr(),
                                      world.get_body_mut(self.body_a).mut_ptr(),
                                      world.get_body_mut(self.body_b).mut_ptr(),

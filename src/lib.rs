@@ -7,9 +7,10 @@
 //!
 //! ````
 //! use wrapped2d::b2;
+//! use wrapped2d::user_data::NoUserData;
 //!
 //! let gravity = b2::Vec2 { x: 0., y: -10. };
-//! let world = b2::World::new(&gravity);
+//! let world = b2::World::<NoUserData>::new(&gravity);
 //! ````
 //!
 //! # Handles
@@ -19,8 +20,9 @@
 //!
 //! ````
 //! # use wrapped2d::b2;
+//! # use wrapped2d::user_data::NoUserData;
 //! # let gravity = b2::Vec2 { x: 0., y: -10. };
-//! # let mut world = b2::World::new(&gravity);
+//! # let mut world = b2::World::<NoUserData>::new(&gravity);
 //! let mut def = b2::BodyDef::new();
 //! def.body_type = b2::BodyType::Dynamic;
 //! def.position = b2::Vec2 { x: 10., y: 10. };
@@ -60,6 +62,7 @@ mod ffi;
 pub mod common;
 pub mod collision;
 pub mod dynamics;
+pub mod user_data;
 
 pub mod b2 {
     pub use common::{Color, DrawFlags, Draw, DRAW_AABB, DRAW_CENTER_OF_MASS, DRAW_JOINT,

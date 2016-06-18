@@ -1,6 +1,7 @@
 extern crate wrapped2d;
 
 use wrapped2d::b2;
+use wrapped2d::user_data::NoUserData;
 
 #[test]
 fn fall() {
@@ -9,7 +10,7 @@ fn fall() {
     let position_iterations = 2;
 
     let gravity = b2::Vec2 { x: 0., y: -10. };
-    let mut world = b2::World::new(&gravity);
+    let mut world = b2::World::<NoUserData>::new(&gravity);
 
     assert_eq!(world.body_count(), 0);
     assert_eq!(world.gravity(), gravity);

@@ -3,7 +3,6 @@ pub mod body;
 pub mod fixture;
 pub mod joints;
 pub mod contacts;
-pub mod user_data;
 
 #[repr(C)]
 #[derive(Clone)]

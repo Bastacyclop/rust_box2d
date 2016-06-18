@@ -1,4 +1,3 @@
-use std::mem;
 use wrap::*;
 use common::math::Vec2;
 use super::{Shape, EdgeShape};
@@ -40,9 +39,9 @@ impl ChainShape {
 
     pub fn child_edge(&self, index: i32) -> EdgeShape {
         unsafe {
-            let edge = mem::zeroed();
-            ffi::ChainShape_get_child_edge(self.ptr(), edge, index);
-            EdgeShape::from_ffi(edge)
+            let mut edge = EdgeShape::new();
+            ffi::ChainShape_get_child_edge(self.ptr(), edge.mut_ptr(), index);
+            edge
         }
     }
 }

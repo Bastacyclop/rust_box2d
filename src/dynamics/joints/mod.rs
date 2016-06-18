@@ -42,11 +42,10 @@ pub use self::wheel::{WheelJoint, WheelJointDef};
 
 
 use std::ops::{Deref, DerefMut};
-use std::any::Any;
 use wrap::*;
 use common::math::Vec2;
 use dynamics::world::{World, BodyHandle, JointHandle};
-use dynamics::user_data::{UserData, RawUserData, RawUserDataMut, InternalUserData};
+use user_data::{UserDataTypes, UserData, RawUserData, RawUserDataMut, InternalUserData};
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -78,22 +77,22 @@ pub trait JointDef {
     fn joint_type() -> JointType where Self: Sized;
 
     #[doc(hidden)]
-    unsafe fn create(&self, world: &mut World) -> *mut ffi::Joint;
+    unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint;
 }
 
-pub struct MetaJoint {
+pub struct MetaJoint<U: UserDataTypes> {
     joint: UnknownJoint,
-    user_data: Box<InternalUserData<MetaJoint>>,
+    user_data: Box<InternalUserData<Joint, U::JointData>>,
 }
 
-impl MetaJoint {
+impl<U: UserDataTypes> MetaJoint<U> {
     #[doc(hidden)]
-    pub unsafe fn new(ptr: *mut ffi::Joint, handle: JointHandle) -> MetaJoint {
+    pub unsafe fn new(ptr: *mut ffi::Joint, handle: JointHandle, custom: U::JointData) -> Self {
         let mut j = MetaJoint {
             joint: UnknownJoint::from_ffi(ptr),
             user_data: Box::new(InternalUserData {
                 handle: handle,
-                custom: None,
+                custom: custom,
             }),
         };
         j.mut_base_ptr().set_internal_user_data(&mut *j.user_data);
@@ -101,17 +100,17 @@ impl MetaJoint {
     }
 }
 
-impl UserData for MetaJoint {
-    fn get_user_data(&self) -> &Option<Box<Any>> {
+impl<U: UserDataTypes> UserData<U::JointData> for MetaJoint<U> {
+    fn get_user_data(&self) -> &U::JointData {
         &self.user_data.custom
     }
 
-    fn get_user_data_mut(&mut self) -> &mut Option<Box<Any>> {
+    fn get_user_data_mut(&mut self) -> &mut U::JointData {
         &mut self.user_data.custom
     }
 }
 
-impl Deref for MetaJoint {
+impl<U: UserDataTypes> Deref for MetaJoint<U> {
     type Target = UnknownJoint;
 
     fn deref(&self) -> &UnknownJoint {
@@ -119,7 +118,7 @@ impl Deref for MetaJoint {
     }
 }
 
-impl DerefMut for MetaJoint {
+impl<U: UserDataTypes> DerefMut for MetaJoint<U> {
     fn deref_mut(&mut self) -> &mut UnknownJoint {
         &mut self.joint
     }

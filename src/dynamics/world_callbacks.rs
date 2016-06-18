@@ -7,7 +7,7 @@ use dynamics::world::BodyHandle;
 use dynamics::body::FixtureHandle;
 use dynamics::fixture::Fixture;
 use dynamics::contacts::Contact;
-use dynamics::user_data::RawUserData;
+use user_data::RawUserData;
 
 pub trait ContactFilter {
     fn should_collide(&mut self, fixture_a: &mut Fixture, fixture_b: &mut Fixture) -> bool;

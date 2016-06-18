@@ -6,13 +6,13 @@ use std::mem;
 use std::fmt;
 
 #[derive(PartialOrd, Ord, Hash)]
-pub struct TypedHandle<T> {
+pub struct TypedHandle<T: ?Sized> {
     index: usize,
     version: usize,
     phantom: PhantomData<T>,
 }
 
-impl<T> TypedHandle<T> {
+impl<T: ?Sized> TypedHandle<T> {
     #[doc(hidden)]
     pub fn new(index: usize, version: usize) -> TypedHandle<T> {
         TypedHandle {
@@ -35,36 +35,39 @@ impl<T> TypedHandle<T> {
     }
 }
 
-impl<T> Copy for TypedHandle<T> {}
-impl<T> Clone for TypedHandle<T> {
+impl<T: ?Sized> Copy for TypedHandle<T> {}
+impl<T: ?Sized> Clone for TypedHandle<T> {
     fn clone(&self) -> TypedHandle<T> {
         *self
     }
 }
 
-unsafe impl<T> Send for TypedHandle<T> {}
-unsafe impl<T> Sync for TypedHandle<T> {}
+unsafe impl<T: ?Sized> Send for TypedHandle<T> {}
+unsafe impl<T: ?Sized> Sync for TypedHandle<T> {}
 
-impl<T> Eq for TypedHandle<T> {}
-impl<T> PartialEq for TypedHandle<T> {
+impl<T: ?Sized> Eq for TypedHandle<T> {}
+impl<T: ?Sized> PartialEq for TypedHandle<T> {
     fn eq(&self, rhs: &TypedHandle<T>) -> bool {
         return self.index == rhs.index && self.version == rhs.version;
     }
 }
 
-impl<T> fmt::Debug for TypedHandle<T> {
+impl<T: ?Sized> fmt::Debug for TypedHandle<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "TypedHandle {{ index: {}, version: {} }}", self.index, self.version)
+        write!(f,
+               "TypedHandle {{ index: {}, version: {} }}",
+               self.index,
+               self.version)
     }
 }
 
-struct HandleEntry<T> {
+struct HandleEntry<E> {
     pub version: usize,
-    pub inner: Option<RefCell<T>>,
+    pub inner: Option<RefCell<E>>,
 }
 
-impl<T> HandleEntry<T> {
-    fn new() -> HandleEntry<T> {
+impl<E> HandleEntry<E> {
+    fn new() -> HandleEntry<E> {
         HandleEntry {
             version: 0,
             inner: None,
@@ -73,30 +76,33 @@ impl<T> HandleEntry<T> {
 }
 
 #[doc(hidden)]
-pub struct HandleMap<T> {
+pub struct HandleMap<E, T: ?Sized = ()> {
     next_index: usize,
     availables: Vec<usize>,
-    entries: VecMap<HandleEntry<T>>,
+    entries: VecMap<HandleEntry<E>>,
+    phantom: PhantomData<T>,
 }
 
-impl<T> HandleMap<T> {
-    pub fn new() -> HandleMap<T> {
+impl<T: ?Sized, E> HandleMap<E, T> {
+    pub fn new() -> HandleMap<E, T> {
         HandleMap {
             next_index: 0,
             availables: Vec::new(),
             entries: VecMap::new(),
+            phantom: PhantomData,
         }
     }
 
-    pub fn with_capacities(availables: usize, entries: usize) -> HandleMap<T> {
+    pub fn with_capacities(availables: usize, entries: usize) -> HandleMap<E, T> {
         HandleMap {
             next_index: 0,
             availables: Vec::with_capacity(availables),
             entries: VecMap::with_capacity(entries),
+            phantom: PhantomData,
         }
     }
 
-    pub fn insert(&mut self, value: T) -> TypedHandle<T> {
+    pub fn insert(&mut self, value: E) -> TypedHandle<T> {
         let index = self.find_available();
 
         let entry = &mut self.entries[index];
@@ -105,7 +111,7 @@ impl<T> HandleMap<T> {
     }
 
     pub fn insert_with<F>(&mut self, f: F) -> TypedHandle<T>
-        where F: FnOnce(TypedHandle<T>) -> T
+        where F: FnOnce(TypedHandle<T>) -> E
     {
 
         let index = self.find_available();
@@ -132,7 +138,7 @@ impl<T> HandleMap<T> {
         index
     }
 
-    pub fn remove(&mut self, handle: TypedHandle<T>) -> Option<T> {
+    pub fn remove(&mut self, handle: TypedHandle<T>) -> Option<E> {
         let index = handle.index;
         let entry = &mut self.entries[index];
         assert_eq!(entry.version, handle.version);
@@ -160,7 +166,7 @@ impl<T> HandleMap<T> {
     }
 
     #[inline]
-    fn get_inner(&self, handle: TypedHandle<T>) -> Option<&RefCell<T>> {
+    fn get_inner(&self, handle: TypedHandle<T>) -> Option<&RefCell<E>> {
         let entry = &self.entries[handle.index];
 
         if entry.version == handle.version {
@@ -170,31 +176,34 @@ impl<T> HandleMap<T> {
         }
     }
 
-    pub fn get(&self, handle: TypedHandle<T>) -> Option<Ref<T>> {
+    pub fn get(&self, handle: TypedHandle<T>) -> Option<Ref<E>> {
         self.get_inner(handle).map(|e| e.borrow())
     }
 
-    pub fn get_mut(&self, handle: TypedHandle<T>) -> Option<RefMut<T>> {
+    pub fn get_mut(&self, handle: TypedHandle<T>) -> Option<RefMut<E>> {
         self.get_inner(handle).map(|e| e.borrow_mut())
     }
 
-    pub fn iter<'a>(&'a self) -> HandleIter<'a, T> {
-        HandleIter { iter: self.entries.iter() }
+    pub fn iter<'a>(&'a self) -> HandleIter<'a, T, E> {
+        HandleIter {
+            iter: self.entries.iter(),
+            phantom: PhantomData,
+        }
     }
 }
 
-impl<'a, T> IntoIterator for &'a HandleMap<T> {
-    type Item = (TypedHandle<T>, &'a RefCell<T>);
-    type IntoIter = HandleIter<'a, T>;
+impl<'a, T: ?Sized, E> IntoIterator for &'a HandleMap<E, T> {
+    type Item = (TypedHandle<T>, &'a RefCell<E>);
+    type IntoIter = HandleIter<'a, T, E>;
 
-    fn into_iter(self) -> HandleIter<'a, T> {
+    fn into_iter(self) -> HandleIter<'a, T, E> {
         self.iter()
     }
 }
 
 macro_rules! iterator {
     (impl $name:ident -> $elem:ty, $($getter:ident),+ and then $($modifier:ident),*) => {
-        impl<'a, T> Iterator for $name<'a, T> {
+        impl<'a, T: ?Sized, E> Iterator for $name<'a, T, E> {
             type Item = $elem;
 
             #[inline]
@@ -220,7 +229,7 @@ macro_rules! iterator {
 
 macro_rules! double_ended_iterator {
     (impl $name:ident -> $elem:ty, $($getter:ident),+ and then $($modifier:ident),*) => {
-        impl<'a, T> DoubleEndedIterator for $name<'a, T> {
+        impl<'a, T: ?Sized, E> DoubleEndedIterator for $name<'a, T, E> {
             #[inline]
             fn next_back(&mut self) -> Option<$elem> {
                 while let Some((index, entry)) = self.iter.next_back() {
@@ -237,17 +246,18 @@ macro_rules! double_ended_iterator {
     }
 }
 
-pub struct HandleIter<'a, T: 'a> {
-    iter: vec_map::Iter<'a, HandleEntry<T>>,
+pub struct HandleIter<'a, T: ?Sized, E: 'a> {
+    iter: vec_map::Iter<'a, HandleEntry<E>>,
+    phantom: PhantomData<T>,
 }
 
 iterator! {
-    impl HandleIter -> (TypedHandle<T>, &'a RefCell<T>),
+    impl HandleIter -> (TypedHandle<T>, &'a RefCell<E>),
     as_ref and then
 }
 
 double_ended_iterator! {
-    impl HandleIter -> (TypedHandle<T>, &'a RefCell<T>),
+    impl HandleIter -> (TypedHandle<T>, &'a RefCell<E>),
     as_ref and then
 }
 
@@ -259,7 +269,7 @@ mod test {
 
     #[test]
     fn insert() {
-        let mut map = HandleMap::new();
+        let mut map = HandleMap::<usize>::new();
 
         let handle = map.insert(DUMMY_VALUE);
 
@@ -268,7 +278,7 @@ mod test {
 
     #[test]
     fn remove() {
-        let mut map = HandleMap::new();
+        let mut map = HandleMap::<usize>::new();
 
         let handle = map.insert(DUMMY_VALUE);
         map.remove(handle);
@@ -278,7 +288,7 @@ mod test {
 
     #[test]
     fn access_after_remove() {
-        let mut map = HandleMap::new();
+        let mut map = HandleMap::<usize>::new();
 
         let handle = map.insert(DUMMY_VALUE);
         map.remove(handle);
@@ -288,7 +298,7 @@ mod test {
 
     #[test]
     fn access_with_old_handle() {
-        let mut map = HandleMap::new();
+        let mut map = HandleMap::<usize>::new();
 
         let handle = map.insert(DUMMY_VALUE);
         map.remove(handle);
@@ -300,7 +310,7 @@ mod test {
     #[test]
     #[should_panic]
     fn remove_with_old_handle() {
-        let mut map = HandleMap::new();
+        let mut map = HandleMap::<usize>::new();
         let handle = map.insert(DUMMY_VALUE);
         map.remove(handle);
         map.remove(handle);

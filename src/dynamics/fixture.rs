@@ -1,14 +1,13 @@
 use std::mem;
 use std::ptr;
 use std::ops::{Deref, DerefMut};
-use std::any::Any;
 use wrap::*;
 use common::math::Vec2;
 use collision::{AABB, RayCastInput, RayCastOutput};
 use collision::shapes::{MassData, ShapeType, UnknownShape};
 use dynamics::world::BodyHandle;
 use dynamics::body::FixtureHandle;
-use dynamics::user_data::{UserData, RawUserData, RawUserDataMut, InternalUserData};
+use user_data::{UserDataTypes, UserData, RawUserData, RawUserDataMut, InternalUserData};
 
 #[repr(C)]
 #[derive(Clone)]
@@ -56,19 +55,22 @@ impl FixtureDef {
     }
 }
 
-pub struct MetaFixture {
+pub struct MetaFixture<U: UserDataTypes> {
     fixture: Fixture,
-    user_data: Box<InternalUserData<MetaFixture>>,
+    user_data: Box<InternalUserData<Fixture, U::FixtureData>>,
 }
 
-impl MetaFixture {
+impl<U: UserDataTypes> MetaFixture<U> {
     #[doc(hidden)]
-    pub unsafe fn new(ptr: *mut ffi::Fixture, handle: FixtureHandle) -> MetaFixture {
+    pub unsafe fn new(ptr: *mut ffi::Fixture,
+                      handle: FixtureHandle,
+                      custom: U::FixtureData)
+                      -> Self {
         let mut f = MetaFixture {
             fixture: Fixture::from_ffi(ptr),
             user_data: Box::new(InternalUserData {
                 handle: handle,
-                custom: None,
+                custom: custom,
             }),
         };
         f.mut_ptr().set_internal_user_data(&mut *f.user_data);
@@ -76,17 +78,17 @@ impl MetaFixture {
     }
 }
 
-impl UserData for MetaFixture {
-    fn get_user_data(&self) -> &Option<Box<Any>> {
+impl<U: UserDataTypes> UserData<U::FixtureData> for MetaFixture<U> {
+    fn get_user_data(&self) -> &U::FixtureData {
         &self.user_data.custom
     }
 
-    fn get_user_data_mut(&mut self) -> &mut Option<Box<Any>> {
+    fn get_user_data_mut(&mut self) -> &mut U::FixtureData {
         &mut self.user_data.custom
     }
 }
 
-impl Deref for MetaFixture {
+impl<U: UserDataTypes> Deref for MetaFixture<U> {
     type Target = Fixture;
 
     fn deref(&self) -> &Fixture {
@@ -94,7 +96,7 @@ impl Deref for MetaFixture {
     }
 }
 
-impl DerefMut for MetaFixture {
+impl<U: UserDataTypes> DerefMut for MetaFixture<U> {
     fn deref_mut(&mut self) -> &mut Fixture {
         &mut self.fixture
     }

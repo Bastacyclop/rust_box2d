@@ -12,25 +12,28 @@ mod debug_draw;
 use debug_draw::debug_draw;
 
 use piston::input::{Event, Input, Button, Motion, Key, MouseButton};
-use piston::window::{Window, OpenGLWindow, AdvancedWindow, WindowSettings};
+use piston::window::{Window, OpenGLWindow, WindowSettings};
 use piston::event_loop::Events;
 use gfx::traits::*;
 use glutin_window::*;
 use wrapped2d::b2;
+use wrapped2d::user_data::NoUserData;
 
 type GfxResources = gfx_device_gl::Resources;
 type GfxCommandBuffer = gfx_device_gl::command::CommandBuffer;
 type Gfx2d = gfx_graphics::Gfx2d<GfxResources>;
 type GfxGraphics<'a> = gfx_graphics::GfxGraphics<'a, GfxResources, GfxCommandBuffer>;
 
+pub type World = b2::World<NoUserData>;
+
 pub fn run<F>(name: &str,
               mut width: u32,
               mut height: u32,
-              mut world: b2::World,
+              mut world: World,
               mut camera: Camera,
               draw_flags: b2::DrawFlags,
               mut process_input: F)
-    where F: FnMut(&mut b2::World, &mut Camera, Input)
+    where F: FnMut(&mut World, &mut Camera, Input)
 {
 
     let opengl = OpenGL::V3_2;
@@ -132,7 +135,7 @@ pub fn run<F>(name: &str,
     }
 }
 
-fn try_grab(world: &mut b2::World, p: b2::Vec2, dummy: b2::BodyHandle) -> Option<b2::JointHandle> {
+fn try_grab(world: &mut World, p: b2::Vec2, dummy: b2::BodyHandle) -> Option<b2::JointHandle> {
     match query_point(world, p) {
         None => None,
         Some(body_h) => {
@@ -153,7 +156,7 @@ fn try_grab(world: &mut b2::World, p: b2::Vec2, dummy: b2::BodyHandle) -> Option
     }
 }
 
-fn query_point(world: &b2::World, p: b2::Vec2) -> Option<b2::BodyHandle> {
+fn query_point(world: &World, p: b2::Vec2) -> Option<b2::BodyHandle> {
     let d = b2::Vec2 {
         x: 0.001,
         y: 0.001,
@@ -182,11 +185,11 @@ fn query_point(world: &b2::World, p: b2::Vec2) -> Option<b2::BodyHandle> {
     result
 }
 
-fn ungrab(world: &mut b2::World, grabbing: &mut Option<b2::JointHandle>) {
+fn ungrab(world: &mut World, grabbing: &mut Option<b2::JointHandle>) {
     grabbing.take().map(|j| world.destroy_joint(j));
 }
 
-fn update_grab(world: &b2::World, target: b2::Vec2, grabbing: Option<b2::JointHandle>) {
+fn update_grab(world: &World, target: b2::Vec2, grabbing: Option<b2::JointHandle>) {
     grabbing.map(|j| {
         let mut j = world.get_joint_mut(j);
         match **j {

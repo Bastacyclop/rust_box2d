@@ -119,11 +119,11 @@ impl<U: UserDataTypes> MetaBody<U> {
         }
     }
 
-    pub fn get_fixture(&self, handle: FixtureHandle) -> Ref<MetaFixture<U>> {
+    pub fn fixture(&self, handle: FixtureHandle) -> Ref<MetaFixture<U>> {
         self.fixtures.get(handle).expect("invalid fixture handle")
     }
 
-    pub fn get_fixture_mut(&self, handle: FixtureHandle) -> RefMut<MetaFixture<U>> {
+    pub fn fixture_mut(&self, handle: FixtureHandle) -> RefMut<MetaFixture<U>> {
         self.fixtures.get_mut(handle).expect("invalid fixture handle")
     }
 
@@ -143,11 +143,11 @@ impl<U: UserDataTypes> MetaBody<U> {
 }
 
 impl<U: UserDataTypes> UserData<U::BodyData> for MetaBody<U> {
-    fn get_user_data(&self) -> &U::BodyData {
+    fn user_data(&self) -> &U::BodyData {
         &self.user_data.custom
     }
 
-    fn get_user_data_mut(&mut self) -> &mut U::BodyData {
+    fn user_data_mut(&mut self) -> &mut U::BodyData {
         &mut self.user_data.custom
     }
 }

@@ -44,8 +44,8 @@ impl RevoluteJointDef {
                                   anchor: &Vec2) {
         self.body_a = body_a;
         self.body_b = body_b;
-        let a = world.get_body(body_a);
-        let b = world.get_body(body_a);
+        let a = world.body(body_a);
+        let b = world.body(body_b);
         self.local_anchor_a = a.local_point(anchor);
         self.local_anchor_b = b.local_point(anchor);
         self.reference_angle = b.angle() - a.angle();
@@ -61,8 +61,8 @@ impl JointDef for RevoluteJointDef {
 
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
         ffi::World_create_revolute_joint(world.mut_ptr(),
-                                         world.get_body_mut(self.body_a).mut_ptr(),
-                                         world.get_body_mut(self.body_b).mut_ptr(),
+                                         world.body_mut(self.body_a).mut_ptr(),
+                                         world.body_mut(self.body_b).mut_ptr(),
                                          self.collide_connected,
                                          self.local_anchor_a,
                                          self.local_anchor_b,

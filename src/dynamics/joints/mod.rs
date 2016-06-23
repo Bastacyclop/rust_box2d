@@ -101,11 +101,11 @@ impl<U: UserDataTypes> MetaJoint<U> {
 }
 
 impl<U: UserDataTypes> UserData<U::JointData> for MetaJoint<U> {
-    fn get_user_data(&self) -> &U::JointData {
+    fn user_data(&self) -> &U::JointData {
         &self.user_data.custom
     }
 
-    fn get_user_data_mut(&mut self) -> &mut U::JointData {
+    fn user_data_mut(&mut self) -> &mut U::JointData {
         &mut self.user_data.custom
     }
 }
@@ -152,11 +152,11 @@ pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
     }
 
     fn body_a(&mut self) -> BodyHandle {
-        unsafe { ffi::Joint_get_body_a(self.mut_base_ptr()).get_handle() }
+        unsafe { ffi::Joint_get_body_a(self.mut_base_ptr()).handle() }
     }
 
     fn body_b(&mut self) -> BodyHandle {
-        unsafe { ffi::Joint_get_body_b(self.mut_base_ptr()).get_handle() }
+        unsafe { ffi::Joint_get_body_b(self.mut_base_ptr()).handle() }
     }
 
     fn dump(&mut self) {
@@ -178,11 +178,11 @@ pub struct JointEdge {
 
 impl JointEdge {
     pub fn other(&self) -> BodyHandle {
-        unsafe { self.other.get_handle() }
+        unsafe { self.other.handle() }
     }
 
     pub fn joint(&self) -> JointHandle {
-        unsafe { self.joint.get_handle() }
+        unsafe { self.joint.handle() }
     }
 
     pub fn prev_mut(&mut self) -> Option<&mut JointEdge> {

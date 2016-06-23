@@ -170,7 +170,7 @@ impl QueryCallbackLink {
 unsafe extern "C" fn qcl_report_fixture(any: ffi::FatAny, fixture: *mut ffi::Fixture) -> bool {
     let callback = mem::transmute::<_, &mut QueryCallback>(any);
     let body = WrappedRef::new(Fixture::from_ffi(fixture)).body();
-    callback.report_fixture(body, fixture.get_handle())
+    callback.report_fixture(body, fixture.handle())
 }
 
 impl Drop for QueryCallbackLink {
@@ -223,7 +223,7 @@ unsafe extern "C" fn rccl_report_fixture(any: ffi::FatAny,
                                          -> f32 {
     // point and normal are coming from C++ &s
     let callback = mem::transmute::<_, &mut RayCastCallback>(any);
-    callback.report_fixture(fixture.get_handle(), &*point, &*normal, fraction)
+    callback.report_fixture(fixture.handle(), &*point, &*normal, fraction)
 }
 
 impl Drop for RayCastCallbackLink {

@@ -79,11 +79,11 @@ impl<U: UserDataTypes> MetaFixture<U> {
 }
 
 impl<U: UserDataTypes> UserData<U::FixtureData> for MetaFixture<U> {
-    fn get_user_data(&self) -> &U::FixtureData {
+    fn user_data(&self) -> &U::FixtureData {
         &self.user_data.custom
     }
 
-    fn get_user_data_mut(&mut self) -> &mut U::FixtureData {
+    fn user_data_mut(&mut self) -> &mut U::FixtureData {
         &mut self.user_data.custom
     }
 }
@@ -120,7 +120,7 @@ impl Fixture {
     }
 
     pub fn body(&self) -> BodyHandle {
-        unsafe { ffi::Fixture_get_body_const(self.ptr()).get_handle() }
+        unsafe { ffi::Fixture_get_body_const(self.ptr()).handle() }
     }
 
     pub fn test_point(&self, point: &Vec2) -> bool {

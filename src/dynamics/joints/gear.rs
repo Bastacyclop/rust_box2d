@@ -31,8 +31,8 @@ impl JointDef for GearJointDef {
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
         ffi::World_create_gear_joint(world.mut_ptr(),
                                      self.collide_connected,
-                                     world.get_joint_mut(self.joint_a).mut_base_ptr(),
-                                     world.get_joint_mut(self.joint_b).mut_base_ptr(),
+                                     world.joint_mut(self.joint_a).mut_base_ptr(),
+                                     world.joint_mut(self.joint_b).mut_base_ptr(),
                                      self.ratio)
     }
 }

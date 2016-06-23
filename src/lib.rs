@@ -23,18 +23,20 @@
 //! # use wrapped2d::user_data::NoUserData;
 //! # let gravity = b2::Vec2 { x: 0., y: -10. };
 //! # let mut world = b2::World::<NoUserData>::new(&gravity);
-//! let mut def = b2::BodyDef::new();
-//! def.body_type = b2::BodyType::Dynamic;
-//! def.position = b2::Vec2 { x: 10., y: 10. };
+//! let mut def = b2::BodyDef {
+//!     body_type: b2::BodyType::Dynamic,
+//!     position: b2::Vec2 { x: 10., y: 10. },
+//!     .. b2::BodyDef::new()
+//! };
 //!
 //! let handle = world.create_body(&def);
-//! let mut body = world.get_body_mut(handle);
+//! let mut body = world.body_mut(handle);
 //!
 //! let mut shape = b2::PolygonShape::new();
 //! shape.set_as_box(0.5, 0.5);
 //!
 //! let handle = body.create_fast_fixture(&shape, 2.);
-//! let fixture = body.get_fixture(handle);
+//! let fixture = body.fixture(handle);
 //! ````
 
 #![feature(associated_consts)]

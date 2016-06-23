@@ -22,10 +22,10 @@ pub struct InternalUserData<T: ?Sized, U> {
 
 #[doc(hidden)]
 pub trait RawUserData: Sized {
-    unsafe fn get_internal_user_data<T: ?Sized, U>(self) -> *const InternalUserData<T, U>;
+    unsafe fn internal_user_data<T: ?Sized, U>(self) -> *const InternalUserData<T, U>;
 
-    unsafe fn get_handle<T: ?Sized>(self) -> TypedHandle<T> {
-        let internal = &*self.get_internal_user_data::<_, ()>();
+    unsafe fn handle<T: ?Sized>(self) -> TypedHandle<T> {
+        let internal = &*self.internal_user_data::<_, ()>();
         internal.handle
     }
 }
@@ -38,13 +38,13 @@ pub trait RawUserDataMut: RawUserData {
 macro_rules! impl_raw_user_data {
     { $raw:ty, $getter:path, $setter:path } => {
         impl RawUserData for *const $raw {
-            unsafe fn get_internal_user_data<T: ?Sized, U>(self) -> *const InternalUserData<T, U> {
+            unsafe fn internal_user_data<T: ?Sized, U>(self) -> *const InternalUserData<T, U> {
                 $getter(self) as *const InternalUserData<T, U>
             }
         }
 
         impl RawUserData for *mut $raw {
-            unsafe fn get_internal_user_data<T: ?Sized, U>(self) -> *const InternalUserData<T, U> {
+            unsafe fn internal_user_data<T: ?Sized, U>(self) -> *const InternalUserData<T, U> {
                 $getter(self) as *const InternalUserData<T, U>
             }
         }
@@ -71,11 +71,11 @@ impl_raw_user_data! {
 }
 
 pub trait UserData<U> {
-    fn get_user_data(&self) -> &U;
-    fn get_user_data_mut(&mut self) -> &mut U;
+    fn user_data(&self) -> &U;
+    fn user_data_mut(&mut self) -> &mut U;
 
     fn set_user_data(&mut self, v: U) {
-        *self.get_user_data_mut() = v;
+        *self.user_data_mut() = v;
     }
 }
 

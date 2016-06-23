@@ -31,8 +31,10 @@ fn main() {
 }
 
 fn create_ground(world: &mut World) -> b2::BodyHandle {
-    let mut def = b2::BodyDef::new();
-    def.position = b2::Vec2 { x: 0., y: 17. };
+    let def = b2::BodyDef {
+        position: b2::Vec2 { x: 0., y: 17. },
+        .. b2::BodyDef::new()
+    };
 
     world.create_body(&def)
 }
@@ -41,12 +43,14 @@ fn create_crank(world: &mut World, ground: b2::BodyHandle) -> b2::BodyHandle {
     let mut shape = b2::PolygonShape::new();
     shape.set_as_box(4., 1.);
 
-    let mut b_def = b2::BodyDef::new();
-    b_def.body_type = b2::BodyType::Dynamic;
-    b_def.position = b2::Vec2 { x: -8., y: 20. };
+    let b_def = b2::BodyDef {
+        body_type: b2::BodyType::Dynamic,
+        position: b2::Vec2 { x: -8., y: 20. },
+        .. b2::BodyDef::new()
+    };
 
     let handle = world.create_body(&b_def);
-    world.get_body_mut(handle).create_fast_fixture(&shape, 2.);
+    world.body_mut(handle).create_fast_fixture(&shape, 2.);
 
     let mut j_def = b2::RevoluteJointDef::new(ground, handle);
     j_def.init(world, ground, handle, &b2::Vec2 { x: -12., y: 20. });
@@ -60,12 +64,14 @@ fn create_connecting_rod(world: &mut World,
     let mut shape = b2::PolygonShape::new();
     shape.set_as_box(8., 1.);
 
-    let mut b_def = b2::BodyDef::new();
-    b_def.body_type = b2::BodyType::Dynamic;
-    b_def.position = b2::Vec2 { x: 4., y: 20. };
+    let b_def = b2::BodyDef {
+        body_type: b2::BodyType::Dynamic,
+        position: b2::Vec2 { x: 4., y: 20. },
+        .. b2::BodyDef::new()
+    };
 
     let handle = world.create_body(&b_def);
-    world.get_body_mut(handle).create_fast_fixture(&shape, 2.);
+    world.body_mut(handle).create_fast_fixture(&shape, 2.);
 
     let mut j_def = b2::RevoluteJointDef::new(crank, handle);
     j_def.init(world, crank, handle, &b2::Vec2 { x: -4., y: 20. });
@@ -80,13 +86,15 @@ fn create_piston(world: &mut World,
     let mut shape = b2::PolygonShape::new();
     shape.set_as_box(3., 3.);
 
-    let mut b_def = b2::BodyDef::new();
-    b_def.body_type = b2::BodyType::Dynamic;
-    b_def.fixed_rotation = true;
-    b_def.position = b2::Vec2 { x: 12., y: 20. };
+    let b_def = b2::BodyDef {
+        body_type: b2::BodyType::Dynamic,
+        fixed_rotation: true,
+        position: b2::Vec2 { x: 12., y: 20. },
+        .. b2::BodyDef::new()
+    };
 
     let handle = world.create_body(&b_def);
-    world.get_body_mut(handle).create_fast_fixture(&shape, 2.);
+    world.body_mut(handle).create_fast_fixture(&shape, 2.);
 
     let mut j_def = b2::RevoluteJointDef::new(connecting_rod, handle);
     j_def.init(world, connecting_rod, handle, &b2::Vec2 { x: 12., y: 20. });

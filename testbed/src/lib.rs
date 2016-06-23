@@ -142,7 +142,7 @@ fn try_grab(world: &mut World, p: b2::Vec2, dummy: b2::BodyHandle) -> Option<b2:
             let mass;
             let center;
             {
-                let mut body = world.get_body_mut(body_h);
+                let mut body = world.body_mut(body_h);
                 mass = body.mass();
                 center = *body.world_center();
                 body.set_awake(true);
@@ -169,8 +169,8 @@ fn query_point(world: &World, p: b2::Vec2) -> Option<b2::BodyHandle> {
     let mut result = None;
     {
         let mut callback = |body_h: b2::BodyHandle, fixture_h: b2::FixtureHandle| {
-            let body = world.get_body(body_h);
-            let fixture = body.get_fixture(fixture_h);
+            let body = world.body(body_h);
+            let fixture = body.fixture(fixture_h);
 
             if body.body_type() != b2::BodyType::Static && fixture.test_point(&p) {
 
@@ -191,7 +191,7 @@ fn ungrab(world: &mut World, grabbing: &mut Option<b2::JointHandle>) {
 
 fn update_grab(world: &World, target: b2::Vec2, grabbing: Option<b2::JointHandle>) {
     grabbing.map(|j| {
-        let mut j = world.get_joint_mut(j);
+        let mut j = world.joint_mut(j);
         match **j {
             b2::UnknownJoint::Mouse(ref mut j) => {
                 j.set_target(&target);

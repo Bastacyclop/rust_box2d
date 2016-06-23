@@ -86,11 +86,11 @@ impl<U: UserDataTypes> World<U> {
         }
     }
 
-    pub fn get_body(&self, handle: BodyHandle) -> Ref<MetaBody<U>> {
+    pub fn body(&self, handle: BodyHandle) -> Ref<MetaBody<U>> {
         self.bodies.get(handle).expect("invalid body handle")
     }
 
-    pub fn get_body_mut(&self, handle: BodyHandle) -> RefMut<MetaBody<U>> {
+    pub fn body_mut(&self, handle: BodyHandle) -> RefMut<MetaBody<U>> {
         self.bodies.get_mut(handle).expect("invalid body handle")
     }
 
@@ -131,11 +131,11 @@ impl<U: UserDataTypes> World<U> {
         }
     }
 
-    pub fn get_joint(&self, handle: JointHandle) -> Ref<MetaJoint<U>> {
+    pub fn joint(&self, handle: JointHandle) -> Ref<MetaJoint<U>> {
         self.joints.get(handle).expect("invalid joint handle")
     }
 
-    pub fn get_joint_mut(&self, handle: JointHandle) -> RefMut<MetaJoint<U>> {
+    pub fn joint_mut(&self, handle: JointHandle) -> RefMut<MetaJoint<U>> {
         self.joints.get_mut(handle).expect("invalid joint handle")
     }
 

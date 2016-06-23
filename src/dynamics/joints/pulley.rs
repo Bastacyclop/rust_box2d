@@ -61,8 +61,8 @@ impl JointDef for PulleyJointDef {
 
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
         ffi::World_create_pulley_joint(world.mut_ptr(),
-                                       world.get_body_mut(self.body_a).mut_ptr(),
-                                       world.get_body_mut(self.body_b).mut_ptr(),
+                                       world.body_mut(self.body_a).mut_ptr(),
+                                       world.body_mut(self.body_b).mut_ptr(),
                                        self.collide_connected,
                                        self.ground_anchor_a,
                                        self.ground_anchor_b,

@@ -16,7 +16,7 @@ pub struct ContactEdge {
 
 impl ContactEdge {
     pub fn other(&self) -> BodyHandle {
-        unsafe { (self.other as *const ffi::Body).get_handle() }
+        unsafe { (self.other as *const ffi::Body).handle() }
     }
 
     pub fn contact_mut<'a>(&'a mut self) -> WrappedRefMut<'a, Contact> {
@@ -72,7 +72,7 @@ impl Contact {
     }
 
     pub fn fixture_a(&self) -> FixtureHandle {
-        unsafe { ffi::Contact_get_fixture_a_const(self.ptr()).get_handle() }
+        unsafe { ffi::Contact_get_fixture_a_const(self.ptr()).handle() }
     }
 
     pub fn child_index_a(&self) -> i32 {
@@ -80,7 +80,7 @@ impl Contact {
     }
 
     pub fn fixture_b(&self) -> FixtureHandle {
-        unsafe { ffi::Contact_get_fixture_b_const(self.ptr()).get_handle() }
+        unsafe { ffi::Contact_get_fixture_b_const(self.ptr()).handle() }
     }
 
     pub fn child_index_b(&self) -> i32 {

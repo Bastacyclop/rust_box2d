@@ -1,10 +1,10 @@
-typedef void (*DrawPolygonCB)(RustFatObject, const b2Vec2*, i32, const b2Color*);
-typedef void (*DrawCircleCB)(RustFatObject, const b2Vec2*, f32, const b2Color*);
-typedef void (*DrawSolidCircleCB)(RustFatObject, const b2Vec2*, f32, const b2Vec2*,
+typedef void (*DrawPolygonCB)(RustObject, const b2Vec2*, i32, const b2Color*);
+typedef void (*DrawCircleCB)(RustObject, const b2Vec2*, f32, const b2Color*);
+typedef void (*DrawSolidCircleCB)(RustObject, const b2Vec2*, f32, const b2Vec2*,
                                   const b2Color*);
-typedef void (*DrawSegmentCB)(RustFatObject, const b2Vec2*, const b2Vec2*,
+typedef void (*DrawSegmentCB)(RustObject, const b2Vec2*, const b2Vec2*,
                               const b2Color*);
-typedef void (*DrawTransformCB)(RustFatObject, const b2Transform*);
+typedef void (*DrawTransformCB)(RustObject, const b2Transform*);
 
 struct DrawLink: public b2Draw {
     DrawLink(): b2Draw() {}
@@ -39,7 +39,7 @@ struct DrawLink: public b2Draw {
         draw_transform(object, &xf);
     }
 
-    RustFatObject object;
+    RustObject object;
     DrawPolygonCB draw_polygon;
     DrawPolygonCB draw_solid_polygon;
     DrawCircleCB draw_circle;
@@ -48,22 +48,8 @@ struct DrawLink: public b2Draw {
     DrawTransformCB draw_transform;
 };
 
-DrawLink* DrawLink_new(RustFatObject o,
-                       DrawPolygonCB dp,
-                       DrawPolygonCB dsp,
-                       DrawCircleCB dc,
-                       DrawSolidCircleCB dsc,
-                       DrawSegmentCB ds,
-                       DrawTransformCB dt) {
-    DrawLink* d = new DrawLink();
-    d->object = o;
-    d->draw_polygon = dp;
-    d->draw_solid_polygon = dsp;
-    d->draw_circle = dc;
-    d->draw_solid_circle = dsc;
-    d->draw_segment = ds;
-    d->draw_transform = dt;
-    return d;
+DrawLink* DrawLink_alloc() {
+    return new DrawLink();
 }
 
 b2Draw* DrawLink_as_base(DrawLink* self) {
@@ -74,8 +60,21 @@ void DrawLink_drop(DrawLink* self) {
     delete self;
 }
 
-void DrawLink_set_object(DrawLink* self, RustFatObject o) {
+void DrawLink_bind(DrawLink* self,
+                   RustObject o,
+                   DrawPolygonCB dp,
+                   DrawPolygonCB dsp,
+                   DrawCircleCB dc,
+                   DrawSolidCircleCB dsc,
+                   DrawSegmentCB ds,
+                   DrawTransformCB dt) {
     self->object = o;
+    self->draw_polygon = dp;
+    self->draw_solid_polygon = dsp;
+    self->draw_circle = dc;
+    self->draw_solid_circle = dsc;
+    self->draw_segment = ds;
+    self->draw_transform = dt;
 }
 
 void DrawLink_set_flags(DrawLink* self, u32 flags) {

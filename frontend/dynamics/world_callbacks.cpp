@@ -1,5 +1,5 @@
-typedef void (*SayGoodbyeToJointCB)(RustFatObject, b2Joint*);
-typedef void (*SayGoodbyeToFixtureCB)(RustFatObject, b2Fixture*);
+typedef void (*SayGoodbyeToJointCB)(RustObject, b2Joint*);
+typedef void (*SayGoodbyeToFixtureCB)(RustObject, b2Fixture*);
 
 struct DestructionListenerLink: public b2DestructionListener {
     DestructionListenerLink() {}
@@ -12,23 +12,21 @@ struct DestructionListenerLink: public b2DestructionListener {
         say_goodbye_to_fixture(object, fixture);
     }
 
-    RustFatObject object;
+    RustObject object;
     SayGoodbyeToJointCB say_goodbye_to_joint;
     SayGoodbyeToFixtureCB say_goodbye_to_fixture;
 };
 
-DestructionListenerLink* DestructionListenerLink_new(RustFatObject o,
-                                                     SayGoodbyeToJointCB sgtj,
-                                                     SayGoodbyeToFixtureCB sgtf) {
-    DestructionListenerLink* dl = new DestructionListenerLink();
-    dl->object = o;
-    dl->say_goodbye_to_joint = sgtj;
-    dl->say_goodbye_to_fixture = sgtf;
-    return dl;
+DestructionListenerLink* DestructionListenerLink_alloc() {
+    return new DestructionListenerLink();
 }
 
-void DestructionListenerLink_set_object(DestructionListenerLink* self, RustFatObject o) {
+void DestructionListenerLink_bind(DestructionListenerLink* self,
+                                  RustObject o,                                                                                       SayGoodbyeToJointCB sgtj,
+                                  SayGoodbyeToFixtureCB sgtf) {
     self->object = o;
+    self->say_goodbye_to_joint = sgtj;
+    self->say_goodbye_to_fixture = sgtf;
 }
 
 b2DestructionListener* DestructionListenerLink_as_base(DestructionListenerLink* self) {
@@ -39,7 +37,7 @@ void DestructionListenerLink_drop(DestructionListenerLink* self) {
     delete self;
 }
 
-typedef bool (*ShouldCollideCB)(RustFatObject, b2Fixture*, b2Fixture*);
+typedef bool (*ShouldCollideCB)(RustObject, b2Fixture*, b2Fixture*);
 
 struct ContactFilterLink: public b2ContactFilter {
     ContactFilterLink() {}
@@ -49,19 +47,19 @@ struct ContactFilterLink: public b2ContactFilter {
         return should_collide(object, fixture_a, fixture_b);
     }
 
-    RustFatObject object;
+    RustObject object;
     ShouldCollideCB should_collide;
 };
 
-ContactFilterLink* ContactFilterLink_new(RustFatObject o, ShouldCollideCB sc) {
-    ContactFilterLink* cf = new ContactFilterLink();
-    cf->object = o;
-    cf->should_collide = sc;
-    return cf;
+ContactFilterLink* ContactFilterLink_alloc() {
+    return new ContactFilterLink();
 }
 
-void ContactFilterLink_set_object(ContactFilterLink* self, RustFatObject o) {
+void ContactFilterLink_bind(ContactFilterLink* self,
+                            RustObject o,
+                            ShouldCollideCB sc) {
     self->object = o;
+    self->should_collide = sc;
 }
 
 b2ContactFilter* ContactFilterLink_as_base(ContactFilterLink* self) {
@@ -72,10 +70,10 @@ void ContactFilterLink_drop(ContactFilterLink* self) {
     delete self;
 }
 
-typedef void (*BeginContactCB)(RustFatObject, b2Contact*);
-typedef void (*EndContactCB)(RustFatObject, b2Contact*);
-typedef void (*PreSolveCB)(RustFatObject, b2Contact*, const b2Manifold*);
-typedef void (*PostSolveCB)(RustFatObject, b2Contact*, const b2ContactImpulse*);
+typedef void (*BeginContactCB)(RustObject, b2Contact*);
+typedef void (*EndContactCB)(RustObject, b2Contact*);
+typedef void (*PreSolveCB)(RustObject, b2Contact*, const b2Manifold*);
+typedef void (*PostSolveCB)(RustObject, b2Contact*, const b2ContactImpulse*);
 
 struct ContactListenerLink: public b2ContactListener {
     ContactListenerLink() {}
@@ -94,29 +92,28 @@ struct ContactListenerLink: public b2ContactListener {
         post_solve(object, contact, impulse);
     }
 
-    RustFatObject object;
+    RustObject object;
     BeginContactCB begin_contact;
     EndContactCB end_contact;
     PreSolveCB pre_solve;
     PostSolveCB post_solve;
 };
 
-ContactListenerLink* ContactListenerLink_new(RustFatObject o,
-                                             BeginContactCB bc,
-                                             EndContactCB ec,
-                                             PreSolveCB pres,
-                                             PostSolveCB posts) {
-    ContactListenerLink* cl = new ContactListenerLink();
-    cl->object = o;
-    cl->begin_contact = bc;
-    cl->end_contact = ec;
-    cl->pre_solve = pres;
-    cl->post_solve = posts;
-    return cl;
+ContactListenerLink* ContactListenerLink_alloc() {
+    return new ContactListenerLink();
 }
 
-void ContactListenerLink_set_object(ContactListenerLink* self, RustFatObject o) {
+void ContactListenerLink_bind(ContactListenerLink* self,
+                              RustObject o,
+                              BeginContactCB bc,
+                              EndContactCB ec,
+                              PreSolveCB pres,
+                              PostSolveCB posts) {
     self->object = o;
+    self->begin_contact = bc;
+    self->end_contact = ec;
+    self->pre_solve = pres;
+    self->post_solve = posts;
 }
 
 b2ContactListener* ContactListenerLink_as_base(ContactListenerLink* self) {
@@ -127,7 +124,7 @@ void ContactListenerLink_drop(ContactListenerLink* self) {
     delete self;
 }
 
-typedef bool (*QCReportFixtureCB)(RustFatObject, b2Fixture*);
+typedef bool (*QCReportFixtureCB)(RustObject, b2Fixture*);
 
 struct QueryCallbackLink: public b2QueryCallback {
     QueryCallbackLink() {}
@@ -137,20 +134,19 @@ struct QueryCallbackLink: public b2QueryCallback {
         return report_fixture(object, fixture);
     }
 
-    RustFatObject object;
+    RustObject object;
     QCReportFixtureCB report_fixture;
 };
 
-QueryCallbackLink* QueryCallbackLink_new(RustFatObject object,
-                                         QCReportFixtureCB rf) {
-    QueryCallbackLink* qc = new QueryCallbackLink();
-    qc->object = object;
-    qc->report_fixture = rf;
-    return qc;
+QueryCallbackLink* QueryCallbackLink_alloc() {
+    return new QueryCallbackLink();
 }
 
-void QueryCallbackLink_set_object(QueryCallbackLink* self, RustFatObject object) {
+void QueryCallbackLink_bind(QueryCallbackLink* self,
+                            RustObject object,
+                            QCReportFixtureCB rf) {
     self->object = object;
+    self->report_fixture = rf;
 }
 
 b2QueryCallback* QueryCallbackLink_as_base(QueryCallbackLink* self) {
@@ -161,7 +157,7 @@ void QueryCallbackLink_drop(QueryCallbackLink* self) {
     delete self;
 }
 
-typedef f32 (*RCCReportFixtureCB)(RustFatObject, b2Fixture*,
+typedef f32 (*RCCReportFixtureCB)(RustObject, b2Fixture*,
                                   const b2Vec2*, const b2Vec2*, f32);
 
 struct RayCastCallbackLink: public b2RayCastCallback {
@@ -175,20 +171,19 @@ struct RayCastCallbackLink: public b2RayCastCallback {
         return report_fixture(object, fixture, &point, &normal, fraction);
     }
 
-    RustFatObject object;
+    RustObject object;
     RCCReportFixtureCB report_fixture;
 };
 
-RayCastCallbackLink* RayCastCallbackLink_new(RustFatObject object,
-                                             RCCReportFixtureCB rf) {
-    RayCastCallbackLink* rcc = new RayCastCallbackLink();
-    rcc->object = object;
-    rcc->report_fixture = rf;
-    return rcc;
+RayCastCallbackLink* RayCastCallbackLink_alloc() {
+    return new RayCastCallbackLink();
 }
 
-void RayCastCallbackLink_set_object(RayCastCallbackLink* self, RustFatObject object) {
+void RayCastCallbackLink_bind(RayCastCallbackLink* self,
+                              RustObject object,
+                              RCCReportFixtureCB rf) {
     self->object = object;
+    self->report_fixture = rf;
 }
 
 b2RayCastCallback* RayCastCallbackLink_as_base(RayCastCallbackLink* self) {

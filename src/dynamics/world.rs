@@ -3,7 +3,7 @@ pub mod callbacks;
 
 use std::mem;
 use std::marker::PhantomData;
-use std::cell::{RefCell, Ref, RefMut};
+use std::cell::{Ref, RefMut};
 use wrap::*;
 use handle::*;
 use common::{Draw, DrawLink, DrawFlags};
@@ -14,8 +14,10 @@ use user_data::UserDataTypes;
 use dynamics::body::{BodyDef, MetaBody, Body};
 use dynamics::joints::{Joint, JointDef, MetaJoint};
 use dynamics::contacts::Contact;
-use self::callbacks::{ContactFilter, ContactFilterLink, ContactListener, ContactListenerLink,
-                      QueryCallback, QueryCallbackLink, RayCastCallback, RayCastCallbackLink};
+use self::callbacks::{ContactFilter, ContactFilterLink,
+                      ContactListener, ContactListenerLink,
+                      QueryCallback, QueryCallbackLink,
+                      RayCastCallback, RayCastCallbackLink};
 
 pub type BodyHandle = TypedHandle<Body>;
 pub type JointHandle = TypedHandle<Joint>;
@@ -24,11 +26,9 @@ pub struct World<U: UserDataTypes> {
     ptr: *mut ffi::World,
     bodies: HandleMap<MetaBody<U>, Body>,
     joints: HandleMap<MetaJoint<U>, Joint>,
-    draw_link: DrawLink,
     contact_filter_link: ContactFilterLink,
     contact_listener_link: ContactListenerLink,
-    query_callback_link: RefCell<QueryCallbackLink>,
-    raycast_callback_link: RefCell<RayCastCallbackLink>,
+    draw_link: DrawLink,
 }
 
 
@@ -49,27 +49,24 @@ impl<U: UserDataTypes> World<U> {
                 ptr: ffi::World_new(gravity),
                 bodies: HandleMap::new(),
                 joints: HandleMap::new(),
-                draw_link: DrawLink::new(),
                 contact_filter_link: ContactFilterLink::new(),
                 contact_listener_link: ContactListenerLink::new(),
-                query_callback_link: RefCell::new(QueryCallbackLink::new()),
-                raycast_callback_link: RefCell::new(RayCastCallbackLink::new()),
+                draw_link: DrawLink::new(),
             }
         }
     }
-
-    pub fn set_contact_filter(&mut self, filter: Box<ContactFilter>) {
+    
+    pub fn set_contact_filter<F: ContactFilter>(&mut self, filter: Box<F>) {
         unsafe {
-            self.contact_filter_link.set_object(filter);
-            ffi::World_set_contact_filter(self.mut_ptr(), self.contact_filter_link.filter_ptr());
+            let ptr = self.contact_filter_link.use_with(filter);
+            ffi::World_set_contact_filter(self.mut_ptr(), ptr);
         }
     }
 
-    pub fn set_contact_listener(&mut self, listener: Box<ContactListener>) {
+    pub fn set_contact_listener<L: ContactListener>(&mut self, listener: Box<L>) {
         unsafe {
-            self.contact_listener_link.set_object(listener);
-            ffi::World_set_contact_listener(self.mut_ptr(),
-                                            self.contact_listener_link.listener_ptr());
+            let ptr = self.contact_listener_link.use_with(listener);
+            ffi::World_set_contact_listener(self.mut_ptr(), ptr);
         }
     }
 
@@ -162,24 +159,26 @@ impl<U: UserDataTypes> World<U> {
         unsafe { ffi::World_clear_forces(self.mut_ptr()) }
     }
 
-    pub fn draw_debug_data(&mut self, draw: &mut Draw, flags: DrawFlags) {
+    pub fn draw_debug_data<D: Draw>(&mut self, draw: &mut D, flags: DrawFlags) {
         unsafe {
-            let draw_ptr = self.draw_link.use_with(draw, flags);
-            ffi::World_set_debug_draw(self.mut_ptr(), draw_ptr);
+            let ptr = self.draw_link.use_with(draw, flags);
+            ffi::World_set_debug_draw(self.mut_ptr(), ptr);
             ffi::World_draw_debug_data(self.mut_ptr());
         }
     }
 
-    pub fn query_aabb(&self, callback: &mut QueryCallback, aabb: &AABB) {
+    pub fn query_aabb<C: QueryCallback>(&self, callback: &mut C, aabb: &AABB) {
         unsafe {
-            let ptr = self.query_callback_link.borrow_mut().use_with(callback);
+            let mut link = QueryCallbackLink::new();
+            let ptr = link.use_with(callback);
             ffi::World_query_aabb(self.ptr(), ptr, aabb);
         }
     }
 
-    pub fn ray_cast(&self, callback: &mut RayCastCallback, p1: &Vec2, p2: &Vec2) {
+    pub fn ray_cast<C: RayCastCallback>(&self, callback: &mut C, p1: &Vec2, p2: &Vec2) {
         unsafe {
-            let ptr = self.raycast_callback_link.borrow_mut().use_with(callback);
+            let mut link = RayCastCallbackLink::new();
+            let ptr = link.use_with(callback);
             ffi::World_ray_cast(self.ptr(), ptr, p1, p2);
         }
     }

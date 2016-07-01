@@ -169,37 +169,12 @@ pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
 }
 
 #[repr(C)]
+#[doc(hidden)]
 pub struct JointEdge {
-    other: *mut ffi::Body,
-    joint: *mut ffi::Joint,
-    prev: *mut JointEdge,
-    next: *mut JointEdge,
-}
-
-impl JointEdge {
-    pub fn other(&self) -> BodyHandle {
-        unsafe { self.other.handle() }
-    }
-
-    pub fn joint(&self) -> JointHandle {
-        unsafe { self.joint.handle() }
-    }
-
-    pub fn prev_mut(&mut self) -> Option<&mut JointEdge> {
-        unsafe { self.prev.as_mut() }
-    }
-
-    pub fn prev(&self) -> Option<&JointEdge> {
-        unsafe { self.prev.as_ref() }
-    }
-
-    pub fn next_mut(&mut self) -> Option<&mut JointEdge> {
-        unsafe { self.next.as_mut() }
-    }
-
-    pub fn next(&self) -> Option<&JointEdge> {
-        unsafe { self.next.as_ref() }
-    }
+    pub other: *mut ffi::Body,
+    pub joint: *mut ffi::Joint,
+    pub prev: *mut JointEdge,
+    pub next: *mut JointEdge,
 }
 
 pub enum UnknownJoint {

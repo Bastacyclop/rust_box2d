@@ -2,14 +2,15 @@ use std::mem;
 use std::ptr;
 use std::ops::{Deref, DerefMut};
 use std::cell::{Ref, RefMut};
+use std::marker::PhantomData;
 use wrap::*;
 use handle::*;
 use common::math::{Vec2, Transform};
 use collision::shapes::{MassData, Shape};
-use dynamics::world::BodyHandle;
+use dynamics::world::{BodyHandle, JointHandle};
 use dynamics::joints::JointEdge;
 use dynamics::fixture::{Fixture, MetaFixture, FixtureDef};
-use dynamics::contacts::ContactEdge;
+use dynamics::contacts::{ContactEdge, Contact};
 use user_data::{UserDataTypes, UserData, InternalUserData, RawUserDataMut};
 
 #[repr(C)]
@@ -283,20 +284,25 @@ impl Body {
         unsafe { ffi::Body_is_fixed_rotation(self.ptr()) }
     }
 
-    pub fn joints<'a>(&'a self) -> Option<&'a JointEdge> {
-        unsafe { ffi::Body_get_joint_list_const(self.ptr()).as_ref() }
+    pub fn joints(&self) -> JointIter {
+        JointIter {
+            edge: unsafe { ffi::Body_get_joint_list_const(self.ptr()) },
+            phantom: PhantomData,
+        }
     }
 
-    pub fn joints_mut<'a>(&'a mut self) -> Option<&'a mut JointEdge> {
-        unsafe { ffi::Body_get_joint_list(self.mut_ptr()).as_mut() }
+    pub fn contacts(&self) -> ContactIter {
+        ContactIter {
+            edge: unsafe { ffi::Body_get_contact_list_const(self.ptr()) },
+            phantom: PhantomData,
+        }
     }
 
-    pub fn contacts<'a>(&'a self) -> Option<&'a ContactEdge> {
-        unsafe { ffi::Body_get_contact_list_const(self.ptr()).as_ref() }
-    }
-
-    pub fn contacts_mut<'a>(&'a mut self) -> Option<&'a mut ContactEdge> {
-        unsafe { ffi::Body_get_contact_list(self.mut_ptr()).as_mut() }
+    pub fn contacts_mut(&mut self) -> ContactIterMut {
+        ContactIterMut {
+            edge: unsafe { ffi::Body_get_contact_list(self.mut_ptr()) },
+            phantom: PhantomData,
+        }
     }
 
     pub fn set_transform(&mut self, pos: &Vec2, angle: f32) {
@@ -377,6 +383,69 @@ impl Body {
 
     pub fn dump(&mut self) {
         unsafe { ffi::Body_dump(self.mut_ptr()) }
+    }
+}
+
+pub struct JointIter<'a> {
+    edge: *const JointEdge,
+    phantom: PhantomData<&'a ()>,
+}
+
+impl<'a> Iterator for JointIter<'a> {
+    type Item = (BodyHandle, JointHandle);
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        use user_data::RawUserData;
+        
+        unsafe { match self.edge.as_ref() {
+            None => None,
+            Some(edge) => {
+                self.edge = edge.next;
+                Some((edge.other.handle(), edge.joint.handle()))
+            }
+        } }
+    }
+}
+
+pub struct ContactIter<'a> {
+    edge: *const ContactEdge,
+    phantom: PhantomData<&'a ()>,
+}
+
+impl<'a> Iterator for ContactIter<'a> {
+    type Item = (BodyHandle, WrappedRef<'a, Contact>);
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        use user_data::RawUserData;
+        
+        unsafe { match self.edge.as_ref() {
+            None => None,
+            Some(edge) => {
+                self.edge = edge.next;
+                Some((edge.other.handle(), WrappedRef::new(Contact::from_ffi(edge.contact))))
+            }
+        } }
+    }
+}
+
+pub struct ContactIterMut<'a> {
+    edge: *mut ContactEdge,
+    phantom: PhantomData<&'a ()>,
+}
+
+impl<'a> Iterator for ContactIterMut<'a> {
+    type Item = (BodyHandle, WrappedRefMut<'a, Contact>);
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        use user_data::RawUserData;
+        
+        unsafe { match self.edge.as_mut() {
+            None => None,
+            Some(ref mut edge) => {
+                self.edge = edge.next;
+                Some((edge.other.handle(), WrappedRefMut::new(Contact::from_ffi(edge.contact))))
+            }
+        } }
     }
 }
 

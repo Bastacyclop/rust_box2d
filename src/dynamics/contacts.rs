@@ -2,46 +2,16 @@ use std::mem;
 use wrap::*;
 use common::math::Transform;
 use collision::{Manifold, WorldManifold};
-use dynamics::world::BodyHandle;
 use dynamics::body::FixtureHandle;
 use user_data::RawUserData;
 
 #[repr(C)]
+#[doc(hidden)]
 pub struct ContactEdge {
-    other: *mut ffi::Body,
-    contact: *mut ffi::Contact,
-    prev: *mut ContactEdge,
-    next: *mut ContactEdge,
-}
-
-impl ContactEdge {
-    pub fn other(&self) -> BodyHandle {
-        unsafe { (self.other as *const ffi::Body).handle() }
-    }
-
-    pub fn contact_mut<'a>(&'a mut self) -> WrappedRefMut<'a, Contact> {
-        unsafe { WrappedRefMut::new(Contact::from_ffi(self.contact)) }
-    }
-
-    pub fn contact<'a>(&'a self) -> WrappedRef<'a, Contact> {
-        unsafe { WrappedRef::new(Contact::from_ffi(self.contact)) }
-    }
-
-    pub fn prev_mut<'a>(&'a mut self) -> Option<&'a mut ContactEdge> {
-        unsafe { self.prev.as_mut() }
-    }
-
-    pub fn prev<'a>(&'a self) -> Option<&'a ContactEdge> {
-        unsafe { self.prev.as_ref() }
-    }
-
-    pub fn next_mut<'a>(&'a mut self) -> Option<&'a mut ContactEdge> {
-        unsafe { self.next.as_mut() }
-    }
-
-    pub fn next<'a>(&'a self) -> Option<&'a ContactEdge> {
-        unsafe { self.next.as_ref() }
-    }
+    pub other: *mut ffi::Body,
+    pub contact: *mut ffi::Contact,
+    pub prev: *mut ContactEdge,
+    pub next: *mut ContactEdge,
 }
 
 wrap! { ffi::Contact => pub Contact }

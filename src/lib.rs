@@ -82,7 +82,7 @@ pub mod b2 {
     pub use dynamics::body::{Body, BodyDef, MetaBody, BodyType, FixtureHandle};
     pub use dynamics::fixture::{Filter, Fixture, FixtureDef, MetaFixture};
     pub use dynamics::joints::{DistanceJoint, DistanceJointDef, FrictionJoint, FrictionJointDef,
-                               GearJoint, GearJointDef, JointEdge, MetaJoint, MotorJoint,
+                               GearJoint, GearJointDef, MetaJoint, MotorJoint,
                                MotorJointDef, MouseJoint, MouseJointDef, PrismaticJoint,
                                PrismaticJointDef, PulleyJoint, PulleyJointDef, RevoluteJoint,
                                RevoluteJointDef, RopeJoint, RopeJointDef, WeldJoint, WeldJointDef,

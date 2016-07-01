@@ -101,17 +101,14 @@ impl<U: UserDataTypes> World<U> {
                 }
             });
     }
-
+    
+    pub fn bodies(&self) -> HandleIter<Body, MetaBody<U>> {
+        self.bodies.iter()
+    }
+    
     fn remove_body_joint_handles(body: &mut Body, joints: &mut HandleMap<MetaJoint<U>, Joint>) {
-        let mut joint_edge = body.joints();
-        loop {
-            match joint_edge {
-                None => break,
-                Some(je) => {
-                    joints.remove(je.joint());
-                    joint_edge = je.next();
-                }
-            }
+        for (_, joint) in body.joints() {
+            joints.remove(joint);
         }
     }
 
@@ -145,7 +142,11 @@ impl<U: UserDataTypes> World<U> {
                 }
             });
     }
-
+    
+    pub fn joints(&mut self) -> HandleIter<Joint, MetaJoint<U>> {
+        self.joints.iter()
+    }
+        
     pub fn step(&mut self, time_step: f32, velocity_iterations: i32, position_iterations: i32) {
         unsafe {
             ffi::World_step(self.mut_ptr(),
@@ -183,22 +184,14 @@ impl<U: UserDataTypes> World<U> {
         }
     }
 
-    pub fn bodies(&self) -> HandleIter<Body, MetaBody<U>> {
-        self.bodies.iter()
-    }
-
-    pub fn joints(&mut self) -> HandleIter<Joint, MetaJoint<U>> {
-        self.joints.iter()
-    }
-
-    pub fn contact_list_mut(&mut self) -> ContactIterMut {
+    pub fn contacts_mut(&mut self) -> ContactIterMut {
         ContactIterMut {
             ptr: unsafe { ffi::World_get_contact_list(self.mut_ptr()) },
             phantom: PhantomData,
         }
     }
 
-    pub fn contact_list(&self) -> ContactIter {
+    pub fn contacts(&self) -> ContactIter {
         ContactIter {
             ptr: unsafe { ffi::World_get_contact_list_const(self.ptr()) },
             phantom: PhantomData,

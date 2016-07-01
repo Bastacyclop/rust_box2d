@@ -40,8 +40,7 @@ fn create_ground(world: &mut World) -> b2::BodyHandle {
 }
 
 fn create_crank(world: &mut World, ground: b2::BodyHandle) -> b2::BodyHandle {
-    let mut shape = b2::PolygonShape::new();
-    shape.set_as_box(4., 1.);
+    let shape = b2::PolygonShape::new_box(4., 1.);
 
     let b_def = b2::BodyDef {
         body_type: b2::BodyType::Dynamic,
@@ -61,8 +60,7 @@ fn create_crank(world: &mut World, ground: b2::BodyHandle) -> b2::BodyHandle {
 
 fn create_connecting_rod(world: &mut World,
                          crank: b2::BodyHandle) -> b2::BodyHandle {
-    let mut shape = b2::PolygonShape::new();
-    shape.set_as_box(8., 1.);
+    let shape = b2::PolygonShape::new_box(8., 1.);
 
     let b_def = b2::BodyDef {
         body_type: b2::BodyType::Dynamic,
@@ -83,8 +81,7 @@ fn create_connecting_rod(world: &mut World,
 fn create_piston(world: &mut World,
                  ground: b2::BodyHandle,
                  connecting_rod: b2::BodyHandle) {
-    let mut shape = b2::PolygonShape::new();
-    shape.set_as_box(3., 3.);
+    let shape = b2::PolygonShape::new_box(3., 3.);
 
     let b_def = b2::BodyDef {
         body_type: b2::BodyType::Dynamic,

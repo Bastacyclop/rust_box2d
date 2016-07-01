@@ -9,7 +9,7 @@ wrap_shape! {
 }
 
 impl ChainShape {
-    pub fn new() -> ChainShape {
+    pub fn new() -> Self {
         unsafe { ChainShape::from_ffi(ffi::ChainShape_new()) }
     }
 

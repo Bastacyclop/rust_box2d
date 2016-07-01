@@ -28,8 +28,7 @@ fn main() {
         def.body_type = b2::BodyType::Dynamic;
         def.position = b2::Vec2 { x: -5., y: 20. };
 
-        let mut shape = b2::PolygonShape::new();
-        shape.set_as_box(1., 1.);
+        let shape = b2::PolygonShape::new_box(1., 1.);
 
         body = world.create_body(&def);
         world.body_mut(body).create_fast_fixture(&shape, 0.3);

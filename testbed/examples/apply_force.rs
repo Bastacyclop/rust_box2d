@@ -102,8 +102,7 @@ fn create_body(world: &mut World) -> b2::BodyHandle {
             transform * b2::Vec2 { x: 0., y: 0.5 }
         ];
 
-        let mut polygon = b2::PolygonShape::new();
-        polygon.set(&vertices);
+        let polygon = b2::PolygonShape::new_with(&vetices);
 
         f_def.density = density;
         body.create_fixture(&polygon, &mut f_def);
@@ -130,8 +129,7 @@ fn create_body(world: &mut World) -> b2::BodyHandle {
 
 fn create_cubes(world: &mut World,
                 ground: b2::BodyHandle) {
-    let mut shape = b2::PolygonShape::new();
-    shape.set_as_box(0.5, 0.5);
+    let shape = b2::PolygonShape::new_box(0.5, 0.5);
 
     let mut f_def = b2::FixtureDef {
         density: 1.,

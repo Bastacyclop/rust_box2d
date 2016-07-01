@@ -24,8 +24,7 @@ fn fall() {
         assert_eq!(ground.position(), &b2::Vec2 { x: 0., y: -10. });
         assert_eq!(world.body_count(), 1);
 
-        let mut ground_box = b2::PolygonShape::new();
-        ground_box.set_as_box(50., 10.);
+        let ground_box = b2::PolygonShape::new_box(50., 10.);
         ground.create_fast_fixture(&ground_box, 0.);
     }
 
@@ -41,8 +40,7 @@ fn fall() {
     }
     assert_eq!(world.body_count(), 2);
 
-    let mut body_box = b2::PolygonShape::new();
-    body_box.set_as_box(1., 1.);
+    let body_box = b2::PolygonShape::new_box(1., 1.);
     let mut fixture_def = b2::FixtureDef::new();
     fixture_def.density = 1.;
     fixture_def.friction = 0.3;

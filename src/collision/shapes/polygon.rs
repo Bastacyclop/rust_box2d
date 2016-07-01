@@ -9,7 +9,7 @@ wrap_shape! {
 }
 
 impl PolygonShape {
-    pub fn new() -> PolygonShape {
+    pub fn new() -> Self {
         unsafe { PolygonShape::from_ffi(ffi::PolygonShape_new()) }
     }
 
@@ -23,6 +23,24 @@ impl PolygonShape {
 
     pub fn set_as_oriented_box(&mut self, hw: f32, hh: f32, center: &Vec2, angle: f32) {
         unsafe { ffi::PolygonShape_set_as_oriented_box(self.mut_ptr(), hw, hh, center, angle) }
+    }
+    
+    pub fn new_with(points: &[Vec2]) -> Self {
+        let mut s = Self::new();
+        s.set(points);
+        s
+    }
+    
+    pub fn new_box(hw: f32, hh: f32) -> Self {
+        let mut s = Self::new();
+        s.set_as_box(hw, hh);
+        s
+    }
+    
+    pub fn new_oriented_box(hw: f32, hh: f32, center: &Vec2, angle: f32) -> Self {
+        let mut s = Self::new();
+        s.set_as_oriented_box(hw, hh, center, angle);
+        s
     }
 
     pub fn vertex_count(&self) -> i32 {

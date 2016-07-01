@@ -9,7 +9,7 @@ wrap_shape! {
 }
 
 impl EdgeShape {
-    pub fn new() -> EdgeShape {
+    pub fn new() -> Self {
         unsafe { EdgeShape::from_ffi(ffi::EdgeShape_new()) }
     }
 

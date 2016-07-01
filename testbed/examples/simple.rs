@@ -15,8 +15,7 @@ fn main() {
         .. b2::BodyDef::new()
     };
 
-    let mut ground_box = b2::PolygonShape::new();
-    ground_box.set_as_box(20., 1.);
+    let ground_box = b2::PolygonShape::new_box(20., 1.);
 
     let ground_handle = world.create_body(&b_def);
     world.body_mut(ground_handle).create_fast_fixture(&ground_box, 0.);
@@ -28,8 +27,7 @@ fn main() {
         .. b2::BodyDef::new()
     };
 
-    let mut cube_shape = b2::PolygonShape::new();
-    cube_shape.set_as_box(1., 1.);
+    let cube_shape = b2::PolygonShape::new_box(1., 1.);
 
     let mut circle_shape = b2::CircleShape::new();
     circle_shape.set_radius(1.);

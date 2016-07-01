@@ -32,8 +32,7 @@
 //! let handle = world.create_body(&def);
 //! let mut body = world.body_mut(handle);
 //!
-//! let mut shape = b2::PolygonShape::new();
-//! shape.set_as_box(0.5, 0.5);
+//! let shape = b2::PolygonShape::new_box(0.5, 0.5);
 //!
 //! let handle = body.create_fast_fixture(&shape, 2.);
 //! let fixture = body.fixture(handle);

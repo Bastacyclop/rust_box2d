@@ -151,12 +151,14 @@ pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
         unsafe { ffi::Joint_is_active(self.base_ptr()) }
     }
 
-    fn body_a(&mut self) -> BodyHandle {
-        unsafe { ffi::Joint_get_body_a(self.mut_base_ptr()).handle() }
+    fn body_a(&self) -> BodyHandle {
+        // we don't need &mut self because nothing is actually mutated here
+        unsafe { ffi::Joint_get_body_a(self.base_ptr() as *mut _).handle() }
     }
 
-    fn body_b(&mut self) -> BodyHandle {
-        unsafe { ffi::Joint_get_body_b(self.mut_base_ptr()).handle() }
+    fn body_b(&self) -> BodyHandle {
+        // we don't need &mut self because nothing is actually mutated here
+        unsafe { ffi::Joint_get_body_b(self.base_ptr() as *mut _).handle() }
     }
 
     fn dump(&mut self) {

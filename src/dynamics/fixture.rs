@@ -105,6 +105,10 @@ impl<U: UserDataTypes> DerefMut for MetaFixture<U> {
 wrap! { ffi::Fixture => pub Fixture }
 
 impl Fixture {
+    pub fn handle(&self) -> FixtureHandle {
+        unsafe { self.ptr().handle() }
+    }
+        
     pub fn shape_type(&self) -> ShapeType {
         unsafe { ffi::Fixture_get_type(self.ptr()) }
     }
@@ -225,7 +229,7 @@ pub mod ffi {
         pub fn Fixture_set_filter_data(slf: *mut Fixture, filter: *const Filter);
         pub fn Fixture_get_filter_data(slf: *const Fixture) -> *const Filter;
         pub fn Fixture_refilter(slf: *mut Fixture);
-        // pub fn Fixture_get_body(slf: *mut Fixture) -> *mut Body;
+        pub fn Fixture_get_body(slf: *mut Fixture) -> *mut Body;
         pub fn Fixture_get_body_const(slf: *const Fixture) -> *const Body;
         // pub fn Fixture_get_next(slf: *mut Fixture) -> *mut Fixture;
         // pub fn Fixture_get_next_const(slf: *const Fixture) -> *const Fixture;

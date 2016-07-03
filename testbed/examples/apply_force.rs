@@ -102,7 +102,7 @@ fn create_body(world: &mut World) -> b2::BodyHandle {
             transform * b2::Vec2 { x: 0., y: 0.5 }
         ];
 
-        let polygon = b2::PolygonShape::new_with(&vetices);
+        let polygon = b2::PolygonShape::new_with(&vertices);
 
         f_def.density = density;
         body.create_fixture(&polygon, &mut f_def);

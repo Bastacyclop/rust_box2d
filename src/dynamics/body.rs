@@ -11,7 +11,7 @@ use dynamics::world::{BodyHandle, JointHandle};
 use dynamics::joints::JointEdge;
 use dynamics::fixture::{Fixture, MetaFixture, FixtureDef};
 use dynamics::contacts::{ContactEdge, Contact};
-use user_data::{UserDataTypes, UserData, InternalUserData, RawUserDataMut};
+use user_data::{UserDataTypes, UserData, InternalUserData, RawUserData, RawUserDataMut};
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -129,17 +129,33 @@ impl<U: UserDataTypes> MetaBody<U> {
     }
 
     pub fn destroy_fixture(&mut self, handle: FixtureHandle) {
-        self.fixtures
-            .remove(handle)
-            .map(|mut meta_fixture| {
-                unsafe {
-                    ffi::Body_destroy_fixture(self.mut_ptr(), meta_fixture.mut_ptr());
-                }
-            });
+        let mut fixture = self.fixtures.remove(handle);
+        unsafe {
+            ffi::Body_destroy_fixture(self.mut_ptr(), fixture.mut_ptr());
+        }
     }
 
     pub fn fixtures(&self) -> HandleIter<Fixture, MetaFixture<U>> {
         self.fixtures.iter()
+    }
+
+    /// This method is here because contacts are owned by the world and not by the body,
+    /// and having a reference to a `MetaBody` requires having a reference to the world.
+    pub fn contacts(&self) -> ContactIter {
+        ContactIter {
+            edge: unsafe { ffi::Body_get_contact_list_const(self.ptr()) },
+            phantom: PhantomData,
+        }
+    }
+
+    /// This method is here because contacts are owned by the world and not by the body,
+    /// however having a mutable reference to a MetaBody only requires having an immutable reference to the World,
+    /// that's why this method is unsafe.
+    pub unsafe fn contacts_mut(&mut self) -> ContactIterMut {
+        ContactIterMut {
+            edge: ffi::Body_get_contact_list(self.mut_ptr()),
+            phantom: PhantomData,
+        }
     }
 }
 
@@ -170,6 +186,10 @@ impl<U: UserDataTypes> DerefMut for MetaBody<U> {
 wrap! { ffi::Body => pub Body }
 
 impl Body {
+    pub fn handle(&self) -> BodyHandle {
+        unsafe { self.ptr().handle() }
+    }
+    
     pub fn transform<'a>(&'a self) -> &'a Transform {
         unsafe {
             &*ffi::Body_get_transform(self.ptr()) // Comes from a C++ &
@@ -287,20 +307,6 @@ impl Body {
     pub fn joints(&self) -> JointIter {
         JointIter {
             edge: unsafe { ffi::Body_get_joint_list_const(self.ptr()) },
-            phantom: PhantomData,
-        }
-    }
-
-    pub fn contacts(&self) -> ContactIter {
-        ContactIter {
-            edge: unsafe { ffi::Body_get_contact_list_const(self.ptr()) },
-            phantom: PhantomData,
-        }
-    }
-
-    pub fn contacts_mut(&mut self) -> ContactIterMut {
-        ContactIterMut {
-            edge: unsafe { ffi::Body_get_contact_list(self.mut_ptr()) },
             phantom: PhantomData,
         }
     }

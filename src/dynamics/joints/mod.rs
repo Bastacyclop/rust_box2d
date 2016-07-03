@@ -125,6 +125,10 @@ impl<U: UserDataTypes> DerefMut for MetaJoint<U> {
 }
 
 pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
+    fn handle(&self) -> JointHandle {
+        unsafe { self.base_ptr().handle() }
+    }
+    
     fn assumed_type() -> JointType where Self: Sized;
 
     fn get_type(&self) -> JointType {

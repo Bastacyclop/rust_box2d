@@ -138,7 +138,7 @@ impl<T: ?Sized, E> HandleMap<E, T> {
         index
     }
 
-    pub fn remove(&mut self, handle: TypedHandle<T>) -> Option<E> {
+    pub fn remove(&mut self, handle: TypedHandle<T>) -> E {
         let index = handle.index;
         let entry = &mut self.entries[index];
         assert_eq!(entry.version, handle.version);
@@ -146,7 +146,7 @@ impl<T: ?Sized, E> HandleMap<E, T> {
 
         entry.version += 1;
         self.availables.push(index);
-        entry.inner.take().map(RefCell::into_inner)
+        entry.inner.take().unwrap().into_inner()
     }
 
     pub fn clear(&mut self) {

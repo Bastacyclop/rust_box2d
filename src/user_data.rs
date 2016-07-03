@@ -32,6 +32,7 @@ pub trait RawUserData: Sized {
 
 #[doc(hidden)]
 pub trait RawUserDataMut: RawUserData {
+    unsafe fn internal_user_data_mut<T: ?Sized, U>(self) -> *mut InternalUserData<T, U>;
     unsafe fn set_internal_user_data<T: ?Sized, U>(self, *mut InternalUserData<T, U>);
 }
 
@@ -50,6 +51,10 @@ macro_rules! impl_raw_user_data {
         }
 
         impl RawUserDataMut for *mut $raw {
+            unsafe fn internal_user_data_mut<T: ?Sized, U>(self) -> *mut InternalUserData<T, U> {
+                $getter(self) as *mut InternalUserData<T, U>
+            }
+
             unsafe fn set_internal_user_data<T: ?Sized, U>(self,
                                                            data: *mut InternalUserData<T, U>) {
                 $setter(self, data as ffi::Any)

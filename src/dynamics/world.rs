@@ -2,6 +2,7 @@
 pub mod callbacks;
 
 use std::mem;
+use std::ptr;
 use std::marker::PhantomData;
 use std::cell::{Ref, RefMut};
 use wrap::*;
@@ -55,18 +56,18 @@ impl<U: UserDataTypes> World<U> {
             }
         }
     }
-    
-    pub fn set_contact_filter<F: ContactFilter>(&mut self, filter: Box<F>) {
+        
+    pub fn set_contact_filter<F: ContactFilter<U>>(&mut self, filter: Box<F>) {
         unsafe {
-            let ptr = self.contact_filter_link.use_with(filter);
-            ffi::World_set_contact_filter(self.mut_ptr(), ptr);
+            let filter_ptr = self.contact_filter_link.use_with(filter);
+            ffi::World_set_contact_filter(self.mut_ptr(), filter_ptr);
         }
     }
 
-    pub fn set_contact_listener<L: ContactListener>(&mut self, listener: Box<L>) {
+    pub fn set_contact_listener<L: ContactListener<U>>(&mut self, listener: Box<L>) {
         unsafe {
-            let ptr = self.contact_listener_link.use_with(listener);
-            ffi::World_set_contact_listener(self.mut_ptr(), ptr);
+            let listener_ptr = self.contact_listener_link.use_with(listener);
+            ffi::World_set_contact_listener(self.mut_ptr(), listener_ptr);
         }
     }
 
@@ -92,14 +93,12 @@ impl<U: UserDataTypes> World<U> {
     }
 
     pub fn destroy_body(&mut self, handle: BodyHandle) {
-        self.bodies
-            .remove(handle)
-            .map(|mut body| {
-                World::remove_body_joint_handles(&mut body, &mut self.joints);
-                unsafe {
-                    ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr());
-                }
-            });
+        let mut body = self.bodies.remove(handle);
+
+        World::remove_body_joint_handles(&mut body, &mut self.joints);
+        unsafe {
+            ffi::World_destroy_body(self.mut_ptr(), body.mut_ptr());
+        }
     }
     
     pub fn bodies(&self) -> HandleIter<Body, MetaBody<U>> {
@@ -134,13 +133,10 @@ impl<U: UserDataTypes> World<U> {
     }
 
     pub fn destroy_joint(&mut self, handle: JointHandle) {
-        self.joints
-            .remove(handle)
-            .map(|mut meta_joint| {
-                unsafe {
-                    ffi::World_destroy_joint(self.mut_ptr(), meta_joint.mut_base_ptr());
-                }
-            });
+        let mut joint = self.joints.remove(handle);
+        unsafe {
+            ffi::World_destroy_joint(self.mut_ptr(), joint.mut_base_ptr());
+        }
     }
     
     pub fn joints(&mut self) -> HandleIter<Joint, MetaJoint<U>> {
@@ -152,7 +148,7 @@ impl<U: UserDataTypes> World<U> {
             ffi::World_step(self.mut_ptr(),
                             time_step,
                             velocity_iterations,
-                            position_iterations)
+                            position_iterations);
         }
     }
 
@@ -164,7 +160,10 @@ impl<U: UserDataTypes> World<U> {
         unsafe {
             let ptr = self.draw_link.use_with(draw, flags);
             ffi::World_set_debug_draw(self.mut_ptr(), ptr);
+            
             ffi::World_draw_debug_data(self.mut_ptr());
+            
+            ffi::World_set_debug_draw(self.mut_ptr(), ptr::null_mut());
         }
     }
 

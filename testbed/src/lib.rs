@@ -196,9 +196,7 @@ fn update_grab(world: &World, target: b2::Vec2, grabbing: Option<b2::JointHandle
             b2::UnknownJoint::Mouse(ref mut j) => {
                 j.set_target(&target);
             }
-            _ => {
-                panic!("expected mouse joint");
-            }
+            _ => panic!("expected mouse joint")
         }
     });
 }

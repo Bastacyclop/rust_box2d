@@ -4,7 +4,9 @@ extern crate testbed;
 
 use piston::input::*;
 use wrapped2d::b2;
-use testbed::World;
+use wrapped2d::user_data::NoUserData;
+
+type World = b2::World<NoUserData>;
 
 fn main() {
     let mut world = World::new(&b2::Vec2 { x: 0., y: -10. });
@@ -12,36 +14,36 @@ fn main() {
     let mut bodies = create_bodies(&mut world);
     create_joints(&mut world, ground, &bodies);
 
-    let camera = testbed::Camera {
-        position: [0., 10.],
-        size: [40., 40.]
+    let process_input = |input, data: &mut testbed::Data<NoUserData>| {
+        match input {
+            Input::Press(Button::Keyboard(Key::B)) => {
+                while let Some(body) = bodies.pop() {
+                    data.world.destroy_body(body);
+                }
+            }
+            Input::Press(Button::Keyboard(Key::J)) => {
+                while let Some((joint, _)) = data.world.joints().next() {
+                    data.world.destroy_joint(joint);
+                }
+            }
+            _ => ()
+        }
     };
 
-    let draw_flags = b2::DRAW_SHAPE |
-                     b2::DRAW_AABB |
-                     b2::DRAW_JOINT |
-                     b2::DRAW_PAIR |
-                     b2::DRAW_CENTER_OF_MASS;
+    let data = testbed::Data {
+        world: world,
+        camera: testbed::Camera {
+            position: [0., 10.],
+            size: [40., 40.]
+        },
+        draw_flags: b2::DRAW_SHAPE |
+                    b2::DRAW_AABB |
+                    b2::DRAW_JOINT |
+                    b2::DRAW_PAIR |
+                    b2::DRAW_CENTER_OF_MASS
+    };
 
-    testbed::run(
-        "Web", 400, 400,
-        world, camera, draw_flags,
-        |world, _, input| {
-            match input {
-                Input::Press(Button::Keyboard(Key::B)) => {
-                    while let Some(body) = bodies.pop() {
-                        world.destroy_body(body);
-                    }
-                }
-                Input::Press(Button::Keyboard(Key::J)) => {
-                    while let Some((joint, _)) = world.joints().next() {
-                        world.destroy_joint(joint);
-                    }
-                }
-                _ => ()
-            }
-        }
-    );
+    testbed::run(process_input, data, "Web", 400, 400);
 }
 
 fn create_ground(world: &mut World) -> b2::BodyHandle {

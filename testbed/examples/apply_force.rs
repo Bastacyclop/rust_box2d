@@ -4,7 +4,9 @@ extern crate testbed;
 
 use piston::input::{ Input, Button, Key };
 use wrapped2d::b2;
-use testbed::World;
+use wrapped2d::user_data::NoUserData;
+
+type World = b2::World<NoUserData>;
 
 fn main() {
     let mut world = World::new(&b2::Vec2 { x: 0., y: 0. });
@@ -13,37 +15,37 @@ fn main() {
     let body = create_body(&mut world);
     create_cubes(&mut world, ground);
 
-    let camera = testbed::Camera {
-        position: [0., 0.],
-        size: [40., 40.]
+    let process_input = |input, data: &mut testbed::Data<NoUserData>| {
+        match input {
+            Input::Press(Button::Keyboard(Key::Z)) => {
+                let mut body = data.world.body_mut(body);
+                let f = body.world_vector(&b2::Vec2 { x: 0., y: -200. });
+                let p = body.world_point(&b2::Vec2 { x: 0., y: 2. });
+                body.apply_force(&f, &p, true);
+            },
+            Input::Press(Button::Keyboard(Key::Q)) => {
+                data.world.body_mut(body).apply_torque(50., true);
+            },
+            Input::Press(Button::Keyboard(Key::D)) => {
+                data.world.body_mut(body).apply_torque(-50., true);
+            },
+            _ => ()
+        }
     };
 
-    let draw_flags = b2::DRAW_SHAPE |
-                     b2::DRAW_JOINT |
-                     b2::DRAW_PAIR |
-                     b2::DRAW_CENTER_OF_MASS;
+    let data = testbed::Data {
+        world: world,
+        camera: testbed::Camera {
+            position: [0., 0.],
+            size: [40., 40.]
+        },
+        draw_flags: b2::DRAW_SHAPE |
+                    b2::DRAW_JOINT |
+                    b2::DRAW_PAIR |
+                    b2::DRAW_CENTER_OF_MASS
+    };
 
-    testbed::run(
-        "Apply Force", 400, 400,
-        world, camera, draw_flags,
-        |world, _, input| {
-            match input {
-                Input::Press(Button::Keyboard(Key::Z)) => {
-                    let mut body = world.body_mut(body);
-                    let f = body.world_vector(&b2::Vec2 { x: 0., y: -200. });
-                    let p = body.world_point(&b2::Vec2 { x: 0., y: 2. });
-                    body.apply_force(&f, &p, true);
-                },
-                Input::Press(Button::Keyboard(Key::Q)) => {
-                    world.body_mut(body).apply_torque(50., true);
-                },
-                Input::Press(Button::Keyboard(Key::D)) => {
-                    world.body_mut(body).apply_torque(-50., true);
-                },
-                _ => ()
-            }
-        }
-    );
+    testbed::run(process_input, data, "Apply Force", 400, 400);
 }
 
 fn create_ground(world: &mut World) -> b2::BodyHandle {

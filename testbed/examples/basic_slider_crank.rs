@@ -3,7 +3,9 @@ extern crate wrapped2d;
 extern crate testbed;
 
 use wrapped2d::b2;
-use testbed::World;
+use wrapped2d::user_data::NoUserData;
+
+type World = b2::World<NoUserData>;
 
 fn main() {
     let mut world = World::new(&b2::Vec2 { x: 0., y: -10. });
@@ -13,21 +15,19 @@ fn main() {
     let connecting_rod = create_connecting_rod(&mut world, crank);
     create_piston(&mut world, ground, connecting_rod);
 
-    let camera = testbed::Camera {
-        position: [0., 20.],
-        size: [40., 40.]
+    let data = testbed::Data {
+        world: world,
+        camera: testbed::Camera {
+            position: [0., 20.],
+            size: [40., 40.]
+        },
+        draw_flags: b2::DRAW_SHAPE |
+                    b2::DRAW_JOINT |
+                    b2::DRAW_PAIR |
+                    b2::DRAW_CENTER_OF_MASS
     };
 
-    let draw_flags = b2::DRAW_SHAPE |
-                     b2::DRAW_JOINT |
-                     b2::DRAW_PAIR |
-                     b2::DRAW_CENTER_OF_MASS;
-
-    testbed::run(
-        "Basic Slider Crank", 400, 400,
-        world, camera, draw_flags,
-        |_, _, _| { }
-    );
+    testbed::run((), data, "Basic Slider Crank", 400, 400);
 }
 
 fn create_ground(world: &mut World) -> b2::BodyHandle {

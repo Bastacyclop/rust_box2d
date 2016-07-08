@@ -5,20 +5,20 @@
 //!
 //! # World
 //!
-//! ````
+//! ```
 //! use wrapped2d::b2;
 //! use wrapped2d::user_data::NoUserData;
 //!
 //! let gravity = b2::Vec2 { x: 0., y: -10. };
 //! let world = b2::World::<NoUserData>::new(&gravity);
-//! ````
+//! ```
 //!
 //! # Handles
 //!
 //! Bodies, fixtures and joints are accessed through handles and
 //! their borrowing is dynamically checked by `RefCell`s.
 //!
-//! ````
+//! ```
 //! # use wrapped2d::b2;
 //! # use wrapped2d::user_data::NoUserData;
 //! # let gravity = b2::Vec2 { x: 0., y: -10. };
@@ -36,7 +36,7 @@
 //!
 //! let handle = body.create_fast_fixture(&shape, 2.);
 //! let fixture = body.fixture(handle);
-//! ````
+//! ```
 
 #[link(name = "Box2D")]
 extern "C" {

@@ -1,21 +1,21 @@
 use wrap::*;
-use user_data::UserDataTypes;
+use user_data::{UserDataTypes, RawUserData};
 use dynamics::world::{World, JointHandle};
 use dynamics::joints::{Joint, JointType, JointDef};
 
 pub struct GearJointDef {
     pub collide_connected: bool,
-    pub joint_a: JointHandle,
-    pub joint_b: JointHandle,
+    pub joint_1: JointHandle,
+    pub joint_2: JointHandle,
     pub ratio: f32,
 }
 
 impl GearJointDef {
-    pub fn new(joint_a: JointHandle, joint_b: JointHandle) -> GearJointDef {
+    pub fn new(joint_1: JointHandle, joint_2: JointHandle) -> GearJointDef {
         GearJointDef {
             collide_connected: false,
-            joint_a: joint_a,
-            joint_b: joint_b,
+            joint_1: joint_1,
+            joint_2: joint_2,
             ratio: 1.,
         }
     }
@@ -31,8 +31,8 @@ impl JointDef for GearJointDef {
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
         ffi::World_create_gear_joint(world.mut_ptr(),
                                      self.collide_connected,
-                                     world.joint_mut(self.joint_a).mut_base_ptr(),
-                                     world.joint_mut(self.joint_b).mut_base_ptr(),
+                                     world.joint_mut(self.joint_1).mut_base_ptr(),
+                                     world.joint_mut(self.joint_2).mut_base_ptr(),
                                      self.ratio)
     }
 }
@@ -48,12 +48,12 @@ impl GearJoint {
         unsafe { ffi::GearJoint_get_ratio(self.ptr()) }
     }
 
-    pub fn joint_1(&self) -> usize {
-        unsafe { ffi::GearJoint_get_joint_1(self.ptr() as *mut ffi::GearJoint) as usize }
+    pub fn joint_1(&self) -> JointHandle {
+        unsafe { ffi::GearJoint_get_joint_1(self.ptr() as *mut ffi::GearJoint).handle() }
     }
 
-    pub fn joint_2(&self) -> usize {
-        unsafe { ffi::GearJoint_get_joint_2(self.ptr() as *mut ffi::GearJoint) as usize }
+    pub fn joint_2(&self) -> JointHandle {
+        unsafe { ffi::GearJoint_get_joint_2(self.ptr() as *mut ffi::GearJoint).handle() }
     }
 
     pub fn set_ratio(&mut self, ratio: f32) {

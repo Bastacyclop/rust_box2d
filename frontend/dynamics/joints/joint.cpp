@@ -36,6 +36,9 @@ void Joint_set_user_data(b2Joint* self, void* data) {
 bool Joint_is_active(const b2Joint* self) {
     return self->IsActive();
 }
+bool Joint_get_collide_connected(const b2Joint* self) {
+    return self->GetCollideConnected();
+}
 
 void Joint_dump_virtual(b2Joint* self) {
     self->Dump();

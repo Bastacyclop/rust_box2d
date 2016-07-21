@@ -135,6 +135,16 @@ pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
         unsafe { ffi::Joint_get_type(self.base_ptr()) }
     }
 
+    fn body_a(&self) -> BodyHandle {
+        // we don't need &mut self because nothing is actually mutated here
+        unsafe { ffi::Joint_get_body_a(self.base_ptr() as *mut _).handle() }
+    }
+
+    fn body_b(&self) -> BodyHandle {
+        // we don't need &mut self because nothing is actually mutated here
+        unsafe { ffi::Joint_get_body_b(self.base_ptr() as *mut _).handle() }
+    }
+
     fn anchor_a(&self) -> Vec2 {
         unsafe { ffi::Joint_get_anchor_a_virtual(self.base_ptr()) }
     }
@@ -155,14 +165,8 @@ pub trait Joint: WrappedBase<ffi::Joint> + FromFFI<ffi::Joint> {
         unsafe { ffi::Joint_is_active(self.base_ptr()) }
     }
 
-    fn body_a(&self) -> BodyHandle {
-        // we don't need &mut self because nothing is actually mutated here
-        unsafe { ffi::Joint_get_body_a(self.base_ptr() as *mut _).handle() }
-    }
-
-    fn body_b(&self) -> BodyHandle {
-        // we don't need &mut self because nothing is actually mutated here
-        unsafe { ffi::Joint_get_body_b(self.base_ptr() as *mut _).handle() }
+    fn is_collide_connected(&self) -> bool {
+        unsafe { ffi::Joint_get_collide_connected(self.base_ptr()) }
     }
 
     fn dump(&mut self) {
@@ -285,6 +289,7 @@ pub mod ffi {
         // pub fn Joint_get_next(slf: *mut Joint) -> *mut Joint;
         // pub fn Joint_get_next_const(slf: *const Joint) -> *const Joint;
         pub fn Joint_is_active(slf: *const Joint) -> bool;
+        pub fn Joint_get_collide_connected(slf: *const Joint) -> bool;
         pub fn Joint_dump_virtual(slf: *mut Joint);
         pub fn Joint_shift_origin_virtual(slf: *mut Joint, origin: *const Vec2);
     }

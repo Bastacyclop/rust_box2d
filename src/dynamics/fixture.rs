@@ -10,7 +10,8 @@ use dynamics::body::FixtureHandle;
 use user_data::{UserDataTypes, UserData, RawUserData, RawUserDataMut, InternalUserData};
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct Filter {
     pub category_bits: u16,
     pub mask_bits: u16,

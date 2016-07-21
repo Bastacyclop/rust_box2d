@@ -1,6 +1,6 @@
 [package]
 name = "wrapped2d"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 
 description = "Rust binding for Box2D"
@@ -13,7 +13,8 @@ license = "zlib-acknowledgement"
 build = "build_frontend.rs"
 
 [features]
-default = ["nalgebra", "cgmath"]
+serialize = ["serde", "serde_macros"]
+default = []
 
 [build-dependencies]
 gcc = "0.3"
@@ -22,11 +23,7 @@ gcc = "0.3"
 libc = "0.2"
 vec_map = "0.6"
 bitflags = "0.6"
-
-[dependencies.nalgebra]
-version = "0.8"
-optional = true
-
-[dependencies.cgmath]
-version = "0.9"
-optional = true
+serde = { version = "0.7", optional = true }
+serde_macros = { version = "0.7", optional = true }
+cgmath = { version = "0.10", optional = true }
+nalgebra = { version = "0.8", optional = true }

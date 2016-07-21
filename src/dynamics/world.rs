@@ -139,7 +139,7 @@ impl<U: UserDataTypes> World<U> {
         }
     }
     
-    pub fn joints(&mut self) -> HandleIter<Joint, MetaJoint<U>> {
+    pub fn joints(&self) -> HandleIter<Joint, MetaJoint<U>> {
         self.joints.iter()
     }
         

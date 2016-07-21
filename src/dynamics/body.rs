@@ -15,6 +15,7 @@ use user_data::{UserDataTypes, UserData, InternalUserData, RawUserData, RawUserD
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum BodyType {
     Static = 0,
     Kinematic = 1,

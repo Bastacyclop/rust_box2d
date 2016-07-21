@@ -78,6 +78,14 @@ impl Vec2 {
     }
 }
 
+impl From<Vec2> for [f32; 2] {
+    fn from(v: Vec2) -> [f32; 2] { [v.x, v.y] }
+}
+
+impl From<[f32; 2]> for Vec2 {
+    fn from(v: [f32; 2]) -> Vec2 { Vec2 { x: v[0], y: v[1] } }
+}
+
 #[cfg(feature = "nalgebra")]
 impl From<Vec2> for nalgebra::Vector2<f32> {
     fn from(v: Vec2) -> nalgebra::Vector2<f32> {

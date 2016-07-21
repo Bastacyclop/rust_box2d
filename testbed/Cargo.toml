@@ -7,12 +7,10 @@ authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 name = "testbed"
 
 [dependencies]
+wrapped2d = { path = ".." }
 piston = "0.18.0"
 piston2d-graphics = "0.15.0"
 piston2d-gfx_graphics = "0.23.0"
 gfx = "0.9.1"
 gfx_device_gl = "0.8.2"
 pistoncore-glutin_window = "0.21.0"
-
-[dependencies.wrapped2d]
-path = ".."

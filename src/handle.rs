@@ -5,7 +5,6 @@ use vec_map::{self, VecMap};
 use std::mem;
 use std::fmt;
 
-#[derive(PartialOrd, Ord, Hash)]
 pub struct TypedHandle<T: ?Sized> {
     index: usize,
     version: usize,

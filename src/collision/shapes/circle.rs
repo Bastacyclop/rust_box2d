@@ -13,6 +13,13 @@ impl CircleShape {
         unsafe { CircleShape::from_ffi(ffi::CircleShape_new()) }
     }
 
+    pub fn new_with(position: Vec2, radius: f32) -> Self {
+        let mut circle = Self::new();
+        circle.set_position(position);
+        circle.set_radius(radius);
+        circle
+    }
+
     pub fn support(&self, dir: &Vec2) -> i32 {
         unsafe { ffi::CircleShape_get_support(self.ptr(), dir) }
     }

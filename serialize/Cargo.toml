@@ -1,0 +1,7 @@
+[package]
+name = "wrapped2d_serialize"
+version = "0.1.0"
+authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
+
+[dependencies]
+wrapped2d = { path = ".." }

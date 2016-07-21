@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 #[doc(hidden)] pub use b2::*;
-use user_data::UserDataTypes;
+use user_data::{UserDataTypes, UserData};
 
 pub struct WorldSerializer {
     body_id_to_handle: HashMap<BodyId, BodyHandle>,
@@ -18,24 +18,34 @@ impl WorldSerializer {
     }
 
     pub fn serialize<S, U>(&mut self, world: &World<U>, serializer: &mut S) -> Result<(), S::Error>
-        where S: Serializer, U: UserDataTypes
+        where S: Serializer,
+              U: UserDataTypes,
+              U::BodyData: Serialize + Clone,
+              U::FixtureData: Serialize + Clone,
+              U::JointData: Serialize + Clone              
     {
         let body_snapshots: Vec<_> = world.bodies()
             .map(|(_, body)| {
-                let body = &body.borrow();
+                let body: &MetaBody<U> = &body.borrow();
                 let fixture_snapshots: Vec<_> = body.fixtures()
-                    .map(|(_, fixture)| FixtureSnapshot::take(&fixture.borrow()))
+                    .map(|(_, fixture)| {
+                        let fixture: &MetaFixture<U> = &fixture.borrow();
+                        (FixtureSnapshot::take(fixture), fixture.user_data().clone())
+                    })
                     .collect();
 
-                (BodySnapshot::take(body), fixture_snapshots)
+                (BodySnapshot::take(body), body.user_data().clone(), fixture_snapshots)
             })
             .collect();
 
         let joint_snapshots: Vec<_> = world.joints()
-            .map(|(_, joint)| JointSnapshot::take(&joint.borrow()))
+            .map(|(_, joint)| {
+                let joint: &MetaJoint<U> = &joint.borrow();
+                (JointSnapshot::take(joint), joint.user_data().clone())
+            })
             .collect();
 
-        let snapshot = WorldSnapshot {
+        let snapshot = WorldSnapshot::<U> {
             config: WorldConfigSnapshot::take(world),
             bodies: body_snapshots,
             joints: joint_snapshots,
@@ -47,23 +57,23 @@ impl WorldSerializer {
     pub fn deserialize<D, U>(&mut self, deserializer: &mut D) -> Result<World<U>, D::Error>
         where D: Deserializer,
               U: UserDataTypes,
-              U::BodyData: Default,
-              U::FixtureData: Default,
-              U::JointData: Default
+              U::BodyData: Deserialize + Clone,
+              U::FixtureData: Deserialize + Clone,
+              U::JointData: Deserialize + Clone,
     {
         self.clear_ids();
-        let snapshot = try!(WorldSnapshot::deserialize(deserializer));
+        let snapshot = try!(WorldSnapshot::<U>::deserialize(deserializer));
         let mut world = snapshot.config.rebuild();
 
-        for (body_snapshot, fixtures) in snapshot.bodies {
-            let (id, handle) = body_snapshot.rebuild(&mut world, U::BodyData::default());
+        for (body_snapshot, body_data, fixtures) in snapshot.bodies {
+            let (id, handle) = body_snapshot.rebuild(&mut world, body_data);
             if self.body_id_to_handle.insert(id, handle).is_some() {
                 panic!("body id duplicate");
             }
 
             let mut body = world.body_mut(handle);
-            for fixture in fixtures {
-                fixture.rebuild(&mut body, U::FixtureData::default());
+            for (fixture_snapshot, fixture_data) in fixtures {
+                fixture_snapshot.rebuild(&mut body, fixture_data);
             }
 
             body_snapshot.may_restore_mass_data(&mut body);
@@ -71,19 +81,19 @@ impl WorldSerializer {
 
         let joints = snapshot.joints.iter();
         let mut gear_joint_snapshots = Vec::new();
-        for joint in joints {
-            match joint.rebuild(&mut world, U::JointData::default(), self) {
+        for &(ref joint_snapshot, ref joint_data) in joints {
+            match joint_snapshot.rebuild(&mut world, joint_data.clone(), self) {
                 Ok((id, handle)) => {
                     if self.joint_id_to_handle.insert(id, handle).is_some() {
                         panic!("joint id duplicate");
                     }
                 },
-                Err(gjs) => gear_joint_snapshots.push(gjs), 
+                Err(gjs) => gear_joint_snapshots.push((gjs, joint_data)), 
             }
         }
 
-        for gjs in gear_joint_snapshots {
-            let (id, handle) = gjs.rebuild(&mut world, U::JointData::default(), self);
+        for (gjs, joint_data) in gear_joint_snapshots {
+            let (id, handle) = gjs.rebuild(&mut world, joint_data.clone(), self);
             if self.joint_id_to_handle.insert(id, handle).is_some() {
                 panic!("joint id duplicate");
             }
@@ -98,12 +108,12 @@ impl WorldSerializer {
     }
 }
 
-// TODO: avoid the Vec's
+// TODO: avoid this struct
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WorldSnapshot {
+pub struct WorldSnapshot<U: UserDataTypes> {
     config: WorldConfigSnapshot,
-    bodies: Vec<(BodySnapshot, Vec<FixtureSnapshot>)>,
-    joints: Vec<JointSnapshot>,
+    bodies: Vec<(BodySnapshot, U::BodyData, Vec<(FixtureSnapshot, U::FixtureData)>)>,
+    joints: Vec<(JointSnapshot, U::JointData)>,
 }
 
 #[derive(Clone, Copy, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]

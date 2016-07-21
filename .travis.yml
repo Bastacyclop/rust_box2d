@@ -32,8 +32,8 @@ before_install:
 - cd ../../..
 
 script:
-- cargo build --features $FEATURES --verbose
-- cargo test --features $FEATURES --verbose
+- cargo build --features "$FEATURES" --verbose
+- cargo test --features "$FEATURES" --verbose
 
 after_success:
 - |

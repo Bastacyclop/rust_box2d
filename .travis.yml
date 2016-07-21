@@ -1,15 +1,15 @@
 language: rust
-
-rust:
-- stable
-- beta
-- nightly
-
 matrix:
+  include:
+  - rust: nightly
+    env: FEATURES="serialize cgmath nalgebra"
+  - rust: beta
+    env: FEATURES=""
+  - rust: stable
+    env: FEATURES=""
   allow_failures:
-    - rust:
-        - stable
-        - beta
+  - rust: beta
+  - rust: stable
 
 env:
   global:
@@ -32,8 +32,8 @@ before_install:
 - cd ../../..
 
 script:
-- cargo build --features "serialize cgmath nalgebra" --verbose
-- cargo test --features "serialize cgmath nalgebra" --verbose
+- cargo build --features $FEATURES --verbose
+- cargo test --features $FEATURES --verbose
 
 after_success:
 - |

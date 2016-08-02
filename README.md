@@ -1,4 +1,4 @@
-## rust_box2d [![Build Status](https://travis-ci.org/Bastacyclop/rust_box2d.svg?branch=master)](https://travis-ci.org/Bastacyclop/rust_box2d)
+## rust_box2d [![Build Status](https://img.shields.io/travis/Bastacyclop/rust_box2d/master.svg?style=flat-square)](https://travis-ci.org/Bastacyclop/rust_box2d) [![Crates.io](https://img.shields.io/crates/v/wrapped2d.svg?style=flat-square)](https://crates.io/crates/wrapped2d) [![License](https://img.shields.io/crates/l/wrapped2d.svg?style=flat-square)]()
 
 A library wrapping around the Box2D physics engine. It aims to provide an idiomatic interface.
 

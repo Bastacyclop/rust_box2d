@@ -1,3 +1,7 @@
+use std::mem;
+use std::ptr;
+use std::slice;
+
 use wrap::*;
 use common::math::Vec2;
 use super::{Shape, EdgeShape};
@@ -11,6 +15,18 @@ wrap_shape! {
 impl ChainShape {
     pub fn new() -> Self {
         unsafe { ChainShape::from_ffi(ffi::ChainShape_new()) }
+    }
+
+    pub fn new_loop(vertices: &[Vec2]) -> Self {
+        let mut s = Self::new();
+        s.create_loop(vertices);
+        s
+    }
+
+    pub fn new_chain(vertices: &[Vec2]) -> Self {
+        let mut s = Self::new();
+        s.create_chain(vertices);
+        s
     }
 
     pub fn clear(&mut self) {
@@ -29,12 +45,44 @@ impl ChainShape {
         }
     }
 
-    pub fn set_prev_vertex(&mut self, vertex: &Vec2) {
-        unsafe { ffi::ChainShape_set_prev_vertex(self.mut_ptr(), vertex) }
+    pub fn vertices(&self) -> &[Vec2] {
+        unsafe {
+            let vertices = ffi::ChainShape_get_vertices_const(self.ptr());
+            let count = ffi::ChainShape_get_vertex_count(self.ptr());
+            slice::from_raw_parts(vertices, count as usize)
+        }
     }
 
-    pub fn set_next_vertex(&mut self, vertex: &Vec2) {
-        unsafe { ffi::ChainShape_set_next_vertex(self.mut_ptr(), vertex) }
+    pub fn prev_vertex(&self) -> Option<Vec2> {
+        unsafe {
+            let mut v = mem::uninitialized();
+            if ffi::ChainShape_get_prev_vertex(self.ptr(), &mut v) {
+                Some(v)
+            } else {
+                None
+            }
+        }
+    }
+
+    pub fn set_prev_vertex(&mut self, v: Option<Vec2>) {
+        let ptr = v.as_ref().map(|v0| v0 as *const _).unwrap_or(ptr::null());
+        unsafe { ffi::ChainShape_set_prev_vertex(self.mut_ptr(), ptr) }
+    }
+
+    pub fn next_vertex(&self) -> Option<Vec2> {
+        unsafe {
+            let mut v = mem::uninitialized();
+            if ffi::ChainShape_get_next_vertex(self.ptr(), &mut v) {
+                Some(v)
+            } else {
+                None
+            }
+        }
+    }
+
+    pub fn set_next_vertex(&mut self, v: Option<Vec2>) {
+        let ptr = v.as_ref().map(|v0| v0 as *const _).unwrap_or(ptr::null());
+        unsafe { ffi::ChainShape_set_next_vertex(self.mut_ptr(), ptr) }
     }
 
     pub fn child_edge(&self, index: i32) -> EdgeShape {
@@ -68,7 +116,11 @@ pub mod ffi {
         pub fn ChainShape_clear(slf: *mut ChainShape);
         pub fn ChainShape_create_loop(slf: *mut ChainShape, vertices: *const Vec2, count: i32);
         pub fn ChainShape_create_chain(slf: *mut ChainShape, vertices: *const Vec2, count: i32);
+        pub fn ChainShape_get_vertices_const(slf: *const ChainShape) -> *const Vec2;
+        pub fn ChainShape_get_vertex_count(slf: *const ChainShape) -> i32;
+        pub fn ChainShape_get_prev_vertex(slf: *const ChainShape, prev: &mut Vec2) -> bool;
         pub fn ChainShape_set_prev_vertex(slf: *mut ChainShape, vertex: *const Vec2);
+        pub fn ChainShape_get_next_vertex(slf: *const ChainShape, next: &mut Vec2) -> bool;
         pub fn ChainShape_set_next_vertex(slf: *mut ChainShape, vertex: *const Vec2);
         pub fn ChainShape_get_child_edge(slf: *const ChainShape,
                                          edge: *mut EdgeShape,

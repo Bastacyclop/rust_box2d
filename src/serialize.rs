@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
-use serde::{Serialize, Serializer, Deserialize, Deserializer};
+use serde::{Serialize, Deserialize};
 
 #[doc(hidden)] pub use b2::*;
 use user_data::{UserDataTypes, UserData};
@@ -384,17 +384,29 @@ impl CircleShapeSnapshot {
 }
 
 snapshot! {
-    // TODO
-    edge => EdgeShapeSnapshot {}
+    edge => EdgeShapeSnapshot {
+        pub vertex1: [f32; 2],
+        pub vertex2: [f32; 2],
+        pub vertex0: Option<[f32; 2]>,
+        pub vertex3: Option<[f32; 2]>,
+    }
 }
 
 impl EdgeShapeSnapshot {
     pub fn take(shape: &EdgeShape) -> Self {
-        unimplemented!()
+        EdgeShapeSnapshot {
+            vertex1: shape.v1().into(),
+            vertex2: shape.v2().into(),
+            vertex0: shape.v0().map(|v| v.into()),
+            vertex3: shape.v3().map(|v| v.into()),
+        }
     }
 
     pub fn rebuild(&self) -> EdgeShape {
-        unimplemented!()
+        let mut s = EdgeShape::new_with(&self.vertex1.into(), &self.vertex2.into());
+        s.set_v0(self.vertex0.map(|v| v.into()));
+        s.set_v3(self.vertex3.map(|v| v.into()));
+        s
     }
 }
 
@@ -420,18 +432,31 @@ impl PolygonShapeSnapshot {
     }
 }
 
+// TODO: avoid this Vec
 snapshot! {
-    // TODO
-    chain => ChainShapeSnapshot {}
+    chain => ChainShapeSnapshot {
+        pub vertices: Vec<[f32; 2]>,
+        pub prev_vertex: Option<[f32; 2]>,
+        pub next_vertex: Option<[f32; 2]>,
+    }
 }
 
 impl ChainShapeSnapshot {
     pub fn take(shape: &ChainShape) -> Self {
-        unimplemented!()
+        ChainShapeSnapshot {
+            vertices: shape.vertices().iter().map(|&v| v.into()).collect(),
+            prev_vertex: shape.prev_vertex().map(|v| v.into()),
+            next_vertex: shape.next_vertex().map(|v| v.into()),
+        }
     }
 
     pub fn rebuild(&self) -> ChainShape {
-        unimplemented!()
+        let vertices: Vec<_> = self.vertices.iter().map(|&v| v.into()).collect();
+
+        let mut s = ChainShape::new_chain(&vertices);
+        s.set_prev_vertex(self.prev_vertex.map(|v| v.into()));
+        s.set_next_vertex(self.next_vertex.map(|v| v.into()));
+        s
     }
 }
 
@@ -515,7 +540,20 @@ snapshot! {
 
 impl RevoluteJointSnapshot {
     pub fn take(joint: &RevoluteJoint) -> Self {
-        unimplemented!()
+        RevoluteJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            local_anchor_a: (*joint.local_anchor_a()).into(),
+            local_anchor_b: (*joint.local_anchor_b()).into(),
+            reference_angle: joint.reference_angle(),
+            enable_limit: joint.is_limit_enabled(),
+            lower_angle: joint.lower_limit(),
+            upper_angle: joint.upper_limit(),
+            enable_motor: joint.is_motor_enabled(),
+            motor_speed: joint.motor_speed(),
+            max_motor_torque: joint.max_motor_torque(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -524,18 +562,65 @@ impl RevoluteJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = RevoluteJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            local_anchor_a: self.local_anchor_a.into(),
+            local_anchor_b: self.local_anchor_b.into(),
+            reference_angle: self.reference_angle,
+            enable_limit: self.enable_limit,
+            lower_angle: self.lower_angle,
+            upper_angle: self.upper_angle,
+            enable_motor: self.enable_motor,
+            motor_speed: self.motor_speed,
+            max_motor_torque: self.max_motor_torque,
+        };
+        
+        world.create_joint_with(&def, data)
     }
 }
 
 snapshot! {
-    // TODO
-    prismatic => PrismaticJointSnapshot {}
+    prismatic => PrismaticJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub local_anchor_a: [f32; 2] ["default::local_anchor_a" => [0., 0.]],
+        pub local_anchor_b: [f32; 2] ["default::local_anchor_b" => [0., 0.]],
+        pub local_axis_a: [f32; 2] ["default::local_axis_a" => [1., 0.]],
+        pub reference_angle: f32 ["default::reference_angle" => 0.],
+        pub enable_limit: bool ["default::enable_limit" => false],
+        pub lower_translation: f32 ["default::lower_translation" => 0.],
+        pub upper_translation: f32 ["default::upper_translation" => 0.],
+        pub enable_motor: bool ["default::enable_motor" => false],
+        pub max_motor_force: f32 ["default::max_motor_force" => 0.],
+        pub motor_speed: f32 ["default::motor_speed" => 0.],
+    }
 }
 
 impl PrismaticJointSnapshot {
     pub fn take(joint: &PrismaticJoint) -> Self {
-        unimplemented!()
+        PrismaticJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            local_anchor_a: (*joint.local_anchor_a()).into(),
+            local_anchor_b: (*joint.local_anchor_b()).into(),
+            local_axis_a: (*joint.local_axis_a()).into(),
+            reference_angle: joint.reference_angle(),
+            enable_limit: joint.is_limit_enabled(),
+            lower_translation: joint.lower_limit(),
+            upper_translation: joint.upper_limit(),
+            enable_motor: joint.is_motor_enabled(),
+            max_motor_force: joint.max_motor_force(),
+            motor_speed: joint.motor_speed(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -544,18 +629,56 @@ impl PrismaticJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = PrismaticJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            local_anchor_a: self.local_anchor_a.into(),
+            local_anchor_b: self.local_anchor_b.into(),
+            local_axis_a: self.local_axis_a.into(),
+            reference_angle: self.reference_angle,
+            enable_limit: self.enable_limit,
+            lower_translation: self.lower_translation,
+            upper_translation: self.upper_translation,
+            enable_motor: self.enable_motor,
+            max_motor_force: self.max_motor_force,
+            motor_speed: self.motor_speed,
+        };
+
+        world.create_joint_with(&def, data)
     }
 }
 
 snapshot! {
-    // TODO
-    distance => DistanceJointSnapshot {}
+    distance => DistanceJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub local_anchor_a: [f32; 2] ["default::local_anchor_a" => [0., 0.]],
+        pub local_anchor_b: [f32; 2] ["default::local_anchor_b" => [0., 0.]],
+        pub length: f32 ["default::length" => 1.],
+        pub frequency: f32 ["default::frequency" => 0.],
+        pub damping_ratio: f32 ["default::damping_ratio" => 0.],
+    }
 }
 
 impl DistanceJointSnapshot {
     pub fn take(joint: &DistanceJoint) -> Self {
-        unimplemented!()
+        DistanceJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            local_anchor_a: (*joint.local_anchor_a()).into(),
+            local_anchor_b: (*joint.local_anchor_b()).into(),
+            length: joint.length(),
+            frequency: joint.frequency(),
+            damping_ratio: joint.damping_ratio(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -564,17 +687,58 @@ impl DistanceJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = DistanceJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            local_anchor_a: self.local_anchor_a.into(),
+            local_anchor_b: self.local_anchor_b.into(),
+            length: self.length,
+            frequency: self.frequency,
+            damping_ratio: self.damping_ratio,
+        };
+
+        world.create_joint_with(&def, data)
     }
 }
 
 snapshot! {
-    // TODO
-    pulley => PulleyJointSnapshot {}
+    pulley => PulleyJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub ground_anchor_a: [f32; 2] ["default::ground_anchor_a" => [-1., 1.]],
+        pub ground_anchor_b: [f32; 2] ["default::ground_anchor_b" => [1., 1.]],
+        pub local_anchor_a: [f32; 2] ["default::local_anchor_a" => [-1., 0.]],
+        pub local_anchor_b: [f32; 2] ["default::local_anchor_b" => [1., 0.]],
+        pub length_a: f32 ["default::length_a" => 0.],
+        pub length_b: f32 ["default::length_b" => 0.],
+        pub ratio: f32 ["default::ratio" => 1.],
+    }
 }
 
 impl PulleyJointSnapshot {
     pub fn take(joint: &PulleyJoint) -> Self {
+        /*
+        TODO
+        PulleyJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            ground_anchor_a: joint.ground_anchor_a().into(),
+            ground_anchor_b: joint.ground_anchor_b().into(),
+            local_anchor_a: (*joint.local_anchor_a()).into(),
+            local_anchor_b: (*joint.local_anchor_b()).into(),
+            length_a: joint.length_a(),
+            length_b: joint.length_b(),
+            ratio: joint.ratio(),
+        }
+        */
         unimplemented!()
     }
 
@@ -584,18 +748,51 @@ impl PulleyJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = PulleyJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            ground_anchor_a: self.ground_anchor_a.into(),
+            ground_anchor_b: self.ground_anchor_b.into(),
+            local_anchor_a: self.local_anchor_a.into(),
+            local_anchor_b: self.local_anchor_b.into(),
+            length_a: self.length_a,
+            length_b: self.length_b,
+            ratio: self.ratio,
+        };
+
+        world.create_joint_with(&def, data)
     }
 }
 
 snapshot! {
-    // TODO
-    mouse => MouseJointSnapshot {}
+    mouse => MouseJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub target: [f32; 2] ["default::target" => [0., 0.]],
+        pub max_force: f32 ["default::max_force" => 0.],
+        pub frequency: f32 ["default::frequency" => 5.],
+        pub damping_ratio: f32 ["default::damping_ratio" => 0.7],
+    }
 }
 
 impl MouseJointSnapshot {
     pub fn take(joint: &MouseJoint) -> Self {
-        unimplemented!()
+        MouseJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            target: (*joint.target()).into(),
+            max_force: joint.max_force(),
+            frequency: joint.frequency(),
+            damping_ratio: joint.damping_ratio(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -604,7 +801,30 @@ impl MouseJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = MouseJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            target: self.target.into(),
+            max_force: self.max_force,
+            frequency: self.frequency,
+            damping_ratio: self.damping_ratio,
+        };
+
+        let joint = world.create_joint_with(&def, data);
+
+        // we need to set the target after the joint creation
+        match &mut world.joint_mut(joint) as &mut UnknownJoint {
+            &mut UnknownJoint::Mouse(ref mut joint) => joint.set_target(&self.target.into()),
+            _ => unreachable!(),
+        }
+
+        joint
     }
 }
 
@@ -650,13 +870,36 @@ impl GearJointSnapshot {
 }
 
 snapshot! {
-    // TODO
-    wheel => WheelJointSnapshot {}
+    wheel => WheelJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub local_anchor_a: [f32; 2] ["default::local_anchor_a" => [0., 0.]],
+        pub local_anchor_b: [f32; 2] ["default::local_anchor_b" => [0., 0.]],
+        pub local_axis_a: [f32; 2] ["default::local_axis_a" => [1., 0.]],
+        pub enable_motor: bool ["default::enable_motor" => false],
+        pub max_motor_torque: f32 ["default::max_motor_torque" => 0.],
+        pub motor_speed: f32 ["default::motor_speed" => 0.],
+        pub frequency: f32 ["default::frequency" => 2.],
+        pub damping_ratio: f32 ["default::damping_ratio" => 0.7],
+    }
 }
 
 impl WheelJointSnapshot {
     pub fn take(joint: &WheelJoint) -> Self {
-        unimplemented!()
+        WheelJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            local_anchor_a: (*joint.local_anchor_a()).into(),
+            local_anchor_b: (*joint.local_anchor_b()).into(),
+            local_axis_a: (*joint.local_axis_a()).into(),
+            enable_motor: joint.is_motor_enabled(),
+            max_motor_torque: joint.max_motor_torque(),
+            motor_speed: joint.motor_speed(),
+            frequency: joint.spring_frequency(),
+            damping_ratio: joint.spring_damping_ratio(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -665,18 +908,54 @@ impl WheelJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = WheelJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            local_anchor_a: self.local_anchor_a.into(),
+            local_anchor_b: self.local_anchor_b.into(),
+            local_axis_a: self.local_axis_a.into(),
+            enable_motor: self.enable_motor,
+            max_motor_torque: self.max_motor_torque,
+            motor_speed: self.motor_speed,
+            frequency: self.frequency,
+            damping_ratio: self.damping_ratio,
+        };
+
+        world.create_joint_with(&def, data)
     }
 }
 
 snapshot! {
-    // TODO
-    weld => WeldJointSnapshot {}
+    weld => WeldJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub local_anchor_a: [f32; 2] ["default::local_anchor_a" => [0., 0.]],
+        pub local_anchor_b: [f32; 2] ["default::local_anchor_b" => [0., 0.]],
+        pub reference_angle: f32 ["default::reference_angle" => 0.],
+        pub frequency: f32 ["default::frequency" => 0.],
+        pub damping_ratio: f32 ["default::damping_ratio" => 0.],
+    }
 }
 
 impl WeldJointSnapshot {
     pub fn take(joint: &WeldJoint) -> Self {
-        unimplemented!()
+        WeldJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            local_anchor_a: (*joint.local_anchor_a()).into(),
+            local_anchor_b: (*joint.local_anchor_b()).into(),
+            reference_angle: joint.reference_angle(),
+            frequency: joint.frequency(),
+            damping_ratio: joint.damping_ratio(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -685,18 +964,49 @@ impl WeldJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = WeldJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            local_anchor_a: self.local_anchor_a.into(),
+            local_anchor_b: self.local_anchor_b.into(),
+            reference_angle: self.reference_angle,
+            frequency: self.frequency,
+            damping_ratio: self.damping_ratio,
+        };
+
+        world.create_joint_with(&def, data)
     }
 }
 
 snapshot! {
-    // TODO
-    friction => FrictionJointSnapshot {}
+    friction => FrictionJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub local_anchor_a: [f32; 2] ["default::local_anchor_a" => [0., 0.]],
+        pub local_anchor_b: [f32; 2] ["default::local_anchor_b" => [0., 0.]],
+        pub max_force: f32 ["default::max_force" => 0.],
+        pub max_torque: f32 ["default::max_torque" => 0.],
+    }
 }
 
 impl FrictionJointSnapshot {
     pub fn take(joint: &FrictionJoint) -> Self {
-        unimplemented!()
+        FrictionJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            local_anchor_a: (*joint.local_anchor_a()).into(),
+            local_anchor_b: (*joint.local_anchor_b()).into(),
+            max_force: joint.max_force(),
+            max_torque: joint.max_torque(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -705,18 +1015,46 @@ impl FrictionJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = FrictionJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            local_anchor_a: self.local_anchor_a.into(),
+            local_anchor_b: self.local_anchor_b.into(),
+            max_force: self.max_force,
+            max_torque: self.max_torque,
+        };
+
+        world.create_joint_with(&def, data)
     }
 }
 
 snapshot! {
-    // TODO
-    rope => RopeJointSnapshot {}
+    rope => RopeJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub local_anchor_a: [f32; 2] ["default::local_anchor_a" => [-1., 0.]],
+        pub local_anchor_b: [f32; 2] ["default::local_anchor_b" => [1., 0.]],
+        pub max_length: f32 ["default::max_length" => 0.],
+    }
 }
 
 impl RopeJointSnapshot {
     pub fn take(joint: &RopeJoint) -> Self {
-        unimplemented!()
+        RopeJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            local_anchor_a: (*joint.local_anchor_a()).into(),
+            local_anchor_b: (*joint.local_anchor_b()).into(),
+            max_length: joint.max_length(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -725,18 +1063,49 @@ impl RopeJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = RopeJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            local_anchor_a: self.local_anchor_a.into(),
+            local_anchor_b: self.local_anchor_b.into(),
+            max_length: self.max_length,
+        };
+
+        world.create_joint_with(&def, data)
     }
 }
 
 snapshot! {
-    // TODO
-    motor => MotorJointSnapshot {}
+    motor => MotorJointSnapshot {
+        pub body_a: BodyId,
+        pub body_b: BodyId,
+        pub collide_connected: bool ["default::collide_connected" => false],
+        pub linear_offset: [f32; 2] ["default::linear_offset" => [0., 0.]],
+        pub angular_offset: f32 ["default::angular_offset" => 0.],
+        pub max_force: f32 ["default::max_force" => 1.],
+        pub max_torque: f32 ["default::max_torque" => 1.],
+        pub correction_factor: f32 ["default::correction_factor" => 0.3],
+    }
 }
 
 impl MotorJointSnapshot {
     pub fn take(joint: &MotorJoint) -> Self {
-        unimplemented!()
+        MotorJointSnapshot {
+            body_a: BodyId(joint.body_a().index()),
+            body_b: BodyId(joint.body_b().index()),
+            collide_connected: joint.is_collide_connected(),
+            linear_offset: (*joint.linear_offset()).into(),
+            angular_offset: joint.angular_offset(),
+            max_force: joint.max_force(),
+            max_torque: joint.max_torque(),
+            correction_factor: joint.correction_factor(),
+        }
     }
 
     pub fn rebuild<U: UserDataTypes>(&self,
@@ -745,6 +1114,22 @@ impl MotorJointSnapshot {
                                      id_to_handle: &mut IdToHandle)
                                      -> JointHandle
     {
-        unimplemented!()
+        let body_a = id_to_handle.body_handle(self.body_a)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+        let body_b = id_to_handle.body_handle(self.body_b)
+            .unwrap_or_else(|| panic!("no handle for this body id"));
+
+        let def = MotorJointDef {
+            body_a: body_a,
+            body_b: body_b,
+            collide_connected: self.collide_connected,
+            linear_offset: self.linear_offset.into(),
+            angular_offset: self.angular_offset,
+            max_force: self.max_force,
+            max_torque: self.max_torque,
+            correction_factor: self.correction_factor,
+        };
+
+        world.create_joint_with(&def, data)
     }
 }

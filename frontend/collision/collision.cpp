@@ -119,7 +119,7 @@ void Contact_set_tangent_speed(b2Contact* self, f32 speed) {
 }
 
 f32 Contact_get_tangent_speed(const b2Contact* self) {
-    self->GetTangentSpeed();
+    return self->GetTangentSpeed();
 }
 
 void Contact_evaluate_virtual(b2Contact* self, b2Manifold* manifold,

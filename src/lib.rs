@@ -41,7 +41,6 @@
 #![cfg_attr(feature = "serialize", plugin(serde_macros))]
 
 #[link(name = "Box2D")] extern "C" {}
-#[link(name = "stdc++")] extern "C" {}
 
 extern crate libc;
 extern crate vec_map;

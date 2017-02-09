@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate approx;
 extern crate wrapped2d;
 
 use wrapped2d::b2;
@@ -13,7 +15,8 @@ fn fall() {
     let mut world = b2::World::<NoUserData>::new(&gravity);
 
     assert_eq!(world.body_count(), 0);
-    assert_eq!(world.gravity(), gravity);
+    assert_relative_eq!(world.gravity().x, gravity.x);
+    assert_relative_eq!(world.gravity().y, gravity.y);
 
     let mut ground_body_def = b2::BodyDef::new();
     ground_body_def.position = b2::Vec2 { x: 0., y: -10. };
@@ -21,7 +24,8 @@ fn fall() {
     {
         let mut ground = world.body_mut(ground_handle);
 
-        assert_eq!(ground.position(), &b2::Vec2 { x: 0., y: -10. });
+        assert_relative_eq!(ground.position().x, 0.);
+        assert_relative_eq!(ground.position().y, -10.);
         assert_eq!(world.body_count(), 1);
 
         let ground_box = b2::PolygonShape::new_box(50., 10.);
@@ -36,7 +40,8 @@ fn fall() {
     {
         let body = world.body(body);
         assert_eq!(body.body_type(), b2::BodyType::Dynamic);
-        assert_eq!(body.position(), &b2::Vec2 { x: 0., y: 4. });
+        assert_relative_eq!(body.position().x, 0.);
+        assert_relative_eq!(body.position().y, 4.);
     }
     assert_eq!(world.body_count(), 2);
 

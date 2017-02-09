@@ -37,27 +37,36 @@
 //! let handle = body.create_fast_fixture(&shape, 2.);
 //! let fixture = body.fixture(handle);
 //! ```
-#![cfg_attr(feature = "serialize", feature(plugin, custom_derive))]
-#![cfg_attr(feature = "serialize", plugin(serde_macros))]
 
 #[link(name = "Box2D")] extern "C" {}
 
 extern crate libc;
 extern crate vec_map;
-#[macro_use] extern crate bitflags;
-#[cfg(feature = "serialize")] extern crate serde;
-#[cfg(feature = "nalgebra")] extern crate nalgebra;
-#[cfg(feature = "cgmath")] extern crate cgmath;
+#[macro_use]
+extern crate bitflags;
+#[cfg(feature = "serialize")]
+#[macro_use]
+extern crate serde_derive;
+#[cfg(feature = "serialize")]
+extern crate serde;
+#[cfg(feature = "nalgebra")]
+extern crate nalgebra;
+#[cfg(feature = "cgmath")]
+extern crate cgmath;
 
 mod ffi;
-#[doc(hidden)] #[macro_use] pub mod wrap;
-#[doc(hidden)] pub mod handle;
+#[doc(hidden)]
+#[macro_use]
+pub mod wrap;
+#[doc(hidden)]
+pub mod handle;
 
 pub mod common;
 pub mod collision;
 pub mod dynamics;
 pub mod user_data;
-#[cfg(feature = "serialize")] pub mod serialize;
+#[cfg(feature = "serialize")]
+pub mod serialize;
 
 pub mod b2 {
     pub use common::{Color, DrawFlags, Draw, DRAW_AABB, DRAW_CENTER_OF_MASS, DRAW_JOINT,

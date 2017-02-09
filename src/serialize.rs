@@ -52,9 +52,9 @@ impl IdToHandle {
 // TODO: avoid this struct
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorldSnapshot<U: UserDataTypes>
-    where U::BodyData: Debug,
-          U::FixtureData: Debug,
-          U::JointData: Debug,
+    where U::BodyData: Debug + Serialize + Deserialize,
+          U::FixtureData: Debug + Serialize + Deserialize,
+          U::JointData: Debug + Serialize + Deserialize,
 {
     config: WorldConfigSnapshot,
     bodies: Vec<CompleteBodySnapshot<U>>,
@@ -66,9 +66,9 @@ type CompleteFixtureSnapshot<U: UserDataTypes> = (FixtureSnapshot, U::FixtureDat
 type CompleteJointSnapshot<U: UserDataTypes> = (JointId, JointSnapshot, U::JointData);
 
 impl<U: UserDataTypes> WorldSnapshot<U>
-    where U::BodyData: Debug,
-          U::FixtureData: Debug,
-          U::JointData: Debug,
+    where U::BodyData: Debug + Serialize + Deserialize,
+          U::FixtureData: Debug + Serialize + Deserialize,
+          U::JointData: Debug + Serialize + Deserialize,
 {
     pub fn take(world: &World<U>) -> Self
         where U::BodyData: Serialize + Clone,

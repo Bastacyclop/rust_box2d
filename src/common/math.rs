@@ -291,7 +291,7 @@ impl<'a> From<&'a nalgebra::Rotation2<f32>> for Rot {
 impl From<Rot> for cgmath::Basis2<f32> {
     fn from(r: Rot) -> cgmath::Basis2<f32> {
         use cgmath::Rotation2;
-        cgmath::Basis2::from_angle(cgmath::Rad { s: r.angle() })
+        cgmath::Basis2::from_angle(cgmath::Rad(r.angle()))
     }
 }
 

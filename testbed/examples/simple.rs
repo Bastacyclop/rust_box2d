@@ -52,12 +52,14 @@ fn main() {
             data.world.body_mut(handle).create_fixture(shape, &mut f_def);
         };
 
-        if let Some(button) = input.press_args() {
-            if button == Keyboard(Key::A) {
+        match input.press_args() {
+            Some(Keyboard(Key::A)) =>  {
                 create_body(&cube_shape);
-            } else if button == Keyboard(Key::Z) {
+            },
+            Some(Keyboard(Key::Z))=>  {
                 create_body(&circle_shape);
-            }
+            },
+            _ => ()
         }
     };
 

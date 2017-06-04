@@ -16,16 +16,18 @@ fn main() {
     create_joints(&mut world, ground, &bodies);
 
     let process_input = |input: &Input, data: &mut testbed::Data<NoUserData>| {
-        if let Some(button) = input.press_args() {
-            if button == Keyboard(Key::B) {
+        match input.press_args() {
+            Some(Keyboard(Key::B)) =>  {
                 while let Some(body) = bodies.pop() {
                     data.world.destroy_body(body);
                 }
-            } else if button == Keyboard(Key::J) {
+            },
+            Some(Keyboard(Key::J))=>  {
                 while let Some((joint, _)) = data.world.joints().next() {
                     data.world.destroy_joint(joint);
                 }
-            }
+            },
+            _ => ()
         }
     };
 

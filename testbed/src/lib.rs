@@ -82,20 +82,23 @@ pub fn run<T, U>(mut test: T, mut data: Data<U>, name: &str, mut width: u32, mut
             camera.gl_to_world(x, y)
         };
 
-        if let Some(button) = e.press_args() {
-            if button == Keyboard(Key::Return) {
+        match e.press_args() {
+            Some(Keyboard(Key::Return)) =>  {
                 running = !running;
-            } else if button == Mouse(MouseButton::Left) {
+            },
+            Some(Mouse(MouseButton::Left))=>  {
                 match grabbing {
                     None => grabbing = try_grab(&mut data.world, mouse_position, dummy),
                     Some(_) => {}
                 }
-            }
+            },
+            _ => ()
         }
-        if let Some(button) = e.release_args() {
-            if button == Mouse(MouseButton::Left) {
+        match e.release_args() {
+            Some(Mouse(MouseButton::Left)) =>  {
                 ungrab(&mut data.world, &mut grabbing);
-            }
+            },
+            _ => ()
         }
         e.mouse_cursor(|x, y| {
             mouse_position = window_to_world(width, height, &data.camera, x, y);

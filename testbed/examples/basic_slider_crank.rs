@@ -1,4 +1,3 @@
-extern crate piston;
 extern crate wrapped2d;
 extern crate testbed;
 

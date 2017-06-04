@@ -1,4 +1,3 @@
-extern crate piston;
 extern crate wrapped2d;
 extern crate testbed;
 
@@ -27,7 +26,7 @@ fn main() {
                     b2::DRAW_CENTER_OF_MASS
     };
 
-    testbed::run(test, data, "Web", 400, 400);
+    testbed::run(test, data, "Breakable", 400, 400);
 }
 
 fn create_ground(world: &mut World) -> b2::BodyHandle {
@@ -98,7 +97,7 @@ impl Test {
                 position: *body.position(),
                 angle: body.angle(),
                 .. b2::BodyDef::new()
-            }            
+            }
         };
 
         let other = world.create_body(&bd);
@@ -110,7 +109,7 @@ impl Test {
         let mut other = world.body_mut(other);
         self.piece2 = other.create_fast_fixture(&self.shape2, 1.);
 
-		// compute consistent velocities for new bodies based on cached velocities
+        // compute consistent velocities for new bodies based on cached velocities
         let center1 = *body.world_center();
         let center2 = *other.world_center();
 
@@ -128,7 +127,7 @@ impl Test {
 }
 
 impl testbed::Test<UserData> for Test {
-    fn step(&mut self, data: &mut testbed::Data<UserData>) {
+    fn step(&mut self, data: &mut testbed::Data<UserData>, dt: f32) {
         if !self.broke {
             if self.should_break.get() {
                 self.break_it(&mut data.world);
@@ -140,7 +139,7 @@ impl testbed::Test<UserData> for Test {
             }
         }
 
-        testbed::step(data);
+        testbed::step(data, dt);
     }
 }
 

@@ -1,8 +1,9 @@
-extern crate piston;
+extern crate piston_window;
 extern crate wrapped2d;
 extern crate testbed;
 
-use piston::input::{ Input, Button, Key };
+use piston_window::*;
+use piston_window::Button::*;
 use wrapped2d::b2;
 use wrapped2d::user_data::NoUserData;
 
@@ -15,21 +16,18 @@ fn main() {
     let body = create_body(&mut world);
     create_cubes(&mut world, ground);
 
-    let process_input = |input, data: &mut testbed::Data<NoUserData>| {
-        match input {
-            Input::Press(Button::Keyboard(Key::Z)) => {
+    let process_input = |input: &Input, data: &mut testbed::Data<NoUserData>| {
+        if let Some(button) = input.press_args() {
+            if button == Keyboard(Key::Z) {
                 let mut body = data.world.body_mut(body);
                 let f = body.world_vector(&b2::Vec2 { x: 0., y: -200. });
                 let p = body.world_point(&b2::Vec2 { x: 0., y: 2. });
                 body.apply_force(&f, &p, true);
-            },
-            Input::Press(Button::Keyboard(Key::Q)) => {
+            } else if button == Keyboard(Key::Q) {
                 data.world.body_mut(body).apply_torque(50., true);
-            },
-            Input::Press(Button::Keyboard(Key::D)) => {
+            } else if button == Keyboard(Key::D) {
                 data.world.body_mut(body).apply_torque(-50., true);
-            },
-            _ => ()
+            }
         }
     };
 

@@ -1,6 +1,6 @@
 [package]
 name = "wrapped2d"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Thomas Koehler <basta.t.k+git@gmail.com>"]
 
 description = "Rust binding for Box2D"
@@ -21,12 +21,12 @@ gcc = "^0.3"
 
 [dependencies]
 libc = "^0.2"
-vec_map = "^0.6"
-bitflags = "^0.7"
+vec_map = "^0.8"
+bitflags = "^0.9"
 serde = { version = "^0.9", optional = true }
 serde_derive = { version = "^0.9", optional = true }
-cgmath = { version = "^0.12", optional = true }
+cgmath = { version = "^0.14", optional = true }
 nalgebra = { version = "^0.10", optional = true }
 
-[dev_dependencies]
+[dev-dependencies]
 approx = "^0.1"

@@ -1,8 +1,9 @@
-extern crate piston;
+extern crate piston_window;
 extern crate wrapped2d;
 extern crate testbed;
 
-use piston::input::{ Input, Button, Key };
+use piston_window::*;
+use piston_window::Button::*;
 use wrapped2d::b2;
 use wrapped2d::user_data::NoUserData;
 
@@ -41,7 +42,7 @@ fn main() {
         .. b2::FixtureDef::new()
     };
 
-    let process_input = |input, data: &mut testbed::Data<NoUserData>| {
+    let process_input = |input: &Input, data: &mut testbed::Data<NoUserData>| {
         let mut create_body = |shape| {
             b_def.position.x += 0.5;
             if b_def.position.x > 20. {
@@ -50,11 +51,13 @@ fn main() {
             let handle = data.world.create_body(&b_def);
             data.world.body_mut(handle).create_fixture(shape, &mut f_def);
         };
-        
-        match input {
-            Input::Press(Button::Keyboard(Key::A)) => create_body(&cube_shape),
-            Input::Press(Button::Keyboard(Key::Z)) => create_body(&circle_shape),
-            _ => ()
+
+        if let Some(button) = input.press_args() {
+            if button == Keyboard(Key::A) {
+                create_body(&cube_shape);
+            } else if button == Keyboard(Key::Z) {
+                create_body(&circle_shape);
+            }
         }
     };
 

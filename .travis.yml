@@ -1,15 +1,9 @@
 language: rust
-matrix:
-  include:
-  - rust: nightly
-    env: FEATURES="serialize cgmath nalgebra"
-  - rust: beta
-    env: FEATURES=""
-  - rust: stable
-    env: FEATURES=""
-  allow_failures:
-  - rust: beta
-  - rust: stable
+cache: cargo
+rust:
+  - stable
+  - beta
+  - nightly
 
 env:
   global:
@@ -32,14 +26,14 @@ before_install:
 - cd ../../..
 
 script:
-- cargo build --features "$FEATURES" --verbose
-- cargo test --features "$FEATURES" --verbose
+- cargo build --all-features --verbose
+- cargo test --all-features --verbose
 
 after_success:
 - |
   [ $TRAVIS_BRANCH = master ] &&
   [ $TRAVIS_PULL_REQUEST = false ] &&
-  cargo doc --features "serialize" --no-deps &&
+  cargo doc --all-features --no-deps &&
   git clone https://github.com/davisp/ghp-import &&
   ./ghp-import/ghp_import.py -n target/doc &&
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages

@@ -1,9 +1,28 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
-use serde::{Serialize, Deserialize};
+use serde::ser::{Serialize, Serializer};
+use serde::de::{Deserialize, Deserializer, DeserializeOwned};
 
 #[doc(hidden)] pub use b2::*;
 use user_data::{UserDataTypes, UserData};
+
+impl Serialize for Vec2 {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let v: [f32; 2] = (*self).into();
+        v.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Vec2 {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        let v: [f32; 2] = Deserialize::deserialize(deserializer)?;
+        Ok(v.into())
+    }
+}
 
 #[derive(Clone, Copy, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct BodyId(pub usize);
@@ -52,9 +71,9 @@ impl IdToHandle {
 // TODO: avoid this struct
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorldSnapshot<U: UserDataTypes>
-    where U::BodyData: Debug + Serialize + Deserialize,
-          U::FixtureData: Debug + Serialize + Deserialize,
-          U::JointData: Debug + Serialize + Deserialize,
+    where U::BodyData: Debug + Serialize + DeserializeOwned,
+          U::FixtureData: Debug + Serialize + DeserializeOwned,
+          U::JointData: Debug + Serialize + DeserializeOwned,
 {
     config: WorldConfigSnapshot,
     bodies: Vec<CompleteBodySnapshot<U>>,
@@ -66,9 +85,9 @@ type CompleteFixtureSnapshot<U: UserDataTypes> = (FixtureSnapshot, U::FixtureDat
 type CompleteJointSnapshot<U: UserDataTypes> = (JointId, JointSnapshot, U::JointData);
 
 impl<U: UserDataTypes> WorldSnapshot<U>
-    where U::BodyData: Debug + Serialize + Deserialize,
-          U::FixtureData: Debug + Serialize + Deserialize,
-          U::JointData: Debug + Serialize + Deserialize,
+    where U::BodyData: Debug + Serialize + DeserializeOwned,
+          U::FixtureData: Debug + Serialize + DeserializeOwned,
+          U::JointData: Debug + Serialize + DeserializeOwned,
 {
     pub fn take(world: &World<U>) -> Self
         where U::BodyData: Serialize + Clone,
@@ -106,9 +125,9 @@ impl<U: UserDataTypes> WorldSnapshot<U>
     }
 
     pub fn rebuild(&self, id_to_handle: &mut IdToHandle) -> World<U>
-        where U::BodyData: Deserialize + Clone,
-              U::FixtureData: Deserialize + Clone,
-              U::JointData: Deserialize + Clone,
+        where U::BodyData: DeserializeOwned + Clone,
+              U::FixtureData: DeserializeOwned + Clone,
+              U::JointData: DeserializeOwned + Clone,
     {
         id_to_handle.clear();
         let mut world = self.config.rebuild();
@@ -365,7 +384,7 @@ impl ShapeSnapshot {
 
 snapshot! {
     circle => CircleShapeSnapshot {
-        pub position: [f32; 2],
+        pub position: Vec2,
         pub radius: f32,
     }
 }
@@ -373,39 +392,39 @@ snapshot! {
 impl CircleShapeSnapshot {
     pub fn take(shape: &CircleShape) -> Self {
         CircleShapeSnapshot {
-            position: shape.position().into(),
+            position: shape.position(),
             radius: shape.radius(),
         }
     }
 
     pub fn rebuild(&self) -> CircleShape {
-        CircleShape::new_with(self.position.into(), self.radius)
+        CircleShape::new_with(self.position, self.radius)
     }
 }
 
 snapshot! {
     edge => EdgeShapeSnapshot {
-        pub vertex1: [f32; 2],
-        pub vertex2: [f32; 2],
-        pub vertex0: Option<[f32; 2]>,
-        pub vertex3: Option<[f32; 2]>,
+        pub vertex1: Vec2,
+        pub vertex2: Vec2,
+        pub vertex0: Option<Vec2>,
+        pub vertex3: Option<Vec2>,
     }
 }
 
 impl EdgeShapeSnapshot {
     pub fn take(shape: &EdgeShape) -> Self {
         EdgeShapeSnapshot {
-            vertex1: shape.v1().into(),
-            vertex2: shape.v2().into(),
-            vertex0: shape.v0().map(|v| v.into()),
-            vertex3: shape.v3().map(|v| v.into()),
+            vertex1: shape.v1(),
+            vertex2: shape.v2(),
+            vertex0: shape.v0(),
+            vertex3: shape.v3(),
         }
     }
 
     pub fn rebuild(&self) -> EdgeShape {
-        let mut s = EdgeShape::new_with(&self.vertex1.into(), &self.vertex2.into());
-        s.set_v0(self.vertex0.map(|v| v.into()));
-        s.set_v3(self.vertex3.map(|v| v.into()));
+        let mut s = EdgeShape::new_with(&self.vertex1, &self.vertex2);
+        s.set_v0(self.vertex0);
+        s.set_v3(self.vertex3);
         s
     }
 }
@@ -413,7 +432,7 @@ impl EdgeShapeSnapshot {
 // TODO: avoid this Vec
 snapshot! {
     polygon => PolygonShapeSnapshot {
-        pub vertices: Vec<[f32; 2]>,
+        pub vertices: Vec<Vec2>,
     }
 }
 
@@ -421,41 +440,38 @@ impl PolygonShapeSnapshot {
     pub fn take(shape: &PolygonShape) -> Self {
         PolygonShapeSnapshot {
             vertices: (0..shape.vertex_count())
-                .map(|i| (*shape.vertex(i)).into())
+                .map(|i| *shape.vertex(i))
                 .collect()
         }
     }
 
     pub fn rebuild(&self) -> PolygonShape {
-        let vertices: Vec<_> = self.vertices.iter().map(|&v| v.into()).collect();
-        PolygonShape::new_with(&vertices)
+        PolygonShape::new_with(&self.vertices)
     }
 }
 
 // TODO: avoid this Vec
 snapshot! {
     chain => ChainShapeSnapshot {
-        pub vertices: Vec<[f32; 2]>,
-        pub prev_vertex: Option<[f32; 2]>,
-        pub next_vertex: Option<[f32; 2]>,
+        pub vertices: Vec<Vec2>,
+        pub prev_vertex: Option<Vec2>,
+        pub next_vertex: Option<Vec2>,
     }
 }
 
 impl ChainShapeSnapshot {
     pub fn take(shape: &ChainShape) -> Self {
         ChainShapeSnapshot {
-            vertices: shape.vertices().iter().map(|&v| v.into()).collect(),
-            prev_vertex: shape.prev_vertex().map(|v| v.into()),
-            next_vertex: shape.next_vertex().map(|v| v.into()),
+            vertices: Vec::from(shape.vertices()),
+            prev_vertex: shape.prev_vertex(),
+            next_vertex: shape.next_vertex(),
         }
     }
 
     pub fn rebuild(&self) -> ChainShape {
-        let vertices: Vec<_> = self.vertices.iter().map(|&v| v.into()).collect();
-
-        let mut s = ChainShape::new_chain(&vertices);
-        s.set_prev_vertex(self.prev_vertex.map(|v| v.into()));
-        s.set_next_vertex(self.next_vertex.map(|v| v.into()));
+        let mut s = ChainShape::new_chain(&self.vertices);
+        s.set_prev_vertex(self.prev_vertex);
+        s.set_next_vertex(self.next_vertex);
         s
     }
 }

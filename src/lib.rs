@@ -38,8 +38,6 @@
 //! let fixture = body.fixture(handle);
 //! ```
 
-#[link(name = "Box2D")] extern "C" {}
-
 extern crate libc;
 extern crate vec_map;
 #[macro_use]

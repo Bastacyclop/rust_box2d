@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["physics", "binding", "bindings", "box2d"]
 license = "zlib-acknowledgement"
 
-build = "build_frontend.rs"
+build = "build.rs"
 
 [features]
 serialize = ["serde", "serde_derive"]

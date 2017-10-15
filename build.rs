@@ -14,4 +14,6 @@ fn main() {
     };
 
     config.compile("libbox2d_frontend.a");
+
+    println!("cargo:rustc-flags=-l Box2D");
 }

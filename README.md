@@ -15,14 +15,8 @@ You can look at the [testbed](testbed) for examples.
 
 You will need [CMake](https://cmake.org/) installed in order to build Box2D.
 
-Alternatively, you can supply your own installation of Box2D ([version 2.3.1](https://github.com/erincatto/Box2D/releases/tag/v2.3.1)) by pointing the `BOX2D_INCLUDE_PATH` environment variable to the Box2D header files. For example:
+Alternatively, you can supply your own installation of Box2D ([version 2.3.1](https://github.com/erincatto/Box2D/releases/tag/v2.3.1)) by pointing the `BOX2D_LIB_DIR` environment variable to the directory containing the compiled Box2D library. For example:
 
 ~~~~sh
-BOX2D_INCLUDE_PATH="path/to/Box2D/Box2D" cargo build
-~~~~
-
-In that case, the Box2D library must be available on rustc's library search path. If this is not the case, you can manually add it:
-
-~~~~sh
-RUSTFLAGS="-L path/to/Box2D/lib_dir"
+BOX2D_LIB_DIR="path\to\Box2D\lib" cargo build
 ~~~~

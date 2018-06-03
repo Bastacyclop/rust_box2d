@@ -13,11 +13,10 @@ You can look at the [testbed](testbed) for examples.
 
 ## Dependencies
 
-You will need the native Box2D library (this is based on [version 2.3.1](https://github.com/erincatto/Box2D/releases/tag/v2.3.1)).  
-For example, you can install it on your system with your package manager or [directly from source](.travis.yml).
+You will need [CMake](https://cmake.org/) installed in order to build Box2D.
 
-If necessary, you can specify the Box2D header files location when compiling:
+Alternatively, you can supply your own installation of Box2D ([version 2.3.1](https://github.com/erincatto/Box2D/releases/tag/v2.3.1)) by pointing the `BOX2D_LIB_DIR` environment variable to the directory containing the compiled Box2D library. For example:
 
 ~~~~sh
-BOX2D_INCLUDE_PATH="path/to/Box2D/Box2D" cargo build
+BOX2D_LIB_DIR="path\to\Box2D\lib" cargo build
 ~~~~

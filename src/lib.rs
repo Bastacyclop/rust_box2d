@@ -37,6 +37,39 @@
 //! let handle = body.create_fast_fixture(&shape, 2.);
 //! let fixture = body.fixture(handle);
 //! ```
+//!
+//! # User Data
+//!
+//! You can provide a unit struct to specify the user data types that will be used for bodies,
+//! joints and fixtures. For example:
+//!
+//! ```
+//! use wrapped2d::b2;
+//! use wrapped2d::user_data::*;
+//!
+//! pub type ObjectId = u64;
+//!
+//! pub struct UserData;
+//! impl UserDataTypes for UserData {
+//!     type BodyData = Option<ObjectId>;
+//!     type JointData = ();
+//!     type FixtureData = FixtureKind;
+//! }
+//! 
+//! pub type World = b2::World<UserData>;
+//! 
+//! pub enum FixtureKind {
+//!     Wood,
+//!     Metal,
+//! }
+//! 
+//! // [ ... elsewhere ... ]
+//! 
+//! // small use cases
+//! let h = world.create_body(&def); // not specifying user data will use `Default` (`None` here)
+//! let h = world.create_body_with(&def, Some(object_id)); // specifying user data for the body
+//! let user_data = world.body(h).user_data(); // access the body user data
+//! ```
 
 extern crate libc;
 extern crate vec_map;

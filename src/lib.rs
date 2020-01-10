@@ -64,11 +64,9 @@
 //! }
 //! 
 //! // [ ... elsewhere ... ]
-//! 
-//! // small use cases
-//! let h = world.create_body(&def); // not specifying user data will use `Default` (`None` here)
-//! let h = world.create_body_with(&def, Some(object_id)); // specifying user data for the body
-//! let user_data = world.body(h).user_data(); // access the body user data
+//! // let h = world.create_body(&def); // will use `Default` user data (`None` here)
+//! // let h = world.create_body_with(&def, Some(object_id)); // specifying user data for the body
+//! // let user_data = world.body(h).user_data(); // access the body user data
 //! ```
 
 extern crate libc;

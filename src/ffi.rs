@@ -2,6 +2,7 @@ use libc::c_void;
 use std::ptr;
 
 pub type Any = *mut c_void;
+#[allow(dead_code)]
 pub type ConstAny = *const c_void;
 
 #[repr(C)]

@@ -82,7 +82,7 @@ pub trait JointDef {
 
 pub struct MetaJoint<U: UserDataTypes> {
     joint: UnknownJoint,
-    user_data: Box<InternalUserData<Joint, U::JointData>>,
+    user_data: Box<InternalUserData<dyn Joint, U::JointData>>,
 }
 
 impl<U: UserDataTypes> MetaJoint<U> {

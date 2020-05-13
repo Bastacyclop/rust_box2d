@@ -86,14 +86,14 @@ impl<U: UserDataTypes> MetaBody<U> {
         b
     }
 
-    pub fn create_fixture(&mut self, shape: &Shape, def: &mut FixtureDef) -> FixtureHandle
+    pub fn create_fixture(&mut self, shape: &dyn Shape, def: &mut FixtureDef) -> FixtureHandle
         where U::FixtureData: Default
     {
         self.create_fixture_with(shape, def, U::FixtureData::default())
     }
 
     pub fn create_fixture_with(&mut self,
-                               shape: &Shape,
+                               shape: &dyn Shape,
                                def: &mut FixtureDef,
                                data: U::FixtureData)
                                -> FixtureHandle {
@@ -104,14 +104,14 @@ impl<U: UserDataTypes> MetaBody<U> {
         }
     }
 
-    pub fn create_fast_fixture(&mut self, shape: &Shape, density: f32) -> FixtureHandle
+    pub fn create_fast_fixture(&mut self, shape: &dyn Shape, density: f32) -> FixtureHandle
         where U::FixtureData: Default
     {
         self.create_fast_fixture_with(shape, density, U::FixtureData::default())
     }
 
     pub fn create_fast_fixture_with(&mut self,
-                                    shape: &Shape,
+                                    shape: &dyn Shape,
                                     density: f32,
                                     data: U::FixtureData)
                                     -> FixtureHandle {
@@ -402,8 +402,6 @@ impl<'a> Iterator for JointIter<'a> {
     type Item = (BodyHandle, JointHandle);
     
     fn next(&mut self) -> Option<Self::Item> {
-        use user_data::RawUserData;
-        
         unsafe { match self.edge.as_ref() {
             None => None,
             Some(edge) => {
@@ -423,8 +421,6 @@ impl<'a> Iterator for ContactIter<'a> {
     type Item = (BodyHandle, WrappedRef<'a, Contact>);
     
     fn next(&mut self) -> Option<Self::Item> {
-        use user_data::RawUserData;
-        
         unsafe { match self.edge.as_ref() {
             None => None,
             Some(edge) => {
@@ -444,8 +440,6 @@ impl<'a> Iterator for ContactIterMut<'a> {
     type Item = (BodyHandle, WrappedRefMut<'a, Contact>);
     
     fn next(&mut self) -> Option<Self::Item> {
-        use user_data::RawUserData;
-        
         unsafe { match self.edge.as_mut() {
             None => None,
             Some(ref mut edge) => {

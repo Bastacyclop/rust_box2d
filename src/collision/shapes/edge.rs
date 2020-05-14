@@ -45,7 +45,7 @@ impl EdgeShape {
     pub fn v0(&self) -> Option<Vec2> {
         unsafe {
             let mut v0 = mem::MaybeUninit::uninit();
-            if ffi::EdgeShape_get_v0(self.ptr(), v0.get_mut()) {
+            if ffi::EdgeShape_get_v0(self.ptr(), &mut *v0.as_mut_ptr()) {
                 Some(v0.assume_init())
             } else {
                 None
@@ -61,7 +61,7 @@ impl EdgeShape {
     pub fn v3(&self) -> Option<Vec2> {
         unsafe {
             let mut v3 = mem::MaybeUninit::uninit();
-            if ffi::EdgeShape_get_v3(self.ptr(), v3.get_mut()) {
+            if ffi::EdgeShape_get_v3(self.ptr(), &mut *v3.as_mut_ptr()) {
                 Some(v3.assume_init())
             } else {
                 None

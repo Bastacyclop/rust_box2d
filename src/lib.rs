@@ -1,4 +1,3 @@
-#![feature(maybe_uninit_ref)]
 //! Bod2D for Rust
 //!
 //! You won't find a lot of information about Box2D itself here,

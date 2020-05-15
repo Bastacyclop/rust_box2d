@@ -21,12 +21,12 @@ use self::callbacks::{ContactFilter, ContactFilterLink,
                       RayCastCallback, RayCastCallbackLink};
 
 pub type BodyHandle = TypedHandle<Body>;
-pub type JointHandle = TypedHandle<Joint>;
+pub type JointHandle = TypedHandle<dyn Joint>;
 
 pub struct World<U: UserDataTypes> {
     ptr: *mut ffi::World,
     bodies: HandleMap<MetaBody<U>, Body>,
-    joints: HandleMap<MetaJoint<U>, Joint>,
+    joints: HandleMap<MetaJoint<U>, dyn Joint>,
     contact_filter_link: ContactFilterLink,
     contact_listener_link: ContactListenerLink,
     draw_link: DrawLink,
@@ -105,7 +105,7 @@ impl<U: UserDataTypes> World<U> {
         self.bodies.iter()
     }
     
-    fn remove_body_joint_handles(body: &mut Body, joints: &mut HandleMap<MetaJoint<U>, Joint>) {
+    fn remove_body_joint_handles(body: &mut Body, joints: &mut HandleMap<MetaJoint<U>, dyn Joint>) {
         for (_, joint) in body.joints() {
             joints.remove(joint);
         }
@@ -139,7 +139,7 @@ impl<U: UserDataTypes> World<U> {
         }
     }
     
-    pub fn joints(&self) -> HandleIter<Joint, MetaJoint<U>> {
+    pub fn joints(&self) -> HandleIter<dyn Joint, MetaJoint<U>> {
         self.joints.iter()
     }
         

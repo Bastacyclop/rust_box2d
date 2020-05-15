@@ -29,9 +29,9 @@ impl Contact {
 
     pub fn world_manifold<'a>(&'a self) -> WorldManifold {
         unsafe {
-            let mut m = mem::uninitialized();
-            ffi::Contact_get_world_manifold(self.ptr(), &mut m);
-            m
+            let mut m = mem::MaybeUninit::uninit();
+            ffi::Contact_get_world_manifold(self.ptr(), m.as_mut_ptr());
+            m.assume_init()
         }
     }
 
@@ -101,9 +101,9 @@ impl Contact {
 
     pub fn evaluate(&mut self, xf_a: &Transform, xf_b: &Transform) -> Manifold {
         unsafe {
-            let mut m = mem::uninitialized();
-            ffi::Contact_evaluate_virtual(self.mut_ptr(), &mut m, xf_a, xf_b);
-            m
+            let mut m = mem::MaybeUninit::uninit();
+            ffi::Contact_evaluate_virtual(self.mut_ptr(), m.as_mut_ptr(), xf_a, xf_b);
+            m.assume_init()
         }
     }
 }

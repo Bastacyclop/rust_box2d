@@ -98,8 +98,7 @@ pub mod user_data;
 pub mod serialize;
 
 pub mod b2 {
-    pub use common::{Color, DrawFlags, Draw, DRAW_AABB, DRAW_CENTER_OF_MASS, DRAW_JOINT,
-                     DRAW_PAIR, DRAW_SHAPE};
+    pub use common::{Color, DrawFlags, Draw};
     pub use common::math::{Rot, Sweep, Transform, Vec2};
     pub use common::math::{cross_vv, cross_vs, cross_sv};
     pub use common::settings::{ANGULAR_SLOP, LINEAR_SLOP, MAX_MANIFOLD_POINTS,

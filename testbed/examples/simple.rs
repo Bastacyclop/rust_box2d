@@ -69,11 +69,11 @@ fn main() {
             position: [0., 5.],
             size: [40., 40.]
         },
-        draw_flags: b2::DRAW_SHAPE |
-                    b2::DRAW_AABB |
-                    b2::DRAW_JOINT |
-                    b2::DRAW_PAIR |
-                    b2::DRAW_CENTER_OF_MASS
+        draw_flags: b2::DrawFlags::DRAW_SHAPE |
+                    b2::DrawFlags::DRAW_AABB |
+                    b2::DrawFlags::DRAW_JOINT |
+                    b2::DrawFlags::DRAW_PAIR |
+                    b2::DrawFlags::DRAW_CENTER_OF_MASS
     };
 
     testbed::run(process_input, data, "Simple", 400, 400);

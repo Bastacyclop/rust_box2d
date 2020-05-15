@@ -20,7 +20,7 @@ pub trait ContactFilter<U: UserDataTypes>: Any {
 #[doc(hidden)]
 pub struct ContactFilterLink {
     ptr: *mut ffi::ContactFilterLink,
-    object: Option<Box<Any>>,
+    object: Option<Box<dyn Any>>,
 }
 
 wrap! { ffi::ContactFilterLink => custom ContactFilterLink }
@@ -81,7 +81,7 @@ pub trait ContactListener<U: UserDataTypes>: Any {
 #[doc(hidden)]
 pub struct ContactListenerLink {
     ptr: *mut ffi::ContactListenerLink,
-    object: Option<Box<Any>>,
+    object: Option<Box<dyn Any>>,
 }
 
 wrap! { ffi::ContactListenerLink => custom ContactListenerLink }

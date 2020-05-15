@@ -55,9 +55,9 @@ impl ChainShape {
 
     pub fn prev_vertex(&self) -> Option<Vec2> {
         unsafe {
-            let mut v = mem::uninitialized();
-            if ffi::ChainShape_get_prev_vertex(self.ptr(), &mut v) {
-                Some(v)
+            let mut v = mem::MaybeUninit::uninit();
+            if ffi::ChainShape_get_prev_vertex(self.ptr(), &mut *v.as_mut_ptr()) {
+                Some(v.assume_init())
             } else {
                 None
             }
@@ -71,9 +71,9 @@ impl ChainShape {
 
     pub fn next_vertex(&self) -> Option<Vec2> {
         unsafe {
-            let mut v = mem::uninitialized();
-            if ffi::ChainShape_get_next_vertex(self.ptr(), &mut v) {
-                Some(v)
+            let mut v = mem::MaybeUninit::uninit();
+            if ffi::ChainShape_get_next_vertex(self.ptr(), &mut *v.as_mut_ptr()) {
+                Some(v.assume_init())
             } else {
                 None
             }

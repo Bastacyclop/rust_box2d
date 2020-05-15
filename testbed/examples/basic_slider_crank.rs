@@ -20,10 +20,10 @@ fn main() {
             position: [0., 20.],
             size: [40., 40.]
         },
-        draw_flags: b2::DRAW_SHAPE |
-                    b2::DRAW_JOINT |
-                    b2::DRAW_PAIR |
-                    b2::DRAW_CENTER_OF_MASS
+        draw_flags: b2::DrawFlags::DRAW_SHAPE |
+                    b2::DrawFlags::DRAW_JOINT |
+                    b2::DrawFlags::DRAW_PAIR |
+                    b2::DrawFlags::DRAW_CENTER_OF_MASS
     };
 
     testbed::run((), data, "Basic Slider Crank", 400, 400);

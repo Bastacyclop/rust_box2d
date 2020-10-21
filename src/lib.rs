@@ -49,24 +49,34 @@
 //!
 //! pub type ObjectId = u64;
 //!
-//! pub struct UserData;
-//! impl UserDataTypes for UserData {
+//! pub struct CustomUserData;
+//! impl UserDataTypes for CustomUserData {
 //!     type BodyData = Option<ObjectId>;
 //!     type JointData = ();
 //!     type FixtureData = FixtureKind;
 //! }
 //! 
-//! pub type World = b2::World<UserData>;
+//! pub type World = b2::World<CustomUserData>;
 //! 
 //! pub enum FixtureKind {
 //!     Wood,
 //!     Metal,
 //! }
 //! 
-//! // [ ... elsewhere ... ]
-//! // let h = world.create_body(&def); // will use `Default` user data (`None` here)
-//! // let h = world.create_body_with(&def, Some(object_id)); // specifying user data for the body
-//! // let user_data = world.body(h).user_data(); // access the body user data
+//! fn main() {
+//!     let mut world = World::new(&b2::Vec2 { x: 0., y: -10. });
+//!     
+//!     let def = b2::BodyDef {
+//!         body_type: b2::BodyType::Dynamic,
+//!         position: b2::Vec2 { x: 0., y: -15. },
+//!         ..b2::BodyDef::new()
+//!     };
+//! 
+//!     let h1 = world.create_body(&def); // will use `Default` user data (`None` here)
+//!     let h2 = world.create_body_with(&def, Some(2)); // specifying user data for the body
+//! 
+//!     let user_data = world.body(h2).user_data(); // access the body user data
+//! }
 //! ```
 
 extern crate libc;

@@ -14,8 +14,6 @@ addons:
   apt:
     packages:
     - cmake
-    - python3
-    - python3-pip
 
 script:
 - cargo build --all-features --verbose
@@ -26,8 +24,7 @@ after_success:
   [ $TRAVIS_BRANCH = master ] &&
   [ $TRAVIS_PULL_REQUEST = false ] &&
   cargo doc --all-features --no-deps &&
-  pip3 install --upgrade pip &&
-  pip3 install ghp-import &&
+  pip install ghp-import &&
   ghp_import -n target/doc &&
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
 - |

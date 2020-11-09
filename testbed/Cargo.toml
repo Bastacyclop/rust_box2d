@@ -8,7 +8,7 @@ name = "testbed"
 
 [dependencies]
 wrapped2d = { path = ".." }
-gfx = "0.16"
-piston = "0.32"
-piston_window = "0.66"
-piston2d-graphics = "0.21"
+gfx = "0.18"
+piston = "0.52"
+piston_window = "0.114"
+piston2d-graphics = "0.37"

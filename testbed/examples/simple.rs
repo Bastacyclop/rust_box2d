@@ -55,14 +55,14 @@ fn main() {
         };
 
         if let Input::Button(ButtonArgs {
-            state: _,
+            state,
             button,
             scancode: _,
         }) = input
         {
-            match button {
-                Button::Keyboard(Key::A) => create_body(&cube_shape),
-                Button::Keyboard(Key::Z) => create_body(&circle_shape),
+            match (state, button) {
+                (ButtonState::Press, Button::Keyboard(Key::A)) => create_body(&cube_shape),
+                (ButtonState::Press, Button::Keyboard(Key::Z)) => create_body(&circle_shape),
                 _ => {}
             }
         }

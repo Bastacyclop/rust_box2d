@@ -18,21 +18,21 @@ fn main() {
 
     let process_input = |input: &Input, data: &mut testbed::Data<NoUserData>| match input {
         Input::Button(ButtonArgs {
-            state: _,
+            state,
             button,
             scancode: _,
         }) => {
-            match button {
-                Keyboard(Key::Z) => {
+            match (state, button) {
+                (ButtonState::Press, Keyboard(Key::Z)) => {
                     let mut body = data.world.body_mut(body);
                     let f = body.world_vector(&b2::Vec2 { x: 0., y: -200. });
                     let p = body.world_point(&b2::Vec2 { x: 0., y: 2. });
                     body.apply_force(&f, &p, true);
                 }
-                Keyboard(Key::Q) => {
+                (ButtonState::Press, Keyboard(Key::Q)) => {
                     data.world.body_mut(body).apply_torque(50., true);
                 }
-                Keyboard(Key::D) => {
+                (ButtonState::Press, Keyboard(Key::D)) => {
                     data.world.body_mut(body).apply_torque(-50., true);
                 }
                 _ => {}

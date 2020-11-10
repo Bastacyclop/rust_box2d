@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Filter",""],["Fixture",""],["FixtureDef",""],["MetaFixture",""]]});

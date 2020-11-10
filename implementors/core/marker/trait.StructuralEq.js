@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["wrapped2d"] = [{"text":"impl StructuralEq for DrawFlags","synthetic":false,"types":[]},{"text":"impl StructuralEq for BodyId","synthetic":false,"types":[]},{"text":"impl StructuralEq for JointId","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

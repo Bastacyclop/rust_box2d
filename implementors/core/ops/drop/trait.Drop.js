@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["wrapped2d"] = [{"text":"impl Drop for ChainShape","synthetic":false,"types":[]},{"text":"impl Drop for EdgeShape","synthetic":false,"types":[]},{"text":"impl Drop for CircleShape","synthetic":false,"types":[]},{"text":"impl Drop for PolygonShape","synthetic":false,"types":[]},{"text":"impl&lt;U:&nbsp;UserDataTypes&gt; Drop for World&lt;U&gt;","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

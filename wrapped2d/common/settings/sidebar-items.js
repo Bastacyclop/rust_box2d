@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["ANGULAR_SLOP",""],["LINEAR_SLOP",""],["MAX_MANIFOLD_POINTS",""],["MAX_POLYGON_VERTICES",""],["PI",""],["POLYGON_RADIUS",""]]});

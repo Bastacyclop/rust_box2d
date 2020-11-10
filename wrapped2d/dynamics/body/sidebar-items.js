@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["BodyType",""]],"struct":[["Body",""],["BodyDef",""],["ContactIter",""],["ContactIterMut",""],["JointIter",""],["MetaBody",""]],"type":[["FixtureHandle",""]]});

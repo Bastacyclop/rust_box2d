@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["BodyAccess",""],["ContactAccess",""],["ContactImpulse",""],["FixtureAccess",""]],"trait":[["ContactFilter",""],["ContactListener",""],["QueryCallback",""],["RayCastCallback",""]]});

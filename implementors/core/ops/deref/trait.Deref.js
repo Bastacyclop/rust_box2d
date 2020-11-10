@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["wrapped2d"] = [{"text":"impl&lt;'a, U:&nbsp;UserDataTypes&gt; Deref for FixtureAccess&lt;'a, U&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a, U:&nbsp;UserDataTypes&gt; Deref for BodyAccess&lt;'a, U&gt;","synthetic":false,"types":[]},{"text":"impl&lt;U:&nbsp;UserDataTypes&gt; Deref for MetaBody&lt;U&gt;","synthetic":false,"types":[]},{"text":"impl&lt;U:&nbsp;UserDataTypes&gt; Deref for MetaFixture&lt;U&gt;","synthetic":false,"types":[]},{"text":"impl&lt;U:&nbsp;UserDataTypes&gt; Deref for MetaJoint&lt;U&gt;","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

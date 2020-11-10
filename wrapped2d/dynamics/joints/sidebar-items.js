@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["JointType",""],["LimitState",""],["UnknownJoint",""]],"mod":[["distance",""],["friction",""],["gear",""],["motor",""],["mouse",""],["prismatic",""],["pulley",""],["revolute",""],["rope",""],["weld",""],["wheel",""]],"struct":[["MetaJoint",""]],"trait":[["Joint",""],["JointDef",""]]});

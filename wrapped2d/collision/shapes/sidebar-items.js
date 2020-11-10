@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ShapeType",""],["UnknownShape",""]],"mod":[["chain",""],["circle",""],["edge",""],["polygon",""]],"struct":[["MassData",""]],"trait":[["Shape",""]]});

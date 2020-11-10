@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["wrapped2d"] = [{"text":"impl Mul&lt;f32&gt; for Vec2","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Mul&lt;f32&gt; for &amp;'a Vec2","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Mul&lt;&amp;'a f32&gt; for Vec2","synthetic":false,"types":[]},{"text":"impl&lt;'a, 'b&gt; Mul&lt;&amp;'a f32&gt; for &amp;'b Vec2","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Mul&lt;Vec2&gt; for &amp;'a Transform","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

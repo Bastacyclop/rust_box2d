@@ -1,0 +1,3 @@
+var N = null;var sourcesIndex = {};
+sourcesIndex["wrapped2d"] = {"name":"","dirs":[{"name":"collision","dirs":[{"name":"shapes","files":["chain.rs","circle.rs","edge.rs","mod.rs","polygon.rs"]}],"files":["distance.rs","mod.rs","time_of_impact.rs"]},{"name":"common","files":["math.rs","mod.rs","settings.rs"]},{"name":"dynamics","dirs":[{"name":"joints","files":["distance.rs","friction.rs","gear.rs","mod.rs","motor.rs","mouse.rs","prismatic.rs","pulley.rs","revolute.rs","rope.rs","weld.rs","wheel.rs"]}],"files":["body.rs","contacts.rs","fixture.rs","mod.rs","world.rs","world_callbacks.rs"]}],"files":["ffi.rs","handle.rs","lib.rs","serialize.rs","user_data.rs","wrap.rs"]};
+createSourceSidebar();

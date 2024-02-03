@@ -92,6 +92,14 @@ impl<U: UserDataTypes> World<U> {
         self.bodies.get_mut(handle).expect("invalid body handle")
     }
 
+    pub fn try_body(&self, handle: BodyHandle) -> Option<Ref<MetaBody<U>>> {
+        self.bodies.get(handle)
+    }
+
+    pub fn try_body_mut(&self, handle: BodyHandle) -> Option<RefMut<MetaBody<U>>> {
+        self.bodies.get_mut(handle)
+    }
+
     pub fn destroy_body(&mut self, handle: BodyHandle) {
         let mut body = self.bodies.remove(handle);
 
@@ -130,6 +138,14 @@ impl<U: UserDataTypes> World<U> {
 
     pub fn joint_mut(&self, handle: JointHandle) -> RefMut<MetaJoint<U>> {
         self.joints.get_mut(handle).expect("invalid joint handle")
+    }
+
+    pub fn try_joint(&self, handle: JointHandle) -> Option<Ref<MetaJoint<U>>> {
+        self.joints.get(handle)
+    }
+
+    pub fn try_joint_mut(&self, handle: JointHandle) -> Option<RefMut<MetaJoint<U>>> {
+        self.joints.get_mut(handle)
     }
 
     pub fn destroy_joint(&mut self, handle: JointHandle) {

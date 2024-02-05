@@ -54,6 +54,23 @@ impl PrismaticJointDef {
         self.local_axis_a = a.local_vector(axis);
         self.reference_angle = b.angle() - a.angle();
     }
+
+    pub fn try_init<U: UserDataTypes>(&mut self,
+                                      world: &World<U>,
+                                      body_a: BodyHandle,
+                                      body_b: BodyHandle,
+                                      anchor: &Vec2,
+                                      axis: &Vec2) -> Option<()> {
+        self.body_a = body_a;
+        self.body_b = body_b;
+        let a = world.try_body_mut(body_a)?;
+        let b = world.try_body_mut(body_b)?;
+        self.local_anchor_a = a.local_point(anchor);
+        self.local_anchor_b = b.local_point(anchor);
+        self.local_axis_a = a.local_vector(axis);
+        self.reference_angle = b.angle() - a.angle();
+        Some(())
+    }
 }
 
 impl JointDef for PrismaticJointDef {

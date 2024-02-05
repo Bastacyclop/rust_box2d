@@ -19,6 +19,24 @@ impl GearJointDef {
             ratio: 1.,
         }
     }
+    
+    pub fn init<U: UserDataTypes>(&mut self,
+                                  joint_1: JointHandle,
+                                  joint_2: JointHandle) {
+        self.joint_1 = joint_1;
+        self.joint_2 = joint_2;
+    }
+
+    pub fn try_init<U: UserDataTypes>(&mut self,
+                                      world: &World<U>,
+                                      joint_1: JointHandle,
+                                      joint_2: JointHandle) -> Option<()> {
+        self.joint_1 = joint_1;
+        self.joint_2 = joint_2;
+        world.try_joint_mut(joint_1)?;
+        world.try_joint_mut(joint_2)?;
+        Some(())
+    }
 }
 
 impl JointDef for GearJointDef {

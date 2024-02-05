@@ -24,6 +24,24 @@ impl RopeJointDef {
             max_length: 0.,
         }
     }
+    
+    pub fn init<U: UserDataTypes>(&mut self,
+                                  body_a: BodyHandle,
+                                  body_b: BodyHandle) {
+        self.body_a = body_a;
+        self.body_b = body_b;
+    }
+
+    pub fn try_init<U: UserDataTypes>(&mut self,
+                                      world: &World<U>,
+                                      body_a: BodyHandle,
+                                      body_b: BodyHandle) -> Option<()> {
+        self.body_a = body_a;
+        self.body_b = body_b;
+        world.try_body_mut(body_a)?;
+        world.try_body_mut(body_b)?;
+        Some(())
+    }
 }
 
 impl JointDef for RopeJointDef {

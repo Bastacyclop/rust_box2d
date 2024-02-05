@@ -50,6 +50,28 @@ impl PulleyJointDef {
         self.length_b = (anchor_b - ground_b).norm();
         self.ratio = ratio;
     }
+
+    pub fn try_init<U: UserDataTypes>(&mut self,
+                                     world: &World<U>,
+                                     body_a: BodyHandle,
+                                     body_b: BodyHandle,
+                                     ground_a: Vec2,
+                                     ground_b: Vec2,
+                                     anchor_a: &Vec2,
+                                     anchor_b: &Vec2,
+                                     ratio: f32) -> Option<()> {
+        assert!(ratio > ::std::f32::EPSILON);
+        self.body_a = body_a;
+        self.body_b = body_b;
+        self.ground_anchor_a = ground_a;
+        self.ground_anchor_b = ground_b;
+        self.length_a = (anchor_a - ground_a).norm();
+        self.length_b = (anchor_b - ground_b).norm();
+        self.ratio = ratio;
+        world.try_body_mut(body_a)?;
+        world.try_body_mut(body_b)?;
+        Some(())
+    }
 }
 
 impl JointDef for PulleyJointDef {

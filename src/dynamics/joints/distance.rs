@@ -43,6 +43,22 @@ impl DistanceJointDef {
         self.local_anchor_b = b.local_point(anchor_b);
         self.length = (anchor_b - anchor_a).norm();
     }
+
+    pub fn try_init<U: UserDataTypes>(&mut self,
+                                      world: &World<U>,
+                                      body_a: BodyHandle,
+                                      body_b: BodyHandle,
+                                      anchor_a: &Vec2,
+                                      anchor_b: &Vec2) -> Option<()> {
+        self.body_a = body_a;
+        self.body_b = body_b;
+        let a = world.try_body_mut(body_a)?;
+        let b = world.try_body_mut(body_b)?;
+        self.local_anchor_a = a.local_point(anchor_a);
+        self.local_anchor_b = b.local_point(anchor_b);
+        self.length = (anchor_b - anchor_a).norm();
+        Some(())
+    }
 }
 
 impl JointDef for DistanceJointDef {

@@ -40,6 +40,19 @@ impl MotorJointDef {
         self.linear_offset = a.local_point(b.position());
         self.angular_offset = b.angle() - a.angle();
     }
+
+    pub fn try_init<U: UserDataTypes>(&mut self,
+                                      world: &World<U>,
+                                      body_a: BodyHandle,
+                                      body_b: BodyHandle) -> Option<()> {
+        self.body_a = body_a;
+        self.body_b = body_b;
+        let a = world.try_body_mut(body_a)?;
+        let b = world.try_body_mut(body_b)?;
+        self.linear_offset = a.local_point(b.position());
+        self.angular_offset = b.angle() - a.angle();
+        Some(())
+    }
 }
 
 impl JointDef for MotorJointDef {

@@ -47,8 +47,8 @@ impl FrictionJointDef {
                                       anchor: &Vec2) -> Option<()> {
         self.body_a = body_a;
         self.body_b = body_b;
-        let a = world.try_body_mut(body_a)?;
-        let b = world.try_body_mut(body_b)?;
+        let a = world.try_body(body_a)?;
+        let b = world.try_body(body_b)?;
         self.local_anchor_a = a.local_point(anchor);
         self.local_anchor_b = b.local_point(anchor);
         Some(())

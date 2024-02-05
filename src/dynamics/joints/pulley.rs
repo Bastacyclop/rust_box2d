@@ -50,28 +50,6 @@ impl PulleyJointDef {
         self.length_b = (anchor_b - ground_b).norm();
         self.ratio = ratio;
     }
-
-    pub fn try_init<U: UserDataTypes>(&mut self,
-                                     world: &World<U>,
-                                     body_a: BodyHandle,
-                                     body_b: BodyHandle,
-                                     ground_a: Vec2,
-                                     ground_b: Vec2,
-                                     anchor_a: &Vec2,
-                                     anchor_b: &Vec2,
-                                     ratio: f32) -> Option<()> {
-        assert!(ratio > ::std::f32::EPSILON);
-        self.body_a = body_a;
-        self.body_b = body_b;
-        self.ground_anchor_a = ground_a;
-        self.ground_anchor_b = ground_b;
-        self.length_a = (anchor_a - ground_a).norm();
-        self.length_b = (anchor_b - ground_b).norm();
-        self.ratio = ratio;
-        world.try_body_mut(body_a)?;
-        world.try_body_mut(body_b)?;
-        Some(())
-    }
 }
 
 impl JointDef for PulleyJointDef {
@@ -93,6 +71,20 @@ impl JointDef for PulleyJointDef {
                                        self.length_a,
                                        self.length_b,
                                        self.ratio)
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_pulley_joint(world.mut_ptr(),
+                                            world.try_body_mut(self.body_a)?.mut_ptr(),
+                                            world.try_body_mut(self.body_b)?.mut_ptr(),
+                                            self.collide_connected,
+                                            self.ground_anchor_a,
+                                            self.ground_anchor_b,
+                                            self.local_anchor_a,
+                                            self.local_anchor_b,
+                                            self.length_a,
+                                            self.length_b,
+                                            self.ratio))
     }
 }
 

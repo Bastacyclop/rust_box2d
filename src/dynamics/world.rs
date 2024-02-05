@@ -132,6 +132,19 @@ impl<U: UserDataTypes> World<U> {
         }
     }
 
+    pub fn try_create_joint<JD: JointDef>(&mut self, def: &JD) -> Option<JointHandle>
+        where U::JointData: Default
+    {
+        self.try_create_joint_with(def, U::JointData::default())
+    }
+
+    pub fn try_create_joint_with<JD: JointDef>(&mut self, def: &JD, data: U::JointData) -> Option<JointHandle> {
+        unsafe {
+            let joint = def.try_create(self)?;
+            Some(self.joints.insert_with(|h| MetaJoint::new(joint, h, data)))
+        }
+    }
+
     pub fn joint(&self, handle: JointHandle) -> Ref<MetaJoint<U>> {
         self.joints.get(handle).expect("invalid joint handle")
     }

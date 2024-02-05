@@ -26,24 +26,6 @@ impl MouseJointDef {
             damping_ratio: 0.7,
         }
     }
-    
-    pub fn init<U: UserDataTypes>(&mut self,
-                                  body_a: BodyHandle,
-                                  body_b: BodyHandle) {
-        self.body_a = body_a;
-        self.body_b = body_b;
-    }
-
-    pub fn try_init<U: UserDataTypes>(&mut self,
-                                      world: &World<U>,
-                                      body_a: BodyHandle,
-                                      body_b: BodyHandle) -> Option<()> {
-        self.body_a = body_a;
-        self.body_b = body_b;
-        world.try_body_mut(body_a)?;
-        world.try_body_mut(body_b)?;
-        Some(())
-    }
 }
 
 impl JointDef for MouseJointDef {
@@ -62,6 +44,17 @@ impl JointDef for MouseJointDef {
                                       self.max_force,
                                       self.frequency,
                                       self.damping_ratio)
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_mouse_joint(world.mut_ptr(),
+                                           world.try_body_mut(self.body_a)?.mut_ptr(),
+                                           world.try_body_mut(self.body_b)?.mut_ptr(),
+                                           self.collide_connected,
+                                           self.target,
+                                           self.max_force,
+                                           self.frequency,
+                                           self.damping_ratio))
     }
 }
 

@@ -78,6 +78,11 @@ pub trait JointDef {
 
     #[doc(hidden)]
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint;
+    
+    #[doc(hidden)]
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(self.create(world))
+    }
 }
 
 pub struct MetaJoint<U: UserDataTypes> {

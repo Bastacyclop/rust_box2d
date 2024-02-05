@@ -72,6 +72,17 @@ impl JointDef for FrictionJointDef {
                                          self.max_force,
                                          self.max_torque)
     }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_friction_joint(world.mut_ptr(),
+                                              world.try_body_mut(self.body_a)?.mut_ptr(),
+                                              world.try_body_mut(self.body_b)?.mut_ptr(),
+                                              self.collide_connected,
+                                              self.local_anchor_a,
+                                              self.local_anchor_b,
+                                              self.max_force,
+                                              self.max_torque))
+    }
 }
 
 wrap_joint! {

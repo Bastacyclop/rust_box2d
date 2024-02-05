@@ -19,24 +19,6 @@ impl GearJointDef {
             ratio: 1.,
         }
     }
-    
-    pub fn init<U: UserDataTypes>(&mut self,
-                                  joint_1: JointHandle,
-                                  joint_2: JointHandle) {
-        self.joint_1 = joint_1;
-        self.joint_2 = joint_2;
-    }
-
-    pub fn try_init<U: UserDataTypes>(&mut self,
-                                      world: &World<U>,
-                                      joint_1: JointHandle,
-                                      joint_2: JointHandle) -> Option<()> {
-        self.joint_1 = joint_1;
-        self.joint_2 = joint_2;
-        world.try_joint_mut(joint_1)?;
-        world.try_joint_mut(joint_2)?;
-        Some(())
-    }
 }
 
 impl JointDef for GearJointDef {
@@ -52,6 +34,14 @@ impl JointDef for GearJointDef {
                                      world.joint_mut(self.joint_1).mut_base_ptr(),
                                      world.joint_mut(self.joint_2).mut_base_ptr(),
                                      self.ratio)
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_gear_joint(world.mut_ptr(),
+                                          self.collide_connected,
+                                          world.try_joint_mut(self.joint_1)?.mut_base_ptr(),
+                                          world.try_joint_mut(self.joint_2)?.mut_base_ptr(),
+                                          self.ratio))
     }
 }
 

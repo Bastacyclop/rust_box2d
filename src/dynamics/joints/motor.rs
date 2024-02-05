@@ -47,8 +47,8 @@ impl MotorJointDef {
                                       body_b: BodyHandle) -> Option<()> {
         self.body_a = body_a;
         self.body_b = body_b;
-        let a = world.try_body_mut(body_a)?;
-        let b = world.try_body_mut(body_b)?;
+        let a = world.try_body(body_a)?;
+        let b = world.try_body(body_b)?;
         self.linear_offset = a.local_point(b.position());
         self.angular_offset = b.angle() - a.angle();
         Some(())
@@ -72,6 +72,18 @@ impl JointDef for MotorJointDef {
                                       self.max_force,
                                       self.max_torque,
                                       self.correction_factor)
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_motor_joint(world.mut_ptr(),
+                                           world.try_body_mut(self.body_a)?.mut_ptr(),
+                                           world.try_body_mut(self.body_b)?.mut_ptr(),
+                                           self.collide_connected,
+                                           self.linear_offset,
+                                           self.angular_offset,
+                                           self.max_force,
+                                           self.max_torque,
+                                           self.correction_factor))
     }
 }
 

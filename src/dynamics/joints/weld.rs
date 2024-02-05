@@ -50,8 +50,8 @@ impl WeldJointDef {
                                       anchor: &Vec2) -> Option<()> {
         self.body_a = body_a;
         self.body_b = body_b;
-        let a = world.try_body_mut(body_a)?;
-        let b = world.try_body_mut(body_b)?;
+        let a = world.try_body(body_a)?;
+        let b = world.try_body(body_b)?;
         self.local_anchor_a = a.local_point(anchor);
         self.local_anchor_b = b.local_point(anchor);
         self.reference_angle = b.angle() - a.angle();
@@ -76,6 +76,18 @@ impl JointDef for WeldJointDef {
                                      self.reference_angle,
                                      self.frequency,
                                      self.damping_ratio)
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_weld_joint(world.mut_ptr(),
+                                          world.try_body_mut(self.body_a)?.mut_ptr(),
+                                          world.try_body_mut(self.body_b)?.mut_ptr(),
+                                          self.collide_connected,
+                                          self.local_anchor_a,
+                                          self.local_anchor_b,
+                                          self.reference_angle,
+                                          self.frequency,
+                                          self.damping_ratio))
     }
 }
 

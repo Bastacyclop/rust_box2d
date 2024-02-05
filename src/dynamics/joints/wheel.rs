@@ -58,8 +58,8 @@ impl WheelJointDef {
                                       axis: &Vec2) -> Option<()> {
         self.body_a = body_a;
         self.body_b = body_b;
-        let a = world.try_body_mut(body_a)?;
-        let b = world.try_body_mut(body_b)?;
+        let a = world.try_body(body_a)?;
+        let b = world.try_body(body_b)?;
         self.local_anchor_a = a.local_point(anchor);
         self.local_anchor_b = b.local_point(anchor);
         self.local_axis_a = a.local_vector(axis);
@@ -87,6 +87,21 @@ impl JointDef for WheelJointDef {
                                       self.motor_speed,
                                       self.frequency,
                                       self.damping_ratio)
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_wheel_joint(world.mut_ptr(),
+                                           world.try_body_mut(self.body_a)?.mut_ptr(),
+                                           world.try_body_mut(self.body_b)?.mut_ptr(),
+                                           self.collide_connected,
+                                           self.local_anchor_a,
+                                           self.local_anchor_b,
+                                           self.local_axis_a,
+                                           self.enable_motor,
+                                           self.max_motor_torque,
+                                           self.motor_speed,
+                                           self.frequency,
+                                           self.damping_ratio))
     }
 }
 

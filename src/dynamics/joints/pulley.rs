@@ -60,17 +60,7 @@ impl JointDef for PulleyJointDef {
     }
 
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
-        ffi::World_create_pulley_joint(world.mut_ptr(),
-                                       world.body_mut(self.body_a).mut_ptr(),
-                                       world.body_mut(self.body_b).mut_ptr(),
-                                       self.collide_connected,
-                                       self.ground_anchor_a,
-                                       self.ground_anchor_b,
-                                       self.local_anchor_a,
-                                       self.local_anchor_b,
-                                       self.length_a,
-                                       self.length_b,
-                                       self.ratio)
+        self.try_create(world).expect("joint create failed: invalid body handle")
     }
 
     unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {

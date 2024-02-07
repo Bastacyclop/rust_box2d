@@ -41,13 +41,7 @@ impl WheelJointDef {
                                   body_b: BodyHandle,
                                   anchor: &Vec2,
                                   axis: &Vec2) {
-        self.body_a = body_a;
-        self.body_b = body_b;
-        let a = world.body(body_a);
-        let b = world.body(body_b);
-        self.local_anchor_a = a.local_point(anchor);
-        self.local_anchor_b = b.local_point(anchor);
-        self.local_axis_a = a.local_vector(axis);
+        self.try_init(world, body_a, body_b, anchor, axis).expect("joint init filed: invalid body handle");
     }
 
     pub fn try_init<U: UserDataTypes>(&mut self,
@@ -75,18 +69,7 @@ impl JointDef for WheelJointDef {
     }
 
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
-        ffi::World_create_wheel_joint(world.mut_ptr(),
-                                      world.body_mut(self.body_a).mut_ptr(),
-                                      world.body_mut(self.body_b).mut_ptr(),
-                                      self.collide_connected,
-                                      self.local_anchor_a,
-                                      self.local_anchor_b,
-                                      self.local_axis_a,
-                                      self.enable_motor,
-                                      self.max_motor_torque,
-                                      self.motor_speed,
-                                      self.frequency,
-                                      self.damping_ratio)
+        self.try_create(world).expect("joint create failed: invalid body handle")
     }
 
     unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {

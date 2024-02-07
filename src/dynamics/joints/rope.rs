@@ -34,13 +34,7 @@ impl JointDef for RopeJointDef {
     }
 
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
-        ffi::World_create_rope_joint(world.mut_ptr(),
-                                     world.body_mut(self.body_a).mut_ptr(),
-                                     world.body_mut(self.body_b).mut_ptr(),
-                                     self.collide_connected,
-                                     self.local_anchor_a,
-                                     self.local_anchor_b,
-                                     self.max_length)
+        self.try_create(world).expect("joint create failed: invalid body handle")
     }
 
     unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {

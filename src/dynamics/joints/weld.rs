@@ -34,13 +34,22 @@ impl WeldJointDef {
                                   body_a: BodyHandle,
                                   body_b: BodyHandle,
                                   anchor: &Vec2) {
+        self.try_init(world, body_a, body_b, anchor).expect("joint init filed: invalid body handle");
+    }
+
+    pub fn try_init<U: UserDataTypes>(&mut self,
+                                      world: &World<U>,
+                                      body_a: BodyHandle,
+                                      body_b: BodyHandle,
+                                      anchor: &Vec2) -> Option<()> {
         self.body_a = body_a;
         self.body_b = body_b;
-        let a = world.body(body_a);
-        let b = world.body(body_b);
+        let a = world.try_body(body_a)?;
+        let b = world.try_body(body_b)?;
         self.local_anchor_a = a.local_point(anchor);
         self.local_anchor_b = b.local_point(anchor);
         self.reference_angle = b.angle() - a.angle();
+        Some(())
     }
 }
 
@@ -52,15 +61,19 @@ impl JointDef for WeldJointDef {
     }
 
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
-        ffi::World_create_weld_joint(world.mut_ptr(),
-                                     world.body_mut(self.body_a).mut_ptr(),
-                                     world.body_mut(self.body_b).mut_ptr(),
-                                     self.collide_connected,
-                                     self.local_anchor_a,
-                                     self.local_anchor_b,
-                                     self.reference_angle,
-                                     self.frequency,
-                                     self.damping_ratio)
+        self.try_create(world).expect("joint create failed: invalid body handle")
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_weld_joint(world.mut_ptr(),
+                                          world.try_body_mut(self.body_a)?.mut_ptr(),
+                                          world.try_body_mut(self.body_b)?.mut_ptr(),
+                                          self.collide_connected,
+                                          self.local_anchor_a,
+                                          self.local_anchor_b,
+                                          self.reference_angle,
+                                          self.frequency,
+                                          self.damping_ratio))
     }
 }
 

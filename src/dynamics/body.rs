@@ -129,6 +129,14 @@ impl<U: UserDataTypes> MetaBody<U> {
         self.fixtures.get_mut(handle).expect("invalid fixture handle")
     }
 
+    pub fn try_fixture(&self, handle: FixtureHandle) -> Option<Ref<MetaFixture<U>>> {
+        self.fixtures.get(handle)
+    }
+
+    pub fn try_fixture_mut(&self, handle: FixtureHandle) -> Option<RefMut<MetaFixture<U>>> {
+        self.fixtures.get_mut(handle)
+    }
+
     pub fn destroy_fixture(&mut self, handle: FixtureHandle) {
         let mut fixture = self.fixtures.remove(handle);
         unsafe {

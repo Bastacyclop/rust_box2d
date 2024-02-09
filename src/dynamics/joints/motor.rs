@@ -33,12 +33,20 @@ impl MotorJointDef {
                                   world: &World<U>,
                                   body_a: BodyHandle,
                                   body_b: BodyHandle) {
+        self.try_init(world, body_a, body_b).expect("joint init filed: invalid body handle");
+    }
+
+    pub fn try_init<U: UserDataTypes>(&mut self,
+                                      world: &World<U>,
+                                      body_a: BodyHandle,
+                                      body_b: BodyHandle) -> Option<()> {
         self.body_a = body_a;
         self.body_b = body_b;
-        let a = world.body(body_a);
-        let b = world.body(body_b);
+        let a = world.try_body(body_a)?;
+        let b = world.try_body(body_b)?;
         self.linear_offset = a.local_point(b.position());
         self.angular_offset = b.angle() - a.angle();
+        Some(())
     }
 }
 
@@ -50,15 +58,19 @@ impl JointDef for MotorJointDef {
     }
 
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
-        ffi::World_create_motor_joint(world.mut_ptr(),
-                                      world.body_mut(self.body_a).mut_ptr(),
-                                      world.body_mut(self.body_b).mut_ptr(),
-                                      self.collide_connected,
-                                      self.linear_offset,
-                                      self.angular_offset,
-                                      self.max_force,
-                                      self.max_torque,
-                                      self.correction_factor)
+        self.try_create(world).expect("joint create failed: invalid body handle")
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_motor_joint(world.mut_ptr(),
+                                           world.try_body_mut(self.body_a)?.mut_ptr(),
+                                           world.try_body_mut(self.body_b)?.mut_ptr(),
+                                           self.collide_connected,
+                                           self.linear_offset,
+                                           self.angular_offset,
+                                           self.max_force,
+                                           self.max_torque,
+                                           self.correction_factor))
     }
 }
 

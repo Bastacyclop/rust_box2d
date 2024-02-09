@@ -29,11 +29,15 @@ impl JointDef for GearJointDef {
     }
 
     unsafe fn create<U: UserDataTypes>(&self, world: &mut World<U>) -> *mut ffi::Joint {
-        ffi::World_create_gear_joint(world.mut_ptr(),
-                                     self.collide_connected,
-                                     world.joint_mut(self.joint_1).mut_base_ptr(),
-                                     world.joint_mut(self.joint_2).mut_base_ptr(),
-                                     self.ratio)
+        self.try_create(world).expect("joint create failed: invalid joint handle")
+    }
+
+    unsafe fn try_create<U: UserDataTypes>(&self, world: &mut World<U>) -> Option<*mut ffi::Joint> {
+        Some(ffi::World_create_gear_joint(world.mut_ptr(),
+                                          self.collide_connected,
+                                          world.try_joint_mut(self.joint_1)?.mut_base_ptr(),
+                                          world.try_joint_mut(self.joint_2)?.mut_base_ptr(),
+                                          self.ratio))
     }
 }
 

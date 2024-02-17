@@ -36,7 +36,7 @@ jobs:
         cargo doc --no-deps --all-features --verbose
         echo "<meta http-equiv=\"refresh\" content=\"0; url=wrapped2d\">" > target/doc/index.html
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v1
       with:
         path: './target/doc'
  

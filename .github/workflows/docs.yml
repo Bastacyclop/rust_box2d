@@ -1,0 +1,46 @@
+name: Publish Documentation
+
+on:
+  push:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      contents: read
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Pages
+      id: pages
+      uses: actions/configure-pages@v4
+    - name: Build Docs
+      run: cargo doc --no-deps --all-features --verbose
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './target/doc'
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

@@ -14,9 +14,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  docs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Pages
+      id: pages
+      uses: actions/configure-pages@v4
+    - name: Build Docs
+      run: cargo doc --no-deps --all-features --verbose
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './target/doc'
+ 
+  deploy:
     needs: build
-
     runs-on: ubuntu-latest
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
@@ -31,16 +44,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup Pages
-      id: pages
-      uses: actions/configure-pages@v4
-    - name: Build Docs
-      run: cargo doc --no-deps --all-features --verbose
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './target/doc'
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4

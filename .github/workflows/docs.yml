@@ -7,11 +7,15 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
+
+# Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+permissions:
+  contents: read
+  pages: write      # to deploy to Pages
+  id-token: write   # to verify the deployment originates from an appropriate source
 
 jobs:
   build:
@@ -28,7 +32,9 @@ jobs:
       id: pages
       uses: actions/configure-pages@v4
     - name: Build Docs
-      run: cargo doc --no-deps --all-features --verbose
+      run: |
+        cargo doc --no-deps --all-features --verbose
+        echo "<meta http-equiv=\"refresh\" content=\"0; url=wrapped2d\">" > target/doc/index.html
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
@@ -37,12 +43,6 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
-    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
-    permissions:
-      contents: read
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
 
     # Deploy to the github-pages environment
     environment:
